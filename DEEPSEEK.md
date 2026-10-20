@@ -234,6 +234,7 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 
 - El STT usa grabación y subida al backend; no hay transcripción parcial en streaming. El micrófono se libera al terminar. La transcripción real se validó con audio de ElevenLabs; la captura de micrófono físico no se pudo automatizar en Chromium (getUserMedia quedó pendiente).
 - El reproductor de YouTube monta el iframe en un nodo imperativo fuera de React; no volver a pasarle un `<div>` renderizado por React a `YT.Player` (provoca `removeChild`). Los videos con `embeddable:false` se filtran; la búsqueda prioriza el canal oficial. Ver `docs/BUGFIX-WATCH.md`.
+- En el flujo de voz, `onstop` debe poner el estado en `idle` antes de llamar a `send()`; si no, `send()` lo considera ocupado y descarta la transcripción. Ver `docs/BUGFIX-VOICE.md`.
 - tecla.live sirve un certificado autofirmado `CN=Easypanel`; hay que configurar Let's Encrypt en Easypanel. No es un problema del código.
 - Podcasts reproducen el avance público de iTunes; el episodio completo se abre en el proveedor.
 - Twitch no tiene búsqueda interna sin credenciales de su API; se ofrece embed oficial y búsqueda externa.

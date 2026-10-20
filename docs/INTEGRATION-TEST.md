@@ -16,7 +16,8 @@
 | **Spotify** | Credenciales de cliente | ✅ `client_credentials` HTTP 200. |
 | **Spotify** | `/api/spotify/login` y authorize de Spotify | ✅ Redirección a `accounts.spotify.com`, scopes correctos, redirect URI `http://localhost:3000/api/spotify/callback`, state presente, página de login de Spotify sin error de redirect. |
 | **Spotify** | Cuenta vinculada / reproducción | ⏳ Pendiente: requiere que el usuario autorice su cuenta de Spotify y tenga Premium con un dispositivo activo. No se automatizó el login por seguridad. |
-| **Micrófono físico** | Captura real desde navegador | ⏳ No verificable en este entorno: el dispositivo simulado de Chromium no resuelve `getUserMedia` (queda pendiente). La transcripción del backend se probó con audio real. |
+| **Micrófono (pipeline)** | `getUserMedia` → MediaRecorder → STT → chat → TTS con audio inyectado en el navegador | ✅ Flujo completo verificado: STT 200, chat 200, TTS 200, transcripción visible y respuesta de clima. Se corrigió un estado `transcribing` que bloqueaba el envío. Ver [BUGFIX-VOICE.md](BUGFIX-VOICE.md). |
+| **Micrófono físico** | Permiso y hardware real en el navegador | ⏳ El audio inyectado valida el código; falta probar el dispositivo/permit del usuario. |
 | **Waze** | Rutas y avisos | ⚠️ Rutas/deep links ✅. Los avisos de huecos/cámaras no tienen API pública y no se simulan; ver [WAZE.md](WAZE.md). |
 
 ## Evidencia visual

@@ -71,6 +71,7 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 12 | Pulido de iconos de marca y transparencia de Waze | glyphs reales, atribución y mapa en vivo oficial | Completada |
 | 13 | Prueba de claves reales | YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify verificados | Completada con pendientes de hardware/autorización |
 | 14 | Fix de producción `/watch` | iframe fuera de React, filtro de no embebibles, selección oficial y E2E verdes | Completada local; pendiente redespliegue |
+| 15 | Fix del flujo de micrófono | estado `transcribing` liberado; STT→chat→TTS verificado con audio inyectado | Completada local; pendiente hardware/redespliegue |
 
 ## ÚLTIMA ACCIÓN
 
@@ -132,3 +133,4 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 - **2026-10-20 05:10** — Iconos de marca reales con atribución; Waze documentado con enlace al mapa en vivo. Avisos de huecos/cámaras no son accesibles por API pública y no se simulan.
 - **2026-10-20 08:25** — Claves reales cargadas y verificadas: YouTube, DeepSeek + tool + acción, ElevenLabs, Deepgram y credenciales Spotify. Micrófono físico y link de Spotify quedan pendientes de prueba interactiva.
 - **2026-10-20 10:05** — Corregido crash de `/watch` en producción: YouTube reemplazaba el nodo de React y lanzaba `removeChild`. Se añadió filtro de no embebibles, preferencia por canal oficial y 26 E2E verdes. Pendiente redeploy y TLS válido.
+- **2026-10-20 10:15** — Corregido flujo de micrófono: Deepgram transcribía, pero `send()` era rechazado por el estado `transcribing`; ahora se libera y la transcripción se envía. Verificado STT→chat→TTS con audio inyectado en Chromium.

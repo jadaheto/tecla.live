@@ -490,6 +490,9 @@ export function useTeclaAI() {
             return;
           }
           useAi.getState().setError(null);
+          // send() rechaza órdenes mientras el estado sea "transcribing".
+          // Hay que liberar el estado antes de encadenar la transcripción.
+          useAi.getState().setStatus("idle");
           await send(transcript, { speak: true });
         } catch (caught) {
           useAi.getState().setError(errorMessage(caught));

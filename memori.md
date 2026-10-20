@@ -75,6 +75,7 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Las variables `NEXT_PUBLIC_*` se inyectan en build; el dominio público debe pasarse como build arg `NEXT_PUBLIC_APP_URL`.
 - Los avisos de lint `react-hooks/set-state-in-effect` (6) son patrones controlados de hidratación/tiempo, no errores.
 - La optimización de imágenes de YouTube real y el reproductor se verificaron con datos reales en la build de Docker.
+- **Bug de voz corregido:** la transcripción de Deepgram se descartaba porque `send()` se llamaba con el estado `transcribing`; ahora se libera a `idle` antes de enviar. Flujo completo verificado con audio inyectado en el navegador. Ver `docs/BUGFIX-VOICE.md`.
 - **Bug de producción corregido:** `YT.Player` reemplazaba un nodo controlado por React y provocaba `removeChild`. Ahora el iframe se monta en un hijo imperativo fuera de React; los videos no embebibles se filtran y la búsqueda prioriza canales oficiales. Ver `docs/BUGFIX-WATCH.md`.
 - **TLS de producción:** tecla.live sirve un certificado autofirmado `CN=Easypanel`; hay que emitir Let's Encrypt. No es un bug de la app y no se puede corregir desde el repo.
 - En esta máquina, Node 26.3.0 dejó `next dev`/`next build` locales en un estado anómalo (espera larga y `.next` con artefactos irrepetibles). Se limpió `.next` y la verificación se hizo con Node 22 dentro de Docker. Si vuelve a ocurrir, usar Node 22 LTS y no mantener builds concurrentes.
@@ -111,4 +112,4 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 10:05 America/Bogota** — Corregido crash de `/watch` (YouTube reemplazaba un nodo de React), filtro de videos no embebibles y selección de versiones oficiales; E2E adaptadas a claves configuradas. Pendiente redesplegar en tecla.live y corregir el certificado TLS autofirmado.
+**2026-10-20 10:15 America/Bogota** — Corregido crash de `/watch` y bug de voz que descartaba la transcripción; pipeline de micrófono verificado de extremo a extremo con audio inyectado. Pendiente redesplegar en tecla.live, probar micrófono físico y corregir el certificado TLS autofirmado.

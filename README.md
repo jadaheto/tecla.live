@@ -87,7 +87,7 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 
 - No se probó en el navegador de un Tesla ni en Easypanel/tecla.live desde este entorno.
 - Spotify requiere que el usuario autorice su cuenta y tenga Premium con un dispositivo activo. La prueba de reproducción real queda pendiente.
-- El micrófono físico no se pudo automatizar con el dispositivo simulado de Chromium; el backend de Deepgram sí se probó con audio real. La captura desde micrófono queda para prueba manual.
+- El pipeline de micrófono (getUserMedia → MediaRecorder → Deepgram → DeepSeek → ElevenLabs) se verificó con audio inyectado en el navegador; falta la prueba del micrófono físico/permit del usuario. Se corrigió un bug que dejaba el estado en «Transcribiendo…» y descartaba la transcripción. Ver [docs/BUGFIX-VOICE.md](docs/BUGFIX-VOICE.md).
 - La transcripción es push-to-talk con envío al backend; no hay transcripción parcial en streaming. Se documenta como limitación y se libera el micrófono al terminar.
 - Los podcasts reproducen el avance público de iTunes; el episodio completo se abre en su proveedor.
 - El rate limiting es en memoria (una instancia); para varias réplicas debe migrarse a PostgreSQL/Redis.
