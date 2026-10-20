@@ -4,7 +4,9 @@ test.describe("dashboard y shell", () => {
   test("muestra la identidad, hero y accesos rápidos", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("link", { name: "TECLA LIVE, ir al inicio" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Buenas");
+    await expect(
+      page.getByRole("heading", { level: 1 }).filter({ hasText: /Buenos|Buenas/ }),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Abrir YouTube" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Abrir TECLA AI" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Continuar viendo" })).toBeVisible();
@@ -12,10 +14,11 @@ test.describe("dashboard y shell", () => {
   });
 
   test("el tema cambia y persiste tras recargar", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/settings#apariencia");
     const html = page.locator("html");
+    await page.getByRole("button", { name: "Oscuro", exact: true }).click();
     await expect(html).toHaveClass(/dark/);
-    await page.getByRole("button", { name: /Cambiar tema/ }).click();
+    await page.getByRole("button", { name: "Claro", exact: true }).click();
     await expect(html).not.toHaveClass(/dark/);
     await page.reload();
     await expect(page.locator("html")).not.toHaveClass(/dark/);
@@ -46,7 +49,9 @@ test.describe("dashboard y shell", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("¿Qué quieres disfrutar hoy?")).toBeVisible();
-    await expect(dialog.getByText("DeepSeek todavía no está configurado")).toBeVisible();
+    await expect(
+      dialog.getByText(/DeepSeek conectado|DeepSeek todavía no está configurado/),
+    ).toBeVisible();
     await dialog.getByRole("button", { name: "Cerrar TECLA AI" }).click();
     await expect(dialog).toBeHidden();
   });

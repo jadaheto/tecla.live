@@ -142,6 +142,7 @@
 - [x] README, capturas y limitaciones.
 - [x] Prueba real de YouTube, DeepSeek, Deepgram y ElevenLabs; credenciales y redirect de Spotify.
 - [ ] Verificación física en Tesla y captura de micrófono real (el simulador de Chromium queda bloqueado en getUserMedia).
+- [ ] Emitir certificado TLS válido para tecla.live (Easypanel está sirviendo un autofirmado `CN=Easypanel`).
 - [ ] Despliegue real en Easypanel y comprobación de tecla.live.
 - [ ] Rate limit distribuido para múltiples réplicas.
 

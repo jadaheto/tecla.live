@@ -34,6 +34,12 @@ const VideoItemSchema = z.object({
       duration: z.string().optional(),
     })
     .optional(),
+  status: z
+    .object({
+      embeddable: z.boolean().optional(),
+      privacyStatus: z.string().optional(),
+    })
+    .optional(),
 });
 
 const SearchResponseSchema = z.object({
@@ -102,6 +108,9 @@ function toVideo(item: z.infer<typeof VideoItemSchema>): YouTubeVideo {
     thumbnail: pickThumbnail(item.snippet),
     durationSeconds: parseIsoDuration(item.contentDetails?.duration),
     liveBroadcastContent: item.snippet.liveBroadcastContent,
+    ...(item.status?.embeddable === undefined
+      ? {}
+      : { embeddable: item.status.embeddable }),
   };
 }
 
@@ -200,10 +209,11 @@ export function createYouTubeClient(config: YouTubeClientConfig) {
     }): Promise<YouTubeVideo[]> {
       const key = `search:${input.region}:${input.limit}:${input.order ?? "relevance"}:${input.query.toLowerCase()}`;
       return cached(key, 5 * 60_000, async () => {
+        const requested = Math.min(50, Math.max(input.limit * 2, input.limit + 4));
         const raw = await request("search", {
           part: "snippet",
           type: "video",
-          maxResults: String(input.limit),
+          maxResults: String(requested),
           q: input.query,
           regionCode: input.region,
           relevanceLanguage: "es",
@@ -223,28 +233,46 @@ export function createYouTubeClient(config: YouTubeClientConfig) {
           .filter((item) => (typeof item.id === "string" ? item.id : item.id.videoId))
           .map(toVideo);
 
+        // Para búsquedas de artistas, el canal oficial suele ser el resultado
+        // más fiable y el que permite reproducción incrustada. Es solo un
+        // orden preferente: no se elimina ningún resultado por su canal.
+        const normalizedQuery = input.query.trim().toLowerCase();
+        const channelRank = (video: YouTubeVideo) => {
+          const channel = (video.channelTitle ?? "").trim().toLowerCase();
+          if (!channel) return 3;
+          if (channel === normalizedQuery) return 0;
+          if (normalizedQuery.includes(channel)) return 1;
+          if (channel.includes(normalizedQuery)) return 2;
+          return 3;
+        };
+        const ordered = [...videos].sort((a, b) => channelRank(a) - channelRank(b));
+
         const ids = videos.map((video) => video.id);
         if (ids.length > 0) {
           try {
             const detailsRaw = await request("videos", {
-              part: "contentDetails,snippet,statistics",
+              part: "contentDetails,snippet,statistics,status",
               id: ids.join(","),
               maxResults: String(ids.length),
             });
             const details = ListResponseSchema.safeParse(detailsRaw);
             if (details.success) {
               const byId = new Map(details.data.items.map((item) => [toVideo(item).id, toVideo(item)]));
-              return videos.map((video) => ({
-                ...video,
-                durationSeconds: byId.get(video.id)?.durationSeconds ?? video.durationSeconds,
-                thumbnail: byId.get(video.id)?.thumbnail || video.thumbnail,
-              }));
+              return ordered
+                .map((video) => ({
+                  ...video,
+                  durationSeconds: byId.get(video.id)?.durationSeconds ?? video.durationSeconds,
+                  thumbnail: byId.get(video.id)?.thumbnail || video.thumbnail,
+                  embeddable: byId.get(video.id)?.embeddable ?? video.embeddable,
+                }))
+                .filter((video) => video.embeddable !== false)
+                .slice(0, input.limit);
             }
           } catch {
             // La búsqueda ya es útil aunque no se obtengan detalles.
           }
         }
-        return videos;
+        return ordered.filter((video) => video.embeddable !== false).slice(0, input.limit);
       });
     },
 
@@ -252,10 +280,10 @@ export function createYouTubeClient(config: YouTubeClientConfig) {
       const key = `trending:${input.region}:${input.limit}`;
       return cached(key, 15 * 60_000, async () => {
         const raw = await request("videos", {
-          part: "snippet,contentDetails,statistics",
+          part: "snippet,contentDetails,statistics,status",
           chart: "mostPopular",
           regionCode: input.region,
-          maxResults: String(input.limit),
+          maxResults: String(Math.min(50, Math.max(input.limit * 2, input.limit + 4))),
         });
         const parsed = ListResponseSchema.safeParse(raw);
         if (!parsed.success) {
@@ -266,14 +294,17 @@ export function createYouTubeClient(config: YouTubeClientConfig) {
             true,
           );
         }
-        return parsed.data.items.map(toVideo).filter((video) => video.id);
+        return parsed.data.items
+          .map(toVideo)
+          .filter((video) => video.id && video.embeddable !== false)
+          .slice(0, input.limit);
       });
     },
 
     async video(id: string): Promise<YouTubeVideo | null> {
       return cached(`video:${id}`, 10 * 60_000, async () => {
         const raw = await request("videos", {
-          part: "snippet,contentDetails,statistics",
+          part: "snippet,contentDetails,statistics,status",
           id,
           maxResults: "1",
         });

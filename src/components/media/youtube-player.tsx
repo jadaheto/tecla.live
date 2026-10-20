@@ -130,7 +130,7 @@ export function YouTubePlayer({
   onProgress?: (positionSeconds: number, durationSeconds: number) => void;
   onEnded?: () => void;
 }) {
-  const containerId = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const hostRef = React.useRef<HTMLDivElement>(null);
   const playerRef = React.useRef<YTPlayer | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [needsGesture, setNeedsGesture] = React.useState(false);
@@ -142,14 +142,23 @@ export function YouTubePlayer({
   }, [onReady, onPlayingChange, onProgress, onEnded, volume, autoPlay, startSeconds]);
 
   React.useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
     let disposed = false;
     let progressTimer: number | undefined;
     let gestureTimer: number | undefined;
 
+    // YouTube reemplaza el elemento que recibe por su propio iframe. Ese nodo
+    // debe quedar fuera del árbol que React reconcilia; si no, React intenta
+    // eliminar un hijo que YouTube ya reemplazó y lanza removeChild.
+    const target = document.createElement("div");
+    host.replaceChildren(target);
+
     loadYouTubeApi()
       .then((YT) => {
         if (disposed) return;
-        const player = new YT.Player(containerId, {
+        const player = new YT.Player(target, {
           videoId,
           playerVars: {
             autoplay: autoPlay ? 1 : 0,
@@ -233,10 +242,10 @@ export function YouTubePlayer({
         // El iframe ya pudo haberse desmontado.
       }
       playerRef.current = null;
-      const container = document.getElementById(containerId);
-      if (container) container.innerHTML = "";
+      // Este hijo lo crea y lo administra YouTube, no React.
+      host.replaceChildren();
     };
-  }, [containerId, videoId, autoPlay]);
+  }, [videoId, autoPlay]);
 
   if (error) {
     return (
@@ -262,7 +271,7 @@ export function YouTubePlayer({
 
   return (
     <div className="relative size-full overflow-hidden rounded-[1.6rem] bg-black">
-      <div id={containerId} className="size-full [&>iframe]:size-full" />
+      <div ref={hostRef} className="size-full [&>iframe]:size-full" />
 
       {!ready ? (
         <div className="absolute inset-0 flex items-center justify-center bg-black">

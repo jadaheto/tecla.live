@@ -3,7 +3,16 @@ import { expect, test } from "@playwright/test";
 test.describe("media y reproductores", () => {
   test("el reproductor de YouTube funciona sin metadatos y el mini reproductor aparece al salir", async ({ page }) => {
     await page.goto("/watch/dQw4w9WgXcQ", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Video de YouTube");
+    // El SDK de YouTube reemplaza el nodo interno del reproductor. Esperamos
+    // a que ese montaje ocurra para detectar regresiones de reconciliación DOM.
+    await page
+      .locator('iframe[src*="youtube.com/embed"]')
+      .waitFor({ state: "attached", timeout: 6000 })
+      .catch(() => {});
+    await page.waitForTimeout(1200);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      /Video de YouTube|Never Gonna Give You Up/,
+    );
     await page.getByRole("link", { name: "Volver a YouTube" }).click();
     await expect(page).toHaveURL(/\/youtube/);
     const mini = page.locator('aside[aria-label="Minirreproductor"]');

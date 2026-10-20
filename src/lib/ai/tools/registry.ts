@@ -34,7 +34,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: "search_youtube",
     execution: "server",
     description:
-      "Busca videos reales en YouTube y devuelve sus IDs y metadatos. Úsala antes de play_youtube cuando el usuario pida contenido por tema.",
+      "Busca videos reales en YouTube y devuelve sus IDs y metadatos. Úsala antes de play_youtube cuando el usuario pida contenido por tema. Para música, prefiere el canal oficial y evita compilaciones o fan edits; los videos marcados como no embebibles se omiten.",
     schema: TOOL_SCHEMAS.search_youtube,
   },
   {

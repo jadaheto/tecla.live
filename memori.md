@@ -41,7 +41,7 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Dashboard cinematográfico responsive (1920×1080, tablet, móvil) con hero editorial, clima real de Sincelejo (Open-Meteo), accesos rápidos, carruseles, estados vacío/error/carga y pie.
 - [x] Búsqueda universal (⌘K), atajos (⌘J, ?), tema claro/oscuro/automático con horario, modos normal/cine/kiosco, fullscreen con fallback, reducción de movimiento.
 - [x] Iconos de marca reales con atribución: YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch; Radio/IPTV/TECLA AI conservan iconografía propia.
-- [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Verificado con API real el 2026-10-20.**
+- [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Verificado con API real el 2026-10-20.** Fix del crash de `/watch` por reconciliación DOM del iframe y filtro de videos no embebibles.
 - [x] TECLA AI texto: 21 herramientas Zod, registro para DeepSeek, orquestación con máximo de pasos y resultados reales, rate limits, presupuesto, ledger de uso, system prompt antiinyección, panel flotante y página `/ai`. **DeepSeek real verificado (texto, tool de clima y action bridge).**
 - [x] Function calling de extremo a extremo validado con mock local de DeepSeek: herramienta de clima real, acción de cliente `set_theme`, continuación con `toolExchange` y eventos en `AIUsageEvent`.
 - [x] Memoria consentida de preferencias: store local, herramienta `remember_preference`, contexto al modelo, consulta/borrado en Ajustes.
@@ -75,6 +75,8 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Las variables `NEXT_PUBLIC_*` se inyectan en build; el dominio público debe pasarse como build arg `NEXT_PUBLIC_APP_URL`.
 - Los avisos de lint `react-hooks/set-state-in-effect` (6) son patrones controlados de hidratación/tiempo, no errores.
 - La optimización de imágenes de YouTube real y el reproductor se verificaron con datos reales en la build de Docker.
+- **Bug de producción corregido:** `YT.Player` reemplazaba un nodo controlado por React y provocaba `removeChild`. Ahora el iframe se monta en un hijo imperativo fuera de React; los videos no embebibles se filtran y la búsqueda prioriza canales oficiales. Ver `docs/BUGFIX-WATCH.md`.
+- **TLS de producción:** tecla.live sirve un certificado autofirmado `CN=Easypanel`; hay que emitir Let's Encrypt. No es un bug de la app y no se puede corregir desde el repo.
 - En esta máquina, Node 26.3.0 dejó `next dev`/`next build` locales en un estado anómalo (espera larga y `.next` con artefactos irrepetibles). Se limpió `.next` y la verificación se hizo con Node 22 dentro de Docker. Si vuelve a ocurrir, usar Node 22 LTS y no mantener builds concurrentes.
 - Waze no ofrece una API pública de consumidor para sus avisos de huecos, cámaras o policía. TECLA LIVE no los recibe ni los dibuja; solo prepara la ruta y enlaza el mapa en vivo oficial. Detectado y documentado en `docs/WAZE.md`.
 - `npm audit --omit=dev` reporta 3 avisos altos en la cadena del CLI de Prisma (`deepmerge-ts`). El CLI no está en la imagen runtime final (solo en la imagen de migración, que procesa el schema del repositorio); corregirlo exige un salto mayor a Prisma 7 y se pospone por riesgo de compatibilidad.
@@ -109,4 +111,4 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 08:25 America/Bogota** — Claves reales cargadas y verificadas con YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify. App productiva en Docker sobre `localhost:3000`. Pendientes: autorización Spotify, micrófono físico, Tesla y Easypanel.
+**2026-10-20 10:05 America/Bogota** — Corregido crash de `/watch` (YouTube reemplazaba un nodo de React), filtro de videos no embebibles y selección de versiones oficiales; E2E adaptadas a claves configuradas. Pendiente redesplegar en tecla.live y corregir el certificado TLS autofirmado.

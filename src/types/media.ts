@@ -34,6 +34,7 @@ export interface YouTubeVideo {
   thumbnail: string;
   durationSeconds?: number;
   liveBroadcastContent?: "none" | "live" | "upcoming";
+  embeddable?: boolean;
 }
 
 export interface YouTubeSearchResult {

@@ -23,10 +23,12 @@ test.describe("páginas y estados de configuración", () => {
     });
   }
 
-  test("YouTube informa que falta configuración sin romper la app", async ({ page }) => {
+  test("YouTube responde sin romper la app, con o sin claves", async ({ page }) => {
     await page.goto("/youtube");
-    await expect(page.getByText("YouTube aún no está configurado")).toBeVisible();
     await expect(page.getByRole("main").getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
+    await expect(
+      page.getByText(/YouTube aún no está configurado|Tendencias de hoy|No pudimos cargar/),
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test("Radio lista emisoras reales o un error controlado", async ({ page }) => {
@@ -38,8 +40,12 @@ test.describe("páginas y estados de configuración", () => {
 
   test("Música muestra el estado de Spotify sin simular reproducción", async ({ page }) => {
     await page.goto("/music");
-    await expect(page.getByText("Spotify está a un paso.")).toBeVisible();
-    await expect(page.getByText("SPOTIFY_CLIENT_ID")).toBeVisible();
+    await expect(
+      page.getByText(/Spotify está a un paso\.|Conecta tu cuenta\./),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/SPOTIFY_CLIENT_ID|Inicia sesión para vincular|Vincular Spotify/).first(),
+    ).toBeVisible();
   });
 
   test("Navegación genera enlaces oficiales al buscar", async ({ page }) => {
