@@ -1,0 +1,198 @@
+import { z } from "zod";
+import { TOOL_SCHEMAS, type ToolName } from "@/features/ai/tools/schemas";
+
+export type ToolExecution = "server" | "client";
+
+export interface ToolDefinition {
+  name: ToolName;
+  description: string;
+  execution: ToolExecution;
+  schema: z.ZodType;
+}
+
+export const CLIENT_TOOL_NAMES: ReadonlySet<ToolName> = new Set<ToolName>([
+  "play_youtube",
+  "pause_media",
+  "resume_media",
+  "next_video",
+  "add_favorite",
+  "show_favorites",
+  "open_app",
+  "search_waze",
+  "open_google_maps",
+  "set_theme",
+  "set_display_mode",
+  "request_fullscreen",
+  "play_radio",
+  "open_spotify",
+  "get_playback_state",
+  "remember_preference",
+]);
+
+export const TOOL_DEFINITIONS: ToolDefinition[] = [
+  {
+    name: "search_youtube",
+    execution: "server",
+    description:
+      "Busca videos reales en YouTube y devuelve sus IDs y metadatos. Úsala antes de play_youtube cuando el usuario pida contenido por tema.",
+    schema: TOOL_SCHEMAS.search_youtube,
+  },
+  {
+    name: "play_youtube",
+    execution: "client",
+    description:
+      "Abre el reproductor de TECLA LIVE con un video de YouTube concreto. Solo acepta IDs válidos; no inventes identificadores.",
+    schema: TOOL_SCHEMAS.play_youtube,
+  },
+  {
+    name: "pause_media",
+    execution: "client",
+    description: "Pausa el reproductor activo controlado por TECLA LIVE.",
+    schema: TOOL_SCHEMAS.pause_media,
+  },
+  {
+    name: "resume_media",
+    execution: "client",
+    description: "Reanuda el reproductor activo controlado por TECLA LIVE.",
+    schema: TOOL_SCHEMAS.resume_media,
+  },
+  {
+    name: "next_video",
+    execution: "client",
+    description: "Reproduce el siguiente elemento de la cola de TECLA LIVE.",
+    schema: TOOL_SCHEMAS.next_video,
+  },
+  {
+    name: "add_favorite",
+    execution: "client",
+    description:
+      "Guarda un elemento real como favorito en la biblioteca local. No lo uses con contenido inventado.",
+    schema: TOOL_SCHEMAS.add_favorite,
+  },
+  {
+    name: "show_favorites",
+    execution: "client",
+    description: "Abre la pantalla de favoritos y biblioteca del usuario.",
+    schema: TOOL_SCHEMAS.show_favorites,
+  },
+  {
+    name: "open_app",
+    execution: "client",
+    description:
+      "Abre una aplicación permitida de TECLA LIVE. No puede abrir URLs arbitrarias.",
+    schema: TOOL_SCHEMAS.open_app,
+  },
+  {
+    name: "search_waze",
+    execution: "client",
+    description:
+      "Prepara una búsqueda de destino en Waze dentro de TECLA LIVE. La navegación real ocurre en Waze.",
+    schema: TOOL_SCHEMAS.search_waze,
+  },
+  {
+    name: "open_google_maps",
+    execution: "client",
+    description: "Abre la búsqueda de un destino en Google Maps.",
+    schema: TOOL_SCHEMAS.open_google_maps,
+  },
+  {
+    name: "set_theme",
+    execution: "client",
+    description: "Cambia el tema de TECLA LIVE a claro, oscuro o automático.",
+    schema: TOOL_SCHEMAS.set_theme,
+  },
+  {
+    name: "set_display_mode",
+    execution: "client",
+    description: "Cambia el modo de pantalla: normal, cine o kiosco.",
+    schema: TOOL_SCHEMAS.set_display_mode,
+  },
+  {
+    name: "request_fullscreen",
+    execution: "client",
+    description:
+      "Solicita pantalla completa. El navegador puede bloquearla si no proviene de un gesto del usuario.",
+    schema: TOOL_SCHEMAS.request_fullscreen,
+  },
+  {
+    name: "search_radio",
+    execution: "server",
+    description:
+      "Busca emisoras de radio reales en el directorio Radio Browser. Devuelve IDs utilizables por play_radio.",
+    schema: TOOL_SCHEMAS.search_radio,
+  },
+  {
+    name: "play_radio",
+    execution: "client",
+    description: "Reproduce una emisora real devuelta por search_radio, usando su ID.",
+    schema: TOOL_SCHEMAS.play_radio,
+  },
+  {
+    name: "search_podcasts",
+    execution: "server",
+    description: "Busca episodios de podcast reales en el directorio de iTunes.",
+    schema: TOOL_SCHEMAS.search_podcasts,
+  },
+  {
+    name: "get_weather",
+    execution: "server",
+    description:
+      "Consulta el clima actual real de Sincelejo o de otra ciudad. No inventes temperaturas.",
+    schema: TOOL_SCHEMAS.get_weather,
+  },
+  {
+    name: "get_playback_state",
+    execution: "client",
+    description:
+      "Consulta el estado real del reproductor activo de TECLA LIVE antes de responder sobre lo que suena.",
+    schema: TOOL_SCHEMAS.get_playback_state,
+  },
+  {
+    name: "open_spotify",
+    execution: "client",
+    description: "Abre la sección de música y Spotify de TECLA LIVE.",
+    schema: TOOL_SCHEMAS.open_spotify,
+  },
+  {
+    name: "remember_preference",
+    execution: "client",
+    description:
+      "Guarda una preferencia duradera solo si el usuario lo pide o confirma explícitamente y la memoria está activada. Nunca guardes secretos, salud, ubicación exacta ni datos sensibles.",
+    schema: TOOL_SCHEMAS.remember_preference,
+  },
+  {
+    name: "spotify_control",
+    execution: "server",
+    description:
+      "Controla Spotify del usuario conectado (play, pause, next, previous, volume). Requiere cuenta vinculada y permisos vigentes.",
+    schema: TOOL_SCHEMAS.spotify_control,
+  },
+];
+
+export const TOOL_BY_NAME = new Map(TOOL_DEFINITIONS.map((tool) => [tool.name, tool]));
+
+export function isToolName(value: string): value is ToolName {
+  return value in TOOL_SCHEMAS;
+}
+
+export function buildDeepSeekTools(): Array<{
+  type: "function";
+  function: { name: string; description: string; parameters: Record<string, unknown> };
+}> {
+  return TOOL_DEFINITIONS.map((tool) => {
+    const jsonSchema = z.toJSONSchema(tool.schema, { target: "draft-7" }) as Record<
+      string,
+      unknown
+    >;
+    delete jsonSchema.$schema;
+    if (!jsonSchema.type) jsonSchema.type = "object";
+    return {
+      type: "function" as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: jsonSchema,
+      },
+    };
+  });
+}

@@ -1,0 +1,227 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions        Session[]
+  preferences     UserPreference?
+  favorites       Favorite[]
+  playlists       Playlist[]
+  watchHistory    WatchHistory[]
+  searchHistory   SearchHistory[]
+  destinations    SavedDestination[]
+  conversations   AIConversation[]
+  memories        AIMemoryPreference[]
+  usageEvents     AIUsageEvent[]
+  connectedAccounts ConnectedAccount[]
+
+  @@index([createdAt])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jti       String    @unique
+  userAgent String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId, expiresAt])
+}
+
+model UserPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme             String   @default("auto")
+  displayMode       String   @default("normal")
+  autoThemeEnabled  Boolean  @default(true)
+  autoThemeStart    String   @default("18:30")
+  autoThemeEnd      String   @default("06:30")
+  reduceMotion      Boolean  @default(false)
+  voiceEnabled      Boolean  @default(true)
+  conversationMode  Boolean  @default(false)
+  volume            Int      @default(80)
+  aiVoiceId         String?
+  weatherLocation   String   @default("Sincelejo, Sucre, Colombia")
+  weatherLat        Float    @default(9.3047)
+  weatherLon        Float    @default(-75.3978)
+  updatedAt         DateTime @updatedAt
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String
+  providerId String
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  href       String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, kind, providerId])
+  @@index([userId, createdAt])
+}
+
+model Playlist {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  items       PlaylistItem[]
+
+  @@index([userId, updatedAt])
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  position   Int      @default(0)
+  kind       String
+  providerId String
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  href       String?
+  createdAt  DateTime @default(now())
+
+  @@unique([playlistId, kind, providerId])
+  @@index([playlistId, position])
+}
+
+model WatchHistory {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            String   @default("youtube")
+  providerId      String
+  title           String
+  subtitle        String?
+  imageUrl        String?
+  href            String?
+  positionSeconds Int      @default(0)
+  durationSeconds Int      @default(0)
+  lastWatchedAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, kind, providerId])
+  @@index([userId, lastWatchedAt])
+}
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SavedDestination {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  address   String
+  kind      String   @default("custom")
+  lat       Float?
+  lon       Float?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model AIConversation {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String      @default("Conversación")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  messages  AIMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model AIMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  toolCalls      Json?
+  toolResults    Json?
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model AIMemoryPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     Json
+  consented Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+}
+
+model AIUsageEvent {
+  id               String   @id @default(cuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId        String
+  provider         String
+  operation        String
+  inputUnits       Int      @default(0)
+  outputUnits      Int      @default(0)
+  estimatedCostUsd Decimal  @default(0) @db.Decimal(12, 6)
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId, createdAt])
+  @@index([provider, createdAt])
+}
+
+model ConnectedAccount {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String
+  providerAccountId String
+  accessToken       String
+  refreshToken      String?
+  expiresAt         DateTime?
+  scope             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([userId, provider])
+  @@index([provider, providerAccountId])
+}

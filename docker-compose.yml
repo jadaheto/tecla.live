@@ -1,0 +1,75 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tecla
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tecla}
+      POSTGRES_DB: tecla
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - tecla_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tecla -d tecla"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    environment:
+      DATABASE_URL: postgresql://tecla:${POSTGRES_PASSWORD:-tecla}@db:5432/tecla?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://tecla:${POSTGRES_PASSWORD:-tecla}@db:5432/tecla?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:-}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
+      SPOTIFY_REDIRECT_URI: ${SPOTIFY_REDIRECT_URI:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+      DEEPGRAM_MODEL: ${DEEPGRAM_MODEL:-nova-3}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-}
+      ELEVENLABS_MODEL_ID: ${ELEVENLABS_MODEL_ID:-eleven_flash_v2_5}
+      AI_MONTHLY_BUDGET_USD: ${AI_MONTHLY_BUDGET_USD:-10}
+      AI_GUEST_RATE_LIMIT: ${AI_GUEST_RATE_LIMIT:-12}
+      NEXT_PUBLIC_WEATHER_LOCATION: ${NEXT_PUBLIC_WEATHER_LOCATION:-Sincelejo, Sucre, Colombia}
+      NEXT_PUBLIC_WEATHER_LAT: ${NEXT_PUBLIC_WEATHER_LAT:-9.3047}
+      NEXT_PUBLIC_WEATHER_LON: ${NEXT_PUBLIC_WEATHER_LON:--75.3978}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 25s
+      retries: 3
+
+volumes:
+  tecla_pgdata:

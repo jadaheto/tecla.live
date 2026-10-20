@@ -1,0 +1,13 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+await page.goto('http://localhost:3000/', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: 'docs/assets/dashboard.png' });
+await page.goto('http://localhost:3000/ai', { waitUntil: 'networkidle' });
+await page.waitForTimeout(800);
+await page.screenshot({ path: 'docs/assets/ai.png' });
+await page.goto('http://localhost:3000/radio', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+await page.screenshot({ path: 'docs/assets/radio.png' });
+await browser.close();
