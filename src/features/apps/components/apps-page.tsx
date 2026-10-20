@@ -13,6 +13,7 @@ const GROUPS = [
   { id: "music", title: "Música y audio", description: "Música, podcasts y emisoras." },
   { id: "navigation", title: "Navegación", description: "Rutas y lugares con enlaces oficiales." },
   { id: "live", title: "En vivo", description: "Radio, canales y transmisiones." },
+  { id: "experience", title: "Experiencias", description: "Sonido y paisaje para el camino." },
 ] as const;
 
 export function AppsPage() {

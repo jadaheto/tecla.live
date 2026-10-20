@@ -4,10 +4,12 @@ import {
   Music2,
   Podcast,
   Radio,
+  Gauge,
   Sparkles,
   Tv,
   TvMinimalPlay,
 } from "lucide-react";
+import { TeclaDriveIcon } from "@/components/icons/tecla-drive-icon";
 import {
   ApplePodcastsBrandIcon,
   DisneyPlusBrandIcon,
@@ -31,7 +33,7 @@ export interface AppDefinition {
   gradient: string;
   accent: string;
   aiPrompt: string;
-  category: "video" | "music" | "navigation" | "live" | "assistant";
+  category: "video" | "music" | "navigation" | "live" | "experience" | "assistant";
 }
 
 export const APPS: AppDefinition[] = [
@@ -149,6 +151,17 @@ export const APPS: AppDefinition[] = [
     category: "live",
   },
   {
+    id: "drive",
+    name: "TECLA Drive",
+    description: "Paisajes y sonido a bordo",
+    href: "/drive",
+    icon: TeclaDriveIcon,
+    gradient: "from-[#5eead4] via-[#0f766e] to-[#0b1026]",
+    accent: "#5eead4",
+    aiPrompt: "abre TECLA Drive",
+    category: "experience",
+  },
+  {
     id: "ai",
     name: "TECLA AI",
     description: "Tu copiloto de entretenimiento",
@@ -209,6 +222,7 @@ export const QUICK_ACCESS_IDS = [
   "iptv",
   "podcasts",
   "twitch",
+  "drive",
   "ai",
 ] as const;
 
@@ -219,4 +233,5 @@ export const EXPLORER_LINKS = [
   { href: "/podcasts", label: "Podcasts", icon: Podcast },
   { href: "/iptv", label: "IPTV", icon: Tv },
   { href: "/navigate", label: "Navegar", icon: Compass },
+  { href: "/drive", label: "Drive", icon: Gauge },
 ];

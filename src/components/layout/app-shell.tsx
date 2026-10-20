@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MobileNav />
       <SearchDialog />
       <ShortcutsDialog />
-      {!isPlayer && pathname !== "/ai" ? <MiniPlayer /> : null}
+      {!isPlayer && pathname !== "/ai" && pathname !== "/drive" ? <MiniPlayer /> : null}
       <AiDock />
     </div>
   );

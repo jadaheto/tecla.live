@@ -31,6 +31,7 @@
 - [x] Accesos rápidos táctiles con YouTube, Spotify, Waze, Maps, Netflix, Disney+, Radio, IPTV, Podcasts, Twitch y TECLA AI.
 - [x] Estados de carga, error, vacío y «no configurado» reutilizables.
 - [x] Iconos de marca reales (YouTube, Spotify, Waze, Maps, Netflix, Disney+, Podcasts, Twitch) con atribución y proporciones correctas.
+- [x] TECLA DRIVE original: ruta `/drive`, escenas Canvas, gauge, paseo 0–100, cuatro sonidos sintetizados, controles táctiles y enlace desde el catálogo. Sin assets de EV Sound FX.
 - [x] Layout responsive para 1920×1080, tablet y móvil, sin hover obligatorio.
 - [x] Modos normal, cine y kiosco; tema claro/oscuro/automático configurable.
 - [x] Búsqueda universal con atajos y debounce; resultados de apps y YouTube.
@@ -130,8 +131,8 @@
 
 ## FASE 7 — PRODUCCIÓN
 
-- [x] Suite Vitest: 45 pruebas aprobadas.
-- [x] Playwright: 26 pruebas aprobadas (1920×1080 y móvil).
+- [x] Suite Vitest: 49 pruebas aprobadas.
+- [x] Playwright: 27 pruebas aprobadas (1920×1080 y móvil).
 - [x] Auditoría básica de secretos, cabeceras, validación y límites.
 - [x] Pruebas de presupuesto/ledger de IA en PostgreSQL.
 - [x] Build Docker final con build arg de dominio.
@@ -150,9 +151,9 @@
 
 - `npm run typecheck`: OK.
 - `npm run lint`: 0 errores · 6 avisos documentados.
-- `npm run test:run`: 9 archivos, 45/45 (incluye Waze Live Map y navegación).
-- `npx playwright test`: 26/26.
-- `npm run build`: OK (39 rutas).
+- `npm run test:run`: 9 archivos, 49/49 (incluye Waze Live Map y navegación).
+- `npx playwright test`: 27/27.
+- `npm run build`: OK (40 rutas).
 - Docker: `tecla-live:final` construida; contenedor no root; `/api/health` OK; home 200.
 - Compose: migración `20261020022821_init` aplicada; 15 tablas; health `database: connected`.
 - Mock DeepSeek: `get_weather` (servidor, dato real), `set_theme` (cliente), continuación y `AIUsageEvent` verificados.

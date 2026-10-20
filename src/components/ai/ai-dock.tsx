@@ -11,10 +11,11 @@ export function AiDock() {
   const open = useAi((state) => state.panelOpen);
   const setOpen = useAi((state) => state.setPanelOpen);
   if (pathname === "/ai") return null;
+  const hideLauncher = pathname === "/drive";
 
   return (
     <>
-      {!open ? (
+      {!open && !hideLauncher ? (
         <button
           type="button"
           onClick={() => setOpen(true)}

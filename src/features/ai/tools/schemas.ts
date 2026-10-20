@@ -11,6 +11,7 @@ export const ALLOWED_APP_IDS = [
   "iptv",
   "podcasts",
   "twitch",
+  "drive",
 ] as const;
 
 export const FAVORITE_KINDS = ["youtube", "radio", "podcast", "channel", "iptv"] as const;

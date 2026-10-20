@@ -139,7 +139,7 @@ PostgreSQL local: `docker compose up -d db` y `npm run db:migrate`. La app arran
 
 > Nota de entorno: en esta Mac, Node 26.3.0 dejó `next dev`/`next build` locales en un estado anómalo. La verificación se hizo con Node 22 dentro de Docker; si el build local se atasca, limpia `.next` y usa Node 22 LTS. No mantengas builds concurrentes.
 
-Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 45 pruebas Vitest, 26 pruebas Playwright, build de producción en Docker con health check. Pruebas reales de proveedores el 2026-10-20; detalle en [`docs/INTEGRATION-TEST.md`](./docs/INTEGRATION-TEST.md).
+Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 49 pruebas Vitest, 27 pruebas Playwright, build de producción en Docker con health check. Pruebas reales de proveedores el 2026-10-20; detalle en [`docs/INTEGRATION-TEST.md`](./docs/INTEGRATION-TEST.md).
 
 ## 6. Integraciones externas
 
@@ -220,9 +220,9 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 - **Fases 0–7 implementadas** en el alcance verificable.
 - `npm run typecheck`: sin errores.
 - `npm run lint`: sin errores; 6 avisos de `react-hooks/set-state-in-effect` en hidratación/tiempo.
-- `npm run build`: correcto (39 rutas).
-- `npm run test:run`: **45/45** pruebas.
-- `npx playwright test`: **26/26** pruebas, incluida cuenta real contra PostgreSQL, minirreproductor, IPTV y modo cine.
+- `npm run build`: correcto (40 rutas).
+- `npm run test:run`: **49/49** pruebas.
+- `npx playwright test`: **27/27** pruebas, incluida cuenta real contra PostgreSQL, minirreproductor, IPTV y modo cine.
 - PostgreSQL 16: migración `20261020022821_init` aplicada; 15 tablas; auth, sync y ledger de IA verificados.
 - Docker: imagen final multi-stage, usuario `nextjs` (uid 1001), health check healthy, home 200.
 - Compose: db + migrate + app con migración aplicada y health `database: connected`.
@@ -233,6 +233,7 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 ## 13. Limitaciones vigentes
 
 - El STT usa grabación y subida al backend; no hay transcripción parcial en streaming. El micrófono se libera al terminar. La transcripción real se validó con audio de ElevenLabs; la captura de micrófono físico no se pudo automatizar en Chromium (getUserMedia quedó pendiente).
+- TECLA DRIVE vive en `/drive`; su canvas y su audio son originales y no dependen de APIs externas. No reutilizar assets de EV Sound FX. Ver `docs/DRIVE.md`.
 - El reproductor de YouTube monta el iframe en un nodo imperativo fuera de React; no volver a pasarle un `<div>` renderizado por React a `YT.Player` (provoca `removeChild`). Los videos con `embeddable:false` se filtran; la búsqueda prioriza el canal oficial. Ver `docs/BUGFIX-WATCH.md`.
 - En el flujo de voz, `onstop` debe poner el estado en `idle` antes de llamar a `send()`; si no, `send()` lo considera ocupado y descarta la transcripción. Ver `docs/BUGFIX-VOICE.md`.
 - tecla.live sirve un certificado autofirmado `CN=Easypanel`; hay que configurar Let's Encrypt en Easypanel. No es un problema del código.

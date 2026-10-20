@@ -31,8 +31,8 @@ Estado: **Completado en alcance verificable.**
 - [x] `npm run typecheck` sin errores.
 - [x] `npm run lint` sin errores (6 avisos documentados).
 - [x] `npm run build` de producción correcto.
-- [x] 45 pruebas unitarias aprobadas.
-- [x] 26 pruebas E2E aprobadas.
+- [x] 49 pruebas unitarias aprobadas.
+- [x] 27 pruebas E2E aprobadas.
 - [x] Docker build correcto, contenedor no root, health check y conexión a base de datos.
 - [x] Docker Compose levanta PostgreSQL, aplica migraciones y arranca la app.
 - [x] Registro/login/sync verificados contra PostgreSQL.
@@ -67,27 +67,29 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 8 | Fase 4: Deepgram/ElevenLabs y voz | push-to-talk, TTS, interrupciones, fallback | Completada (proveedores bloqueados) |
 | 9 | Fase 5: radio, podcasts, IPTV, Twitch, Maps, Spotify | implementaciones reales y límites | Completada (Spotify/streams bloqueados) |
 | 10 | Fase 6: cuentas PostgreSQL, sync, memoria, ajustes | auth y sync verificados | Completada |
-| 11 | Fase 7: pruebas, Docker, Compose, documentación | unit 45, e2e 26, imagen y compose OK | Completada |
+| 11 | Fase 7: pruebas, Docker, Compose, documentación | unit 49, e2e 27, imagen y compose OK | Completada |
 | 12 | Pulido de iconos de marca y transparencia de Waze | glyphs reales, atribución y mapa en vivo oficial | Completada |
 | 13 | Prueba de claves reales | YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify verificados | Completada con pendientes de hardware/autorización |
 | 14 | Fix de producción `/watch` | iframe fuera de React, filtro de no embebibles, selección oficial y E2E verdes | Completada local; pendiente redespliegue |
 | 15 | Fix del flujo de micrófono | estado `transcribing` liberado; STT→chat→TTS verificado con audio inyectado | Completada local; pendiente hardware/redespliegue |
+| 16 | TECLA DRIVE | canvas original, audio sintetizado, integración y 49/27 pruebas | Completada local |
 
 ## ÚLTIMA ACCIÓN
 
-Prueba real de claves con build de producción en Docker: YouTube (búsqueda/tendencias/reproductor), DeepSeek (texto, herramienta de clima y acción de interfaz), ElevenLabs (MP3), Deepgram (transcripción del MP3), Spotify (credenciales y redirect). Evidencia en `docs/INTEGRATION-TEST.md`.
+TECLA DRIVE integrado en `/drive`: tres escenas Canvas originales, gauge de velocidad simulada, paseo 0–100 y cuatro sonidos sintetizados con Web Audio. Sin GPS, samples ni assets de EV Sound FX. Typecheck y lint limpios en contenedor Node 22; 49 unitarias y 27 E2E verdes; build de 40 rutas.
 
 ## RESULTADO
 
 - `npm run typecheck`: OK.
 - `npm run lint`: 0 errores, 6 avisos `set-state-in-effect` en hidratación/tiempo.
-- `npm run build`: OK, 39 rutas.
-- `npm run test:run`: 45/45.
-- `npx playwright test`: 26/26.
+- `npm run build`: OK, 40 rutas.
+- `npm run test:run`: 49/49.
+- `npx playwright test`: 27/27.
 - PostgreSQL: migración `20261020022821_init`, tablas creadas, registro/login/sync y uso de IA registrados.
 - Docker: imagen final construida con build arg `NEXT_PUBLIC_APP_URL=https://tecla.live`; contenedor no root, health check healthy y home HTTP 200.
 - Compose: DB + migrate + app; migración aplicada y health 200.
 - Mock DeepSeek: tool server `get_weather` real + acción cliente `set_theme` + continuación + ledger (`AIUsageEvent`).
+- TECLA DRIVE: `AudioContext` en estado `running` y 5 osciladores verificados para el preset V8; escenas y controles probados en desktop y móvil.
 
 ## BLOQUEADORES
 
@@ -126,11 +128,12 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 - **2026-10-19 21:10** — Primer build verde de la base.
 - **2026-10-19 21:20** — Dashboard, YouTube, TECLA AI, voz, ajustes y páginas multimedia implementadas.
 - **2026-10-19 21:28** — PostgreSQL 16, migración y auth/sync verificados.
-- **2026-10-19 21:32** — 45 pruebas unitarias verdes.
+- **2026-10-19 21:32** — 44 pruebas unitarias verdes (la suite creció a 49 con TECLA DRIVE).
 - **2026-10-19 21:36** — 26 pruebas E2E verdes; se corrigió la hidratación usando `localhost` y no `127.0.0.1` en Playwright.
 - **2026-10-19 21:40** — Docker build, contenedor, migración y Compose verificados.
 - **2026-10-19 21:45** — Mock local de DeepSeek validó function calling, continuación y ledger; documentación de cierre.
 - **2026-10-20 05:10** — Iconos de marca reales con atribución; Waze documentado con enlace al mapa en vivo. Avisos de huecos/cámaras no son accesibles por API pública y no se simulan.
 - **2026-10-20 08:25** — Claves reales cargadas y verificadas: YouTube, DeepSeek + tool + acción, ElevenLabs, Deepgram y credenciales Spotify. Micrófono físico y link de Spotify quedan pendientes de prueba interactiva.
-- **2026-10-20 10:05** — Corregido crash de `/watch` en producción: YouTube reemplazaba el nodo de React y lanzaba `removeChild`. Se añadió filtro de no embebibles, preferencia por canal oficial y 26 E2E verdes. Pendiente redeploy y TLS válido.
+- **2026-10-20 10:05** — Corregido crash de `/watch` en producción: YouTube reemplazaba el nodo de React y lanzaba `removeChild`. Se añadió filtro de no embebibles y preferencia por canal oficial. En ese momento eran 26 E2E; la suite creció a 27 con TECLA DRIVE. Pendiente redeploy y TLS válido.
 - **2026-10-20 10:15** — Corregido flujo de micrófono: Deepgram transcribía, pero `send()` era rechazado por el estado `transcribing`; ahora se libera y la transcripción se envía. Verificado STT→chat→TTS con audio inyectado en Chromium.
+- **2026-10-20 13:30** — Añadido TECLA DRIVE: experiencia original en `/drive` con tres escenas Canvas, gauge, paseo 0–100 y cuatro sonidos sintetizados. AudioContext verificado; 49 unitarias y 27 E2E. Sin assets de EV Sound FX.

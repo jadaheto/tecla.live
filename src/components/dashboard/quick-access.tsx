@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Sparkles } from "lucide-react";
-import { APP_BY_ID, type AppDefinition } from "@/lib/catalog";
+import { APP_BY_ID, QUICK_ACCESS_IDS, type AppDefinition } from "@/lib/catalog";
 import { useAi } from "@/features/ai/store";
 import { toast } from "@/stores/toast";
 import { cn } from "@/lib/utils";
@@ -38,19 +38,7 @@ export function QuickAccess() {
   return (
     <section aria-label="Accesos rápidos" className="mt-5 md:mt-6">
       <div className="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 md:gap-3">
-        {[
-          "youtube",
-          "spotify",
-          "waze",
-          "maps",
-          "netflix",
-          "disney",
-          "radio",
-          "iptv",
-          "podcasts",
-          "twitch",
-          "ai",
-        ].map((id) => {
+        {QUICK_ACCESS_IDS.map((id) => {
           const app = APP_BY_ID.get(id);
           if (!app) return null;
           return <QuickTile key={app.id} app={app} onOpen={() => openApp(app)} />;

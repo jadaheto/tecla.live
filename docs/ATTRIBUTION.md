@@ -19,6 +19,10 @@ El logotipo de Disney+ proviene de [Wikimedia Commons — File:Disney+ logo.svg]
 
 Si TECLA LIVE se distribuye comercialmente, revisa las guías de marca vigentes de cada propietario antes de publicar. Las marcas se usan de forma nominativa para indicar el servicio correspondiente.
 
+## TECLA DRIVE
+
+TECLA DRIVE es una implementación original de TECLA LIVE. No contiene código, audio, imágenes, textos, nombres de escenas ni assets de EV Sound FX. La referencia fue únicamente conceptual (HUD, escenas y sonido para un vehículo eléctrico). TECLA LIVE no está afiliada a EV Sound FX.
+
 ## Fuentes de contenido
 
 - Clima y geocodificación: [Open-Meteo](https://open-meteo.com/).
