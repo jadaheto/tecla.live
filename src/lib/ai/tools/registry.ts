@@ -86,7 +86,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: "search_waze",
     execution: "client",
     description:
-      "Prepara una búsqueda de destino en Waze dentro de TECLA LIVE. La navegación real ocurre en Waze.",
+      "Prepara una búsqueda de destino en Waze dentro de TECLA LIVE. La navegación real y los avisos de huecos, cámaras y policía solo se muestran en Waze; TECLA LIVE no los recibe.",
     schema: TOOL_SCHEMAS.search_waze,
   },
   {

@@ -76,7 +76,10 @@ function QuickTile({ app, onOpen }: { app: AppDefinition; onOpen: () => void }) 
         )}
       >
         <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
-        <app.icon className="relative size-7" strokeWidth={1.8} aria-hidden />
+        <app.icon
+          className={app.wide ? "relative h-auto w-[72%]" : "relative size-7"}
+          aria-hidden
+        />
         {app.id === "ai" ? (
           <Sparkles className="absolute bottom-2 right-2 size-3 text-white/80" aria-hidden />
         ) : null}
@@ -102,7 +105,10 @@ export function DashboardAppCard({ app, className }: { app: AppDefinition; class
         )}
       >
         <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
-        <app.icon className="relative size-5" strokeWidth={1.8} aria-hidden />
+        <app.icon
+          className={app.wide ? "relative h-auto w-12" : "relative size-6"}
+          aria-hidden
+        />
       </span>
       <span className="mt-4 flex items-center gap-1.5 text-sm font-semibold">
         {app.name}

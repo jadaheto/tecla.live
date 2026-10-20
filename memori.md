@@ -40,6 +40,7 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Fase 0 completa: archivos de control, objetivo del harness, scaffold, Prisma, build y typecheck verdes.
 - [x] Dashboard cinematográfico responsive (1920×1080, tablet, móvil) con hero editorial, clima real de Sincelejo (Open-Meteo), accesos rápidos, carruseles, estados vacío/error/carga y pie.
 - [x] Búsqueda universal (⌘K), atajos (⌘J, ?), tema claro/oscuro/automático con horario, modos normal/cine/kiosco, fullscreen con fallback, reducción de movimiento.
+- [x] Iconos de marca reales con atribución: YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch; Radio/IPTV/TECLA AI conservan iconografía propia.
 - [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Llamada real bloqueada por falta de `YOUTUBE_API_KEY`.**
 - [x] TECLA AI texto: 21 herramientas Zod, registro para DeepSeek, orquestación con máximo de pasos y resultados reales, rate limits, presupuesto, ledger de uso, system prompt antiinyección, panel flotante y página `/ai`.
 - [x] Function calling de extremo a extremo validado con mock local de DeepSeek: herramienta de clima real, acción de cliente `set_theme`, continuación con `toolExchange` y eventos en `AIUsageEvent`.
@@ -48,18 +49,18 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Radio Browser: búsqueda, top Colombia, HTTPS, reproducción HTML5, favoritos, volumen y control por TECLA AI.
 - [x] Podcasts: búsqueda real en iTunes, reproducción del avance público, velocidad, progreso, favoritos y enlace al episodio completo. No se presenta el avance como episodio completo.
 - [x] IPTV: parser M3U/M3U8 validado, importación por archivo/texto, categorías, búsqueda, favoritos y reproducción HLS con hls.js.
-- [x] Navegación: Waze y Google Maps con deep links oficiales, búsqueda, recientes, favoritos, Casa/Trabajo y sin GPS.
+- [x] Navegación: Waze y Google Maps con deep links oficiales, búsqueda, recientes, favoritos, Casa/Trabajo y sin GPS. Waze incluye tarjeta de avisos con enlace al mapa en vivo; no se simulan huecos/cámaras.
 - [x] Twitch: embed oficial con parent dinámico, canales guardados y búsqueda externa. **Sin credenciales de la API de Twitch no hay búsqueda interna de directorio.**
 - [x] Netflix y Disney+ como accesos externos oficiales, sin eludir DRM.
 - [x] Spotify: OAuth con state, tokens cifrados, estado, now-playing, play/pausa/siguiente/anterior/volumen y desconexión. **OAuth real bloqueado por credenciales de Spotify.**
 - [x] Cuentas: registro/login/logout, bcrypt, sesiones revocables, `/api/auth/me`, sincronización de favoritos/historial/preferencias y carga de preferencias desde la nube.
 - [x] Ajustes completos: apariencia, pantalla, IA/voz, clima, cuenta, orden del dashboard, privacidad, exportación y borrado local.
 - [x] Dockerfile multi-stage no root, health check; Dockerfile.migrate; docker-compose con PostgreSQL, migración y app; build e2e de contenedor verificado.
-- [x] 44 pruebas unitarias y 26 pruebas E2E (Playwright) aprobadas; lint sin errores.
+- [x] 45 pruebas unitarias y 26 pruebas E2E (Playwright) aprobadas; lint sin errores.
 
 ## ESTADO ACTUAL
 
-Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 44 unitarias, 26 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** El servidor de desarrollo está en `http://localhost:3000` sobre la base local en el puerto 55433 (contenedor `tecla-postgres`). Las integraciones YouTube/DeepSeek/Deepgram/ElevenLabs/Spotify están implementadas pero **no probadas contra proveedores reales por falta de credenciales**. Easypanel y el navegador Tesla no están disponibles para verificación.
+Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 45 unitarias, 26 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** El servidor de desarrollo está en `http://localhost:3000` sobre la base local en el puerto 55433 (contenedor `tecla-postgres`). Las integraciones YouTube/DeepSeek/Deepgram/ElevenLabs/Spotify están implementadas pero **no probadas contra proveedores reales por falta de credenciales**. Easypanel y el navegador Tesla no están disponibles para verificación.
 
 ## PROBLEMAS CONOCIDOS
 
@@ -73,6 +74,7 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Las variables `NEXT_PUBLIC_*` se inyectan en build; el dominio público debe pasarse como build arg `NEXT_PUBLIC_APP_URL`.
 - Los avisos de lint `react-hooks/set-state-in-effect` (6) son patrones controlados de hidratación/tiempo, no errores.
 - La prueba de optimización de imágenes remotas con YouTube real no se ejecutó por falta de datos de YouTube.
+- Waze no ofrece una API pública de consumidor para sus avisos de huecos, cámaras o policía. TECLA LIVE no los recibe ni los dibuja; solo prepara la ruta y enlaza el mapa en vivo oficial. Detectado y documentado en `docs/WAZE.md`.
 - `npm audit --omit=dev` reporta 3 avisos altos en la cadena del CLI de Prisma (`deepmerge-ts`). El CLI no está en la imagen runtime final (solo en la imagen de migración, que procesa el schema del repositorio); corregirlo exige un salto mayor a Prisma 7 y se pospone por riesgo de compatibilidad.
 
 ## SOLUCIONES VERIFICADAS
@@ -88,6 +90,7 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Spotify: los tokens cifrados se guardan en PostgreSQL; el refresh se valida al expirar. OAuth real no probado.
 - La verificación de sesión activa en PostgreSQL hace que el logout revoque de inmediato, a costa de una consulta por ruta autenticada (aceptable en esta escala).
 - Mock local de DeepSeek permitió probar el protocolo real de tool calls sin gastar crédito ni sustituir producción.
+- Iconos de marca: Simple Icons (CC0) y Disney+ de Wikimedia (dominio público), con atribución en `docs/ATTRIBUTION.md`.
 
 ## PRÓXIMOS PASOS
 
@@ -100,4 +103,4 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 02:45 UTC / 2026-10-19 21:45 America/Bogota** — Implementación completa del alcance verificable, pruebas, Docker, Compose, migración y documentación. Integraciones externas pendientes de credenciales; Easypanel y Tesla pendientes de verificación física.
+**2026-10-20 05:10 America/Bogota** — Pulido de iconos de marca y transparencia de Waze; 45 pruebas unitarias verdes. Integraciones externas pendientes de credenciales; Easypanel y Tesla pendientes de verificación física.

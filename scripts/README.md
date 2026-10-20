@@ -2,7 +2,7 @@
 
 Estos scripts no se incluyen en la imagen Docker (ver `.dockerignore`).
 
-- `capture-docs.mjs` — captura las imágenes de `docs/assets` desde el servidor local.
+- `capture-docs.mjs` — captura las imágenes de `docs/assets` (incluye dashboard, IA, radio y Waze) desde el servidor local.
 - `visual-check.mjs` — recorre las rutas principales a 1920×1080 y registra errores de consola.
 - `mock-deepseek.mjs` — **solo pruebas locales**: emula el endpoint de DeepSeek en el puerto 5555 para validar el protocolo de function calling sin gastar crédito. No es un sustituto de producción; la integración real queda pendiente de `DEEPSEEK_API_KEY`.
 

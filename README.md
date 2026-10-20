@@ -36,7 +36,7 @@ npm run build         # build de producción
 npm run start         # servidor standalone de Next (tras build)
 npm run typecheck     # TypeScript estricto
 npm run lint          # ESLint
-npm run test:run      # Vitest (44 pruebas)
+npm run test:run      # Vitest (45 pruebas)
 npm run test:e2e      # Playwright (26 pruebas; requiere servidor y PostgreSQL para cuenta)
 npm run db:migrate    # migración de desarrollo
 npm run db:deploy     # migraciones en producción
@@ -51,6 +51,8 @@ npm run db:seed       # semilla opcional
 - TECLA AI por texto y voz: orquestación DeepSeek con function calling, 21 herramientas tipadas, puente de acciones del navegador, límites de uso, presupuesto, memoria de preferencias consentida.
 - Deepgram para transcripción push-to-talk, ElevenLabs para respuestas habladas con interrupción, selector de voces autorizadas y fallback textual.
 - Radio Browser, iTunes Podcasts, M3U/IPTV con hls.js, Twitch embed, Waze/Google Maps con deep links oficiales y accesos a Netflix/Disney+.
+- **Iconos de marca reales** para YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch (Simple Icons, con atribución), integrados en el diseño TECLA.
+- **Waze**: preparación de ruta y enlace al mapa en vivo oficial. Los avisos de huecos/cámaras pertenecen a Waze y no se reciben ni simulan dentro de TECLA LIVE.
 - Spotify OAuth con tokens cifrados AES-256-GCM y controles remotos; sin simular reproducción local.
 - Cuentas con sesión JWT HttpOnly, bcrypt, aislamiento por usuario y sincronización de biblioteca/preferencias con PostgreSQL.
 - Docker multi-stage, usuario no root, health checks, migraciones y documentación de Easypanel.
@@ -73,7 +75,7 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 
 - `npm run typecheck`: sin errores.
 - `npm run lint`: sin errores (5 avisos de la regla nueva `react-hooks/set-state-in-effect` en detecciones de hidratación/tiempo).
-- `npm run test:run`: **44 pruebas unitarias aprobadas**.
+- `npm run test:run`: **45 pruebas unitarias aprobadas**.
 - `npx playwright test`: **26 pruebas E2E aprobadas**, incluye registro/sincronización real contra PostgreSQL, navegación móvil, minirreproductor, IPTV y modo cine.
 - PostgreSQL 16 en Docker, migración inicial aplicada, health check con `database: connected`.
 - Dockerfile multi-stage compilado y ejecutado como usuario no root; `docker compose` levanta base de datos, aplica migraciones y arranca la app con health check.
@@ -97,5 +99,6 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - [Plan técnico](PLAN.md) · [Tareas](TASKS.md) · [Memoria](memori.md) · [Goal Loop](GOAL_LOOP.md)
 - [Manual técnico y convenciones](DEEPSEEK.md) · [Reglas del agente](AGENTS.md)
 - [Despliegue en Easypanel](docs/EASYPANEL.md)
+- [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md)
 
 Hecho para disfrutar el camino. No manipules la pantalla mientras conduces.

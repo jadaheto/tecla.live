@@ -5,6 +5,7 @@ import {
   buildNavigateHref,
   buildWazeRouteUrl,
   buildWazeSearchUrl,
+  WAZE_LIVE_MAP_URL,
 } from "@/lib/integrations/navigation";
 
 describe("navigation deep links", () => {
@@ -35,6 +36,10 @@ describe("navigation deep links", () => {
   it("rejects empty destinations", () => {
     expect(() => buildWazeSearchUrl(" ")).toThrow("DESTINATION_TOO_SHORT");
     expect(() => buildGoogleMapsSearchUrl("a")).toThrow("DESTINATION_TOO_SHORT");
+  });
+
+  it("points to the official Waze live map for community alerts", () => {
+    expect(WAZE_LIVE_MAP_URL).toBe("https://www.waze.com/live-map/");
   });
 
   it("builds a safe internal navigation href", () => {

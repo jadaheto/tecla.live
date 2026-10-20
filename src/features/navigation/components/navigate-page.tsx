@@ -27,6 +27,7 @@ import {
   buildGoogleMapsRouteUrl,
   buildGoogleMapsSearchUrl,
   buildWazeSearchUrl,
+  WAZE_LIVE_MAP_URL,
 } from "@/lib/integrations/navigation";
 import { cn } from "@/lib/utils";
 
@@ -375,7 +376,7 @@ function NavigationPanel({
               <p className="mt-3 max-w-md text-xs leading-relaxed text-white/55">
                 {query
                   ? isWaze
-                    ? "Abre el enlace para iniciar la navegación en Waze. La ruta final la calcula Waze con el tráfico real."
+                    ? "Abre el enlace para iniciar la navegación en Waze. La ruta y los avisos de huecos, cámaras y policía los muestra Waze dentro de su app o mapa oficial."
                     : "Abre la ruta en Google Maps. La app o el sitio calculan el trayecto y el tráfico."
                   : "Escribe un destino para generar un enlace válido. No pedimos tu ubicación."}
               </p>
@@ -459,6 +460,34 @@ function NavigationPanel({
       </div>
 
       <aside className="space-y-4">
+        {isWaze ? (
+          <div className="rounded-3xl border border-[#33ccff]/20 bg-gradient-to-br from-[#33ccff]/10 via-surface/45 to-surface/35 p-5">
+            <p className="eyebrow flex items-center gap-1.5 !text-[#33ccff]">
+              <TriangleAlert className="size-3.5" aria-hidden />
+              Avisos de Waze
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">
+              Huecos, cámaras y policía son reportes de la comunidad de Waze. TECLA LIVE
+              <strong className="font-medium text-foreground"> no los recibe ni los dibuja</strong>:
+              Waze no ofrece una API pública de consumidor para leer esas alertas. Se muestran solo
+              dentro de su app o de su mapa oficial.
+            </p>
+            <a
+              href={WAZE_LIVE_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[#33ccff]/25 bg-[#33ccff]/10 px-3 text-[11px] font-medium text-[#33ccff] transition-colors hover:bg-[#33ccff]/15"
+            >
+              Abrir mapa en vivo de Waze
+              <ExternalLink className="size-3" aria-hidden />
+            </a>
+            <p className="mt-2 text-[9px] leading-relaxed text-muted/60">
+              Los avisos no se simulan. Para integrarlos dentro de TECLA LIVE haría falta acceso
+              autorizado a un feed de tráfico de Waze (partner) o a un proveedor licenciado.
+            </p>
+          </div>
+        ) : null}
+
         <div className="rounded-3xl border border-border bg-surface/45 p-5">
           <div className="flex items-center justify-between">
             <p className="eyebrow">Recientes</p>

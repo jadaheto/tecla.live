@@ -1,3 +1,5 @@
+export const WAZE_LIVE_MAP_URL = "https://www.waze.com/live-map/";
+
 export function buildWazeSearchUrl(destination: string): string {
   const query = destination.trim();
   if (query.length < 2) throw new Error("DESTINATION_TOO_SHORT");

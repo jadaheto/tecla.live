@@ -49,6 +49,11 @@ test.describe("páginas y estados de configuración", () => {
     await expect(page.getByRole("heading", { name: "Cartagena" })).toBeVisible();
     const wazeLink = page.getByRole("link", { name: /Abrir ruta en Waze/ });
     await expect(wazeLink).toHaveAttribute("href", /waze\.com\/ul\?q=Cartagena/);
+    await expect(page.getByText("Avisos de Waze")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Abrir mapa en vivo de Waze/ })).toHaveAttribute(
+      "href",
+      "https://www.waze.com/live-map/",
+    );
   });
 
   test("biblioteca permite crear una lista local", async ({ page }) => {

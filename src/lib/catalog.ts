@@ -1,17 +1,23 @@
+import type { ComponentType, SVGProps } from "react";
 import {
-  Clapperboard,
   Compass,
-  Gamepad2,
-  Map as MapIcon,
   Music2,
-  Navigation,
   Podcast,
   Radio,
   Sparkles,
   Tv,
   TvMinimalPlay,
-  type LucideIcon,
 } from "lucide-react";
+import {
+  ApplePodcastsBrandIcon,
+  DisneyPlusBrandIcon,
+  GoogleMapsBrandIcon,
+  NetflixBrandIcon,
+  SpotifyBrandIcon,
+  TwitchBrandIcon,
+  WazeBrandIcon,
+  YouTubeBrandIcon,
+} from "@/components/icons/brand-icons";
 
 export interface AppDefinition {
   id: string;
@@ -19,7 +25,9 @@ export interface AppDefinition {
   description: string;
   href: string;
   external?: boolean;
-  icon: LucideIcon;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  /** Logos horizontales que deben conservar su proporción (Disney+). */
+  wide?: boolean;
   gradient: string;
   accent: string;
   aiPrompt: string;
@@ -32,8 +40,8 @@ export const APPS: AppDefinition[] = [
     name: "YouTube",
     description: "Videos, tendencias y canales",
     href: "/youtube",
-    icon: TvMinimalPlay,
-    gradient: "from-[#ff3b3b] via-[#c81e2b] to-[#4b0610]",
+    icon: YouTubeBrandIcon,
+    gradient: "from-[#ff2b2b] via-[#c40000] to-[#5f0000]",
     accent: "#ff4d4d",
     aiPrompt: "busca un video en YouTube",
     category: "video",
@@ -43,8 +51,8 @@ export const APPS: AppDefinition[] = [
     name: "Spotify",
     description: "Música y listas",
     href: "/music",
-    icon: Music2,
-    gradient: "from-[#1ed760] via-[#118a45] to-[#063a20]",
+    icon: SpotifyBrandIcon,
+    gradient: "from-[#1ed760] via-[#0f9d58] to-[#064e2a]",
     accent: "#1ed760",
     aiPrompt: "abre Spotify",
     category: "music",
@@ -54,8 +62,8 @@ export const APPS: AppDefinition[] = [
     name: "Waze",
     description: "Rutas y tráfico",
     href: "/navigate?tab=waze",
-    icon: Navigation,
-    gradient: "from-[#37d6ff] via-[#1678c9] to-[#062c54]",
+    icon: WazeBrandIcon,
+    gradient: "from-[#33ccff] via-[#1f7fd4] to-[#07345c]",
     accent: "#37d6ff",
     aiPrompt: "abre Waze y busca un destino",
     category: "navigation",
@@ -65,8 +73,8 @@ export const APPS: AppDefinition[] = [
     name: "Google Maps",
     description: "Lugares y direcciones",
     href: "/navigate?tab=maps",
-    icon: MapIcon,
-    gradient: "from-[#5eead4] via-[#1c9c7a] to-[#053b30]",
+    icon: GoogleMapsBrandIcon,
+    gradient: "from-[#4285f4] via-[#34a853] to-[#ea4335]",
     accent: "#5eead4",
     aiPrompt: "abre Google Maps",
     category: "navigation",
@@ -77,8 +85,8 @@ export const APPS: AppDefinition[] = [
     description: "Series y películas",
     href: "https://www.netflix.com",
     external: true,
-    icon: Clapperboard,
-    gradient: "from-[#f04343] via-[#890b0b] to-[#1c0303]",
+    icon: NetflixBrandIcon,
+    gradient: "from-[#e50914] via-[#a0060d] to-[#260003]",
     accent: "#f04343",
     aiPrompt: "abre Netflix",
     category: "video",
@@ -89,8 +97,9 @@ export const APPS: AppDefinition[] = [
     description: "Historias para toda la familia",
     href: "https://www.disneyplus.com",
     external: true,
-    icon: Sparkles,
-    gradient: "from-[#6fa8ff] via-[#273a8f] to-[#080d2e]",
+    icon: DisneyPlusBrandIcon,
+    wide: true,
+    gradient: "from-[#3a7bff] via-[#113ccf] to-[#061a5c]",
     accent: "#6fa8ff",
     aiPrompt: "abre Disney+",
     category: "video",
@@ -122,8 +131,8 @@ export const APPS: AppDefinition[] = [
     name: "Podcasts",
     description: "Voces e historias",
     href: "/podcasts",
-    icon: Podcast,
-    gradient: "from-[#ff9a76] via-[#b53c52] to-[#390916]",
+    icon: ApplePodcastsBrandIcon,
+    gradient: "from-[#c05cff] via-[#9933cc] to-[#3a0f52]",
     accent: "#ff9a76",
     aiPrompt: "busca un podcast de inteligencia artificial",
     category: "music",
@@ -133,8 +142,8 @@ export const APPS: AppDefinition[] = [
     name: "Twitch",
     description: "Transmisiones en vivo",
     href: "/twitch",
-    icon: Gamepad2,
-    gradient: "from-[#a970ff] via-[#5c2bbf] to-[#1b0740]",
+    icon: TwitchBrandIcon,
+    gradient: "from-[#a970ff] via-[#9146ff] to-[#3a1478]",
     accent: "#a970ff",
     aiPrompt: "abre Twitch",
     category: "live",

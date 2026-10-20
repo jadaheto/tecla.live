@@ -30,6 +30,7 @@
 - [x] Header: logo, reloj/fecha, clima, búsqueda, TECLA AI, tema, fullscreen y ajustes.
 - [x] Accesos rápidos táctiles con YouTube, Spotify, Waze, Maps, Netflix, Disney+, Radio, IPTV, Podcasts, Twitch y TECLA AI.
 - [x] Estados de carga, error, vacío y «no configurado» reutilizables.
+- [x] Iconos de marca reales (YouTube, Spotify, Waze, Maps, Netflix, Disney+, Podcasts, Twitch) con atribución y proporciones correctas.
 - [x] Layout responsive para 1920×1080, tablet y móvil, sin hover obligatorio.
 - [x] Modos normal, cine y kiosco; tema claro/oscuro/automático configurable.
 - [x] Búsqueda universal con atajos y debounce; resultados de apps y YouTube.
@@ -110,6 +111,7 @@
 - [ ] Verificación OAuth real de Spotify (bloqueada por credenciales y Premium).
 - [ ] Verificación de listas IPTV y canales reales autorizados (requiere contenido del usuario).
 - [ ] Búsqueda interna de Twitch (requiere credenciales de API; se usa búsqueda externa).
+- [ ] Alertas de huecos/cámaras dentro de TECLA LIVE: bloqueadas; Waze no ofrece API pública de consumidor. Se enlaza el mapa en vivo oficial. Ver `docs/WAZE.md`.
 
 ## FASE 6 — PERSONALIZACIÓN
 
@@ -127,7 +129,7 @@
 
 ## FASE 7 — PRODUCCIÓN
 
-- [x] Suite Vitest: 44 pruebas aprobadas.
+- [x] Suite Vitest: 45 pruebas aprobadas.
 - [x] Playwright: 26 pruebas aprobadas (1920×1080 y móvil).
 - [x] Auditoría básica de secretos, cabeceras, validación y límites.
 - [x] Pruebas de presupuesto/ledger de IA en PostgreSQL.
@@ -146,7 +148,7 @@
 
 - `npm run typecheck`: OK.
 - `npm run lint`: 0 errores · 6 avisos documentados.
-- `npm run test:run`: 9 archivos, 44/44.
+- `npm run test:run`: 9 archivos, 45/45 (incluye Waze Live Map y navegación).
 - `npx playwright test`: 26/26.
 - `npm run build`: OK (39 rutas).
 - Docker: `tecla-live:final` construida; contenedor no root; `/api/health` OK; home 200.

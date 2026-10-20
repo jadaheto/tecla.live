@@ -1,7 +1,7 @@
 # DEEPSEEK.md — Manual técnico de TECLA LIVE
 
 > Manual operativo para el agente de DeepSeek Harness. Las reglas canónicas están en [`AGENTS.md`](./AGENTS.md).
-> Última actualización: 2026-10-19 (Fase 7, alcance verificable).
+> Última actualización: 2026-10-20 (Fase 7 + pulido de marcas y Waze).
 
 ## 1. Propósito
 
@@ -23,7 +23,7 @@ TECLA LIVE es un centro de entretenimiento web para el navegador del Tesla y dis
 | Lenguaje | TypeScript estricto | 5.9.3 |
 | Estilos | Tailwind CSS | 4.3.3 |
 | Componentes | shadcn/ui (patrón Radix + CVA + Tailwind) | Radix UI |
-| Iconos | Lucide React | 1.59.0 |
+| Iconos | Lucide React + glyphs de marca (Simple Icons, CC0) | 1.59.0 / SVG local |
 | Animación | Motion (`motion/react`) | 14.4.0 |
 | Estado cliente | Zustand | 5.0.15 |
 | Datos remotos | TanStack Query | 5.104.5 |
@@ -109,7 +109,7 @@ Máximo de pasos de herramientas: `AI_MAX_TOOL_STEPS` (4 por defecto). Cada ruta
 - Nombres de archivos en kebab-case; componentes en PascalCase; funciones y variables en inglés.
 - Textos visibles en español latinoamericano.
 - Estilos con Tailwind y tokens CSS (`--background`, `--surface`, `--accent`, etc.). Nada de colores hardcodeados dispersos.
-- Iconos Lucide; no usar recursos protegidos de Apple, Netflix, Spotify o Disney.
+- Iconos Lucide para funciones internas; glyphs de marca para identificar servicios externos, con atribución en `docs/ATTRIBUTION.md`. No copiar recursos de Apple ni interfaces propietarias.
 - Formularios y payloads externos se validan con Zod en el servidor. Nunca confiar en el cliente.
 - APIs externas siempre desde route handlers del servidor, con timeout (`AbortSignal.timeout`), caché y manejo de cuota.
 - Errores del servidor: log estructurado sin secretos; mensaje público corto; nunca volcar tokens.
@@ -137,7 +137,7 @@ npm run db:seed
 
 PostgreSQL local: `docker compose up -d db` y `npm run db:migrate`. La app arranca sin base de datos para el modo invitado.
 
-Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 44 pruebas Vitest, 26 pruebas Playwright, build de producción y contenedor Docker con health check. Detalle en `GOAL_LOOP.md`.
+Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 45 pruebas Vitest, 26 pruebas Playwright, build de producción y contenedor Docker con health check. Detalle en `GOAL_LOOP.md`.
 
 ## 6. Integraciones externas
 
@@ -151,7 +151,7 @@ Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 44 pruebas 
 | Open-Meteo | sin clave | Funciona. |
 | Radio Browser | sin clave (User-Agent propio) | Funciona si el servicio responde. |
 | iTunes Search (podcasts) | sin clave | Funciona si el servicio responde. |
-| Waze / Google Maps | sin clave (deep links oficiales) | Funciona. |
+| Waze / Google Maps | sin clave (deep links oficiales) | Rutas y búsquedas funcionan. Los avisos de huecos/cámaras no son accesibles por API pública y no se simulan; se enlaza el mapa en vivo oficial. |
 | IPTV M3U | URL/lista autorizada por el usuario | Parser local con validación de protocolo y tamaño; HLS con hls.js. |
 | Twitch | sin clave para embed | Embed oficial con parent; búsqueda de directorio solo externa sin credenciales de API. |
 
@@ -217,7 +217,7 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 - `npm run typecheck`: sin errores.
 - `npm run lint`: sin errores; 6 avisos de `react-hooks/set-state-in-effect` en hidratación/tiempo.
 - `npm run build`: correcto (39 rutas).
-- `npm run test:run`: **44/44** pruebas.
+- `npm run test:run`: **45/45** pruebas.
 - `npx playwright test`: **26/26** pruebas, incluida cuenta real contra PostgreSQL, minirreproductor, IPTV y modo cine.
 - PostgreSQL 16: migración `20261020022821_init` aplicada; 15 tablas; auth, sync y ledger de IA verificados.
 - Docker: imagen final multi-stage, usuario `nextjs` (uid 1001), health check healthy, home 200.
@@ -234,6 +234,7 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 - Los tokens de Spotify y las sesiones de usuario dependen de PostgreSQL; sin base de datos el modo invitado sigue funcionando pero las cuentas no.
 - Las variables `NEXT_PUBLIC_*` se inyectan al compilar; usa `NEXT_PUBLIC_APP_URL` como build arg.
 - El navegador Tesla puede bloquear autoplay, fullscreen, H.264/HLS o micrófono. La app detecta y reporta; no elude restricciones.
+- Waze no expone sus alertas de comunidad por API pública. TECLA LIVE prepara la ruta y enlaza el mapa en vivo; no dibuja alertas ni hace scraping. Ver `docs/WAZE.md`.
 
 ## 14. Nota de depuración local
 

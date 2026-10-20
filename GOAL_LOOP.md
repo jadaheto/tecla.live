@@ -31,7 +31,7 @@ Estado: **Completado en alcance verificable.**
 - [x] `npm run typecheck` sin errores.
 - [x] `npm run lint` sin errores (6 avisos documentados).
 - [x] `npm run build` de producción correcto.
-- [x] 44 pruebas unitarias aprobadas.
+- [x] 45 pruebas unitarias aprobadas.
 - [x] 26 pruebas E2E aprobadas.
 - [x] Docker build correcto, contenedor no root, health check y conexión a base de datos.
 - [x] Docker Compose levanta PostgreSQL, aplica migraciones y arranca la app.
@@ -66,18 +66,19 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 8 | Fase 4: Deepgram/ElevenLabs y voz | push-to-talk, TTS, interrupciones, fallback | Completada (proveedores bloqueados) |
 | 9 | Fase 5: radio, podcasts, IPTV, Twitch, Maps, Spotify | implementaciones reales y límites | Completada (Spotify/streams bloqueados) |
 | 10 | Fase 6: cuentas PostgreSQL, sync, memoria, ajustes | auth y sync verificados | Completada |
-| 11 | Fase 7: pruebas, Docker, Compose, documentación | unit 44, e2e 26, imagen y compose OK | Completada |
+| 11 | Fase 7: pruebas, Docker, Compose, documentación | unit 45, e2e 26, imagen y compose OK | Completada |
+| 12 | Pulido de iconos de marca y transparencia de Waze | glyphs reales, atribución y mapa en vivo oficial | Completada |
 
 ## ÚLTIMA ACCIÓN
 
-Verificación final local y preparación de Docker/Easypanel. Se ejecutaron typecheck, lint, build, 44 tests unitarios, 26 E2E, migración y build de Docker; se levantó el stack Compose completo con health `database: connected` y se probó el protocolo de function calling con un mock local de DeepSeek.
+Pulido de iconos de marca reales (YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch) con atribución, y transparencia de Waze: tarjeta de avisos, enlace al mapa en vivo oficial y regla antiinvención en TECLA AI. Se ejecutaron typecheck, lint, 45 tests unitarios, 26 E2E y build; se reconstruirá la imagen Docker final.
 
 ## RESULTADO
 
 - `npm run typecheck`: OK.
 - `npm run lint`: 0 errores, 6 avisos `set-state-in-effect` en hidratación/tiempo.
 - `npm run build`: OK, 39 rutas.
-- `npm run test:run`: 44/44.
+- `npm run test:run`: 45/45.
 - `npx playwright test`: 26/26.
 - PostgreSQL: migración `20261020022821_init`, tablas creadas, registro/login/sync y uso de IA registrados.
 - Docker: imagen final construida con build arg `NEXT_PUBLIC_APP_URL=https://tecla.live`; contenedor no root, health check healthy y home HTTP 200.
@@ -119,7 +120,8 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 - **2026-10-19 21:10** — Primer build verde de la base.
 - **2026-10-19 21:20** — Dashboard, YouTube, TECLA AI, voz, ajustes y páginas multimedia implementadas.
 - **2026-10-19 21:28** — PostgreSQL 16, migración y auth/sync verificados.
-- **2026-10-19 21:32** — 44 pruebas unitarias verdes.
+- **2026-10-19 21:32** — 45 pruebas unitarias verdes.
 - **2026-10-19 21:36** — 26 pruebas E2E verdes; se corrigió la hidratación usando `localhost` y no `127.0.0.1` en Playwright.
 - **2026-10-19 21:40** — Docker build, contenedor, migración y Compose verificados.
 - **2026-10-19 21:45** — Mock local de DeepSeek validó function calling, continuación y ledger; documentación de cierre.
+- **2026-10-20 05:10** — Iconos de marca reales con atribución; Waze documentado con enlace al mapa en vivo. Avisos de huecos/cámaras no son accesibles por API pública y no se simulan.

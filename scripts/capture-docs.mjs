@@ -10,4 +10,7 @@ await page.screenshot({ path: 'docs/assets/ai.png' });
 await page.goto('http://localhost:3000/radio', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.screenshot({ path: 'docs/assets/radio.png' });
+await page.goto('http://localhost:3000/navigate', { waitUntil: 'networkidle' });
+await page.waitForTimeout(900);
+await page.screenshot({ path: 'docs/assets/waze.png' });
 await browser.close();

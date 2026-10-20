@@ -178,7 +178,7 @@ export function SearchExperience() {
                     className="flex min-h-11 items-center gap-2 rounded-full border border-border bg-surface px-3.5 text-xs font-medium transition-colors hover:border-accent/30"
                   >
                     <span className={cn("flex size-6 items-center justify-center rounded-lg bg-gradient-to-br text-white", app.gradient)}>
-                      <app.icon className="size-3" aria-hidden />
+                      <app.icon className={app.wide ? "h-auto w-5" : "size-3"} aria-hidden />
                     </span>
                     {app.name}
                     {app.external ? <ExternalLink className="size-3 text-muted" aria-hidden /> : null}

@@ -164,7 +164,7 @@ export function SearchDialog() {
                           app.gradient,
                         )}
                       >
-                        <app.icon className="size-4" aria-hidden />
+                        <app.icon className={app.wide ? "h-auto w-6" : "size-4"} aria-hidden />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-medium text-foreground">{app.name}</span>
@@ -207,7 +207,7 @@ export function SearchDialog() {
                             app.gradient,
                           )}
                         >
-                          <app.icon className="size-4" aria-hidden />
+                          <app.icon className={app.wide ? "h-auto w-6" : "size-4"} aria-hidden />
                         </span>
                         <span className="flex-1 text-sm font-medium">{app.name}</span>
                         {app.id === "ai" ? (
