@@ -59,8 +59,8 @@
 - [x] Modo cine y minirreproductor global.
 - [x] Manejo de cuota agotada/clave ausente.
 - [x] Tests de validación, URLs y E2E de estado no configurado.
-- [ ] Verificación contra YouTube Data API real (bloqueada por `YOUTUBE_API_KEY`).
-- [ ] Verificación de reproducción/autoplay en navegador Tesla (bloqueada por hardware).
+- [x] Verificación contra YouTube Data API real: búsqueda, tendencias y metadatos (2026-10-20).
+- [ ] Verificación de reproducción/autoplay en navegador Tesla (pendiente de hardware).
 
 ## FASE 3 — TECLA AI TEXTO
 
@@ -76,8 +76,8 @@
 - [x] Memoria de preferencias con consentimiento, consulta y borrado.
 - [x] Tests de tools, validación, permisos, ciclo de function calling y presupuesto.
 - [x] Function calling de extremo a extremo con mock local de DeepSeek (tool servidor + tool cliente + continuación).
-- [ ] Verificación contra DeepSeek API real (bloqueada por `DEEPSEEK_API_KEY`).
-- [ ] Prueba de modelos y precios vigentes con una clave real.
+- [x] Verificación contra DeepSeek API real: respuesta de texto, herramienta `get_weather` y acción `set_display_mode` vía UI (2026-10-20).
+- [x] Modelo configurado `deepseek-flash` respondió correctamente con una clave real; precios pendientes de revisar en el panel de DeepSeek.
 
 ## FASE 4 — TECLA AI VOZ
 
@@ -90,8 +90,8 @@
 - [x] Pausa/restauración de reproductores controlados durante la voz.
 - [x] Fallback textual cuando micrófono o APIs no están disponibles.
 - [x] Tests de límites, schemas y E2E de estados/fallback.
-- [ ] Verificación con Deepgram real (bloqueada por `DEEPGRAM_API_KEY`).
-- [ ] Verificación con ElevenLabs real y voz autorizada (bloqueada por claves).
+- [x] Verificación con Deepgram real: transcripción del MP3 de ElevenLabs, confianza 0.996, 3.84 s (2026-10-20).
+- [x] Verificación con ElevenLabs real: MP3 128 kbps generado y reproducido por la UI (2026-10-20).
 - [ ] Transcripción parcial en streaming (mejora futura; no implementada).
 - [ ] Prueba de micrófono/autoplay en Tesla.
 
@@ -108,7 +108,8 @@
 - [x] Twitch: embed oficial con parent válido, canales guardados y apertura externa.
 - [x] Netflix y Disney+ como accesos externos.
 - [x] Tests unitarios de deep links, M3U y validación; E2E de páginas y navegación.
-- [ ] Verificación OAuth real de Spotify (bloqueada por credenciales y Premium).
+- [x] Credenciales Spotify y redirect validados (client_credentials 200, authorize sin error de redirect).
+- [ ] Vincular la cuenta de Spotify y probar reproducción con Premium/dispositivo activo.
 - [ ] Verificación de listas IPTV y canales reales autorizados (requiere contenido del usuario).
 - [ ] Búsqueda interna de Twitch (requiere credenciales de API; se usa búsqueda externa).
 - [ ] Alertas de huecos/cámaras dentro de TECLA LIVE: bloqueadas; Waze no ofrece API pública de consumidor. Se enlaza el mapa en vivo oficial. Ver `docs/WAZE.md`.
@@ -139,8 +140,8 @@
 - [x] `Dockerfile.migrate` probado (imagen 751 MB, sin migraciones pendientes).
 - [x] Documento Easypanel con pasos verificables.
 - [x] README, capturas y limitaciones.
-- [ ] Prueba real de proveedores con claves.
-- [ ] Verificación física en Tesla.
+- [x] Prueba real de YouTube, DeepSeek, Deepgram y ElevenLabs; credenciales y redirect de Spotify.
+- [ ] Verificación física en Tesla y captura de micrófono real (el simulador de Chromium queda bloqueado en getUserMedia).
 - [ ] Despliegue real en Easypanel y comprobación de tecla.live.
 - [ ] Rate limit distribuido para múltiples réplicas.
 
@@ -156,14 +157,14 @@
 - Mock DeepSeek: `get_weather` (servidor, dato real), `set_theme` (cliente), continuación y `AIUsageEvent` verificados.
 - Auth real: registro, sesión, `/api/auth/me`, sync y logout contra PostgreSQL.
 - Externos libres verificados manualmente: Open-Meteo, geocodificación, Radio Browser e iTunes.
+- Prueba real de claves 2026-10-20: YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify. Detalle en `docs/INTEGRATION-TEST.md`.
 
 ## BLOQUEOS EXTERNOS CONOCIDOS
 
-- [ ] `YOUTUBE_API_KEY` — sin credencial; búsquedas/tendencias reales no verificadas.
-- [ ] `DEEPSEEK_API_KEY` — sin credencial; conversación real no verificada (solo mock).
-- [ ] `DEEPGRAM_API_KEY` — sin credencial; transcripción real no verificada.
-- [ ] `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` — sin credencial; voz real no verificada.
-- [ ] `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` — sin credencial; OAuth real no verificado.
+- [x] YouTube, DeepSeek, Deepgram y ElevenLabs verificados con claves reales.
+- [x] Spotify: credenciales de cliente y redirect verificados.
+- [ ] Spotify: falta vincular cuenta y probar reproducción.
+- [ ] Micrófono físico del navegador: no automatizable en este entorno.
 - [ ] Acceso a Easypanel y DNS de tecla.live — no disponible; despliegue no verificado.
 - [ ] Navegador del Tesla — prueba física pendiente.
 - [ ] Credenciales de Twitch — búsqueda interna no implementada; embed oficial disponible.

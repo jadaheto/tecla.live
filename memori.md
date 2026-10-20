@@ -41,18 +41,18 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Dashboard cinematográfico responsive (1920×1080, tablet, móvil) con hero editorial, clima real de Sincelejo (Open-Meteo), accesos rápidos, carruseles, estados vacío/error/carga y pie.
 - [x] Búsqueda universal (⌘K), atajos (⌘J, ?), tema claro/oscuro/automático con horario, modos normal/cine/kiosco, fullscreen con fallback, reducción de movimiento.
 - [x] Iconos de marca reales con atribución: YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch; Radio/IPTV/TECLA AI conservan iconografía propia.
-- [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Llamada real bloqueada por falta de `YOUTUBE_API_KEY`.**
-- [x] TECLA AI texto: 21 herramientas Zod, registro para DeepSeek, orquestación con máximo de pasos y resultados reales, rate limits, presupuesto, ledger de uso, system prompt antiinyección, panel flotante y página `/ai`.
+- [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Verificado con API real el 2026-10-20.**
+- [x] TECLA AI texto: 21 herramientas Zod, registro para DeepSeek, orquestación con máximo de pasos y resultados reales, rate limits, presupuesto, ledger de uso, system prompt antiinyección, panel flotante y página `/ai`. **DeepSeek real verificado (texto, tool de clima y action bridge).**
 - [x] Function calling de extremo a extremo validado con mock local de DeepSeek: herramienta de clima real, acción de cliente `set_theme`, continuación con `toolExchange` y eventos en `AIUsageEvent`.
 - [x] Memoria consentida de preferencias: store local, herramienta `remember_preference`, contexto al modelo, consulta/borrado en Ajustes.
-- [x] Voz: STT push-to-talk con subida al backend y Deepgram; TTS ElevenLabs streaming por backend; interrupción, pausa/restauración de media controlada, selector de voces autorizadas y fallback textual. **Prueba real bloqueada por claves; transcripción parcial no implementada.**
+- [x] Voz: STT push-to-talk con subida al backend y Deepgram; TTS ElevenLabs streaming por backend; interrupción, pausa/restauración de media controlada, selector de voces autorizadas y fallback textual. **Deepgram y ElevenLabs reales verificados; captura de micrófono físico pendiente.**
 - [x] Radio Browser: búsqueda, top Colombia, HTTPS, reproducción HTML5, favoritos, volumen y control por TECLA AI.
 - [x] Podcasts: búsqueda real en iTunes, reproducción del avance público, velocidad, progreso, favoritos y enlace al episodio completo. No se presenta el avance como episodio completo.
 - [x] IPTV: parser M3U/M3U8 validado, importación por archivo/texto, categorías, búsqueda, favoritos y reproducción HLS con hls.js.
 - [x] Navegación: Waze y Google Maps con deep links oficiales, búsqueda, recientes, favoritos, Casa/Trabajo y sin GPS. Waze incluye tarjeta de avisos con enlace al mapa en vivo; no se simulan huecos/cámaras.
 - [x] Twitch: embed oficial con parent dinámico, canales guardados y búsqueda externa. **Sin credenciales de la API de Twitch no hay búsqueda interna de directorio.**
 - [x] Netflix y Disney+ como accesos externos oficiales, sin eludir DRM.
-- [x] Spotify: OAuth con state, tokens cifrados, estado, now-playing, play/pausa/siguiente/anterior/volumen y desconexión. **OAuth real bloqueado por credenciales de Spotify.**
+- [x] Spotify: OAuth con state, tokens cifrados, estado, now-playing, play/pausa/siguiente/anterior/volumen y desconexión. **Credenciales y redirect validados; falta vincular cuenta y probar reproducción.**
 - [x] Cuentas: registro/login/logout, bcrypt, sesiones revocables, `/api/auth/me`, sincronización de favoritos/historial/preferencias y carga de preferencias desde la nube.
 - [x] Ajustes completos: apariencia, pantalla, IA/voz, clima, cuenta, orden del dashboard, privacidad, exportación y borrado local.
 - [x] Dockerfile multi-stage no root, health check; Dockerfile.migrate; docker-compose con PostgreSQL, migración y app; build e2e de contenedor verificado.
@@ -60,11 +60,12 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 
 ## ESTADO ACTUAL
 
-Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 45 unitarias, 26 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** El servidor de desarrollo está en `http://localhost:3000` sobre la base local en el puerto 55433 (contenedor `tecla-postgres`). Las integraciones YouTube/DeepSeek/Deepgram/ElevenLabs/Spotify están implementadas pero **no probadas contra proveedores reales por falta de credenciales**. Easypanel y el navegador Tesla no están disponibles para verificación.
+Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 45 unitarias, 26 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** La app está corriendo desde la imagen Docker final en `http://localhost:3000`, con claves reales inyectadas en runtime. **YouTube, DeepSeek, Deepgram y ElevenLabs fueron probados contra sus proveedores reales (2026-10-20).** Spotify validó credenciales y redirect; falta la autorización de la cuenta. Micrófono físico, Tesla y Easypanel siguen pendientes.
 
 ## PROBLEMAS CONOCIDOS
 
-- Sin `YOUTUBE_API_KEY`, `DEEPSEEK_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_*` ni `SPOTIFY_*` en `.env`: los proveedores no se pueden probar contra sus APIs reales. La UI muestra estados honestos.
+- Spotify: credenciales de cliente y redirect válidos, pero la cuenta no está vinculada; falta probar reproducción con Premium y dispositivo activo.
+- El micrófono físico no se pudo automatizar: el dispositivo simulado de Chromium no resuelve `getUserMedia`. La captura debe probarse manualmente en un navegador con micrófono; Deepgram se probó con audio real generado por ElevenLabs.
 - Sin acceso a Easypanel ni DNS de tecla.live: despliegue no verificado.
 - Sin acceso físico al navegador del Tesla: autoplay, fullscreen, micrófono y embeds requieren prueba real.
 - Deepgram se usa en modo grabación→transcripción; no hay transcripción parcial en streaming.
@@ -73,7 +74,8 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Rate limiting en memoria por instancia; no distribuido entre réplicas.
 - Las variables `NEXT_PUBLIC_*` se inyectan en build; el dominio público debe pasarse como build arg `NEXT_PUBLIC_APP_URL`.
 - Los avisos de lint `react-hooks/set-state-in-effect` (6) son patrones controlados de hidratación/tiempo, no errores.
-- La prueba de optimización de imágenes remotas con YouTube real no se ejecutó por falta de datos de YouTube.
+- La optimización de imágenes de YouTube real y el reproductor se verificaron con datos reales en la build de Docker.
+- En esta máquina, Node 26.3.0 dejó `next dev`/`next build` locales en un estado anómalo (espera larga y `.next` con artefactos irrepetibles). Se limpió `.next` y la verificación se hizo con Node 22 dentro de Docker. Si vuelve a ocurrir, usar Node 22 LTS y no mantener builds concurrentes.
 - Waze no ofrece una API pública de consumidor para sus avisos de huecos, cámaras o policía. TECLA LIVE no los recibe ni los dibuja; solo prepara la ruta y enlaza el mapa en vivo oficial. Detectado y documentado en `docs/WAZE.md`.
 - `npm audit --omit=dev` reporta 3 avisos altos en la cadena del CLI de Prisma (`deepmerge-ts`). El CLI no está en la imagen runtime final (solo en la imagen de migración, que procesa el schema del repositorio); corregirlo exige un salto mayor a Prisma 7 y se pospone por riesgo de compatibilidad.
 
@@ -89,18 +91,22 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Dockerfile.migrate optimizado de 2.01 GB a 751 MB instalando solo Prisma CLI.
 - Spotify: los tokens cifrados se guardan en PostgreSQL; el refresh se valida al expirar. OAuth real no probado.
 - La verificación de sesión activa en PostgreSQL hace que el logout revoque de inmediato, a costa de una consulta por ruta autenticada (aceptable en esta escala).
-- Mock local de DeepSeek permitió probar el protocolo real de tool calls sin gastar crédito ni sustituir producción.
+- Mock local de DeepSeek permitió probar el protocolo antes de las claves; luego se verificó DeepSeek real con `deepseek-flash`, tool de clima y acción de interfaz.
+- Deepgram real transcribió un MP3 generado por ElevenLabs con confianza 0.996 (3.84 s); el ciclo TTS→STT quedó comprobado.
+- Spotify `client_credentials` devolvió 200 y la página de authorize aceptó redirect_uri; la vinculación de cuenta sigue siendo un paso interactivo del usuario.
+- La prueba de micrófono simulado con Playwright/Chromium quedó bloqueada en `getUserMedia`; no es un fallo de la UI ni de Deepgram, sino una limitación del entorno de automatización.
 - Iconos de marca: Simple Icons (CC0) y Disney+ de Wikimedia (dominio público), con atribución en `docs/ATTRIBUTION.md`.
 
 ## PRÓXIMOS PASOS
 
-1. Configurar claves reales y verificar YouTube, DeepSeek, Deepgram, ElevenLabs y Spotify con cuentas de prueba limitadas.
-2. Probar en el navegador de un Tesla: micrófono, autoplay, fullscreen, embeds y rendimiento.
+1. Vincular la cuenta de Spotify desde `/music` y probar play/pausa/volumen con Premium y un dispositivo activo.
+2. Probar el micrófono real en un navegador (y en el Tesla) y el ciclo de voz completo desde la UI.
 3. Desplegar en Easypanel siguiendo `docs/EASYPANEL.md` y verificar tecla.live.
-4. Sustituir el rate limit en memoria por PostgreSQL/Redis si se escala a varias réplicas.
-5. Evaluar transcripción parcial en streaming con token temporal de Deepgram.
-6. Añadir eliminación de cuenta/datos sincronizados si el producto la requiere.
+4. Probar en el navegador de un Tesla: autoplay, fullscreen, embeds y rendimiento.
+5. Sustituir el rate limit en memoria por PostgreSQL/Redis si se escala a varias réplicas.
+6. Evaluar transcripción parcial en streaming con token temporal de Deepgram.
+7. Añadir eliminación de cuenta/datos sincronizados si el producto la requiere.
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 05:10 America/Bogota** — Pulido de iconos de marca y transparencia de Waze; 45 pruebas unitarias verdes. Integraciones externas pendientes de credenciales; Easypanel y Tesla pendientes de verificación física.
+**2026-10-20 08:25 America/Bogota** — Claves reales cargadas y verificadas con YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify. App productiva en Docker sobre `localhost:3000`. Pendientes: autorización Spotify, micrófono físico, Tesla y Easypanel.

@@ -1,7 +1,7 @@
 # DEEPSEEK.md — Manual técnico de TECLA LIVE
 
 > Manual operativo para el agente de DeepSeek Harness. Las reglas canónicas están en [`AGENTS.md`](./AGENTS.md).
-> Última actualización: 2026-10-20 (Fase 7 + pulido de marcas y Waze).
+> Última actualización: 2026-10-20 (Fase 7 + marcas + prueba real de claves).
 
 ## 1. Propósito
 
@@ -137,12 +137,16 @@ npm run db:seed
 
 PostgreSQL local: `docker compose up -d db` y `npm run db:migrate`. La app arranca sin base de datos para el modo invitado.
 
-Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 45 pruebas Vitest, 26 pruebas Playwright, build de producción y contenedor Docker con health check. Detalle en `GOAL_LOOP.md`.
+> Nota de entorno: en esta Mac, Node 26.3.0 dejó `next dev`/`next build` locales en un estado anómalo. La verificación se hizo con Node 22 dentro de Docker; si el build local se atasca, limpia `.next` y usa Node 22 LTS. No mantengas builds concurrentes.
+
+Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 45 pruebas Vitest, 26 pruebas Playwright, build de producción en Docker con health check. Pruebas reales de proveedores el 2026-10-20; detalle en [`docs/INTEGRATION-TEST.md`](./docs/INTEGRATION-TEST.md).
 
 ## 6. Integraciones externas
 
-| Integración | Variables | Estado sin credenciales |
+| Integración | Variables | Estado si faltan credenciales |
 | --- | --- | --- |
+
+> **Estado actual 2026-10-20:** todas las claves están configuradas. YouTube, DeepSeek, Deepgram y ElevenLabs se probaron contra sus APIs reales. Spotify validó credenciales/redirect; falta vincular la cuenta. Detalle en [`docs/INTEGRATION-TEST.md`](./docs/INTEGRATION-TEST.md).
 | YouTube Data API v3 + IFrame | `YOUTUBE_API_KEY` | Búsquedas y tendencias muestran estado "no configurado"; el resto del dashboard funciona. |
 | DeepSeek | `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODEL` | TECLA AI muestra modo no configurado y permite seguir usando controles manuales. |
 | Deepgram | `DEEPGRAM_API_KEY`, `DEEPGRAM_MODEL` | Botón de voz deshabilitado con explicación; entrada de texto disponible. |
@@ -155,9 +159,9 @@ Verificación registrada: `typecheck` OK, `lint` 0 errores/6 avisos, 45 pruebas 
 | IPTV M3U | URL/lista autorizada por el usuario | Parser local con validación de protocolo y tamaño; HLS con hls.js. |
 | Twitch | sin clave para embed | Embed oficial con parent; búsqueda de directorio solo externa sin credenciales de API. |
 
-Verificar modelos y endpoints vigentes antes de cambiarlos. Valores por defecto: DeepSeek `deepseek-chat` (modelo oficial estable; el prompt original mencionaba `deepseek-flash`, que no es el identificador de la API pública), Deepgram `nova-3`, ElevenLabs `eleven_flash_v2_5`. El identificador de voz de ElevenLabs debe salir de la cuenta del usuario; no se inventa.
+Verificar modelos y endpoints vigentes antes de cambiarlos. En esta instalación respondió `DEEPSEEK_MODEL=deepseek-flash` contra el `DEEPSEEK_BASE_URL` configurado; el `.env.example` conserva `deepseek-chat` como alternativa. Deepgram `nova-3` y ElevenLabs `eleven_flash_v2_5` también respondieron. El identificador de voz de ElevenLabs debe salir de la cuenta del usuario; no se inventa.
 
-Prueba de function calling: el protocolo de orquestación se validó con un mock local de DeepSeek (sin coste): ida y vuelta de una tool de servidor (`get_weather` real), una tool de cliente (`set_theme`) y continuación con `toolExchange`, con eventos registrados en `AIUsageEvent`. **DeepSeek real no se probó por falta de clave.**
+Prueba de function calling: el protocolo se validó primero con un mock local; después, con DeepSeek real. Se ejecutó `get_weather` (servidor) y `set_display_mode` (cliente) desde el panel, con eventos en `AIUsageEvent`. El ciclo `DeepSeek → tool → action bridge → UI` quedó verificado. Evidencia en [`docs/INTEGRATION-TEST.md`](./docs/INTEGRATION-TEST.md).
 
 ## 7. Reglas de TECLA AI
 
@@ -223,11 +227,12 @@ Código que compila + lint/typecheck limpios + pruebas relevantes + verificació
 - Docker: imagen final multi-stage, usuario `nextjs` (uid 1001), health check healthy, home 200.
 - Compose: db + migrate + app con migración aplicada y health `database: connected`.
 - Integraciones libres comprobadas: Open-Meteo, geocodificación, Radio Browser e iTunes.
-- **No verificados:** YouTube, DeepSeek, Deepgram, ElevenLabs y Spotify reales; Easypanel/tecla.live; navegador Tesla. Son bloqueos de credenciales/infraestructura/hardware, no resultados simulados.
+- **Verificados con claves reales:** YouTube (búsqueda/tendencias/watch), DeepSeek (texto + tool + acción UI), Deepgram (transcripción), ElevenLabs (MP3 y reproducción UI); Spotify credenciales/redirect.
+- **Pendientes:** vincular Spotify y probar playback; micrófono físico; Easypanel/tecla.live; navegador Tesla. Son bloqueos de autorización/hardware/infraestructura, no resultados simulados.
 
 ## 13. Limitaciones vigentes
 
-- El STT usa grabación y subida al backend; no hay transcripción parcial en streaming. El micrófono se libera al terminar.
+- El STT usa grabación y subida al backend; no hay transcripción parcial en streaming. El micrófono se libera al terminar. La transcripción real se validó con audio de ElevenLabs; la captura de micrófono físico no se pudo automatizar en Chromium (getUserMedia quedó pendiente).
 - Podcasts reproducen el avance público de iTunes; el episodio completo se abre en el proveedor.
 - Twitch no tiene búsqueda interna sin credenciales de su API; se ofrece embed oficial y búsqueda externa.
 - El rate limiting de IA es en memoria por instancia. En varias réplicas debe migrarse a PostgreSQL/Redis.

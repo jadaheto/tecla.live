@@ -9,7 +9,7 @@ Construir y validar TECLA LIVE hasta cumplir los criterios de aceptación de la 
 
 ## FASE ACTUAL
 
-**Fase 7 — Producción**, completada en el alcance verificable. Las verificaciones que dependen de credenciales externas, Easypanel o hardware Tesla quedan declaradas como bloqueos.
+**Fase 7 — Producción**, completada en el alcance verificable. Las claves reales ya se probaron; quedan pendientes la vinculación de Spotify, el micrófono físico, Easypanel y el hardware Tesla.
 
 ## OBJETIVO ACTIVO
 
@@ -36,9 +36,10 @@ Estado: **Completado en alcance verificable.**
 - [x] Docker build correcto, contenedor no root, health check y conexión a base de datos.
 - [x] Docker Compose levanta PostgreSQL, aplica migraciones y arranca la app.
 - [x] Registro/login/sync verificados contra PostgreSQL.
-- [x] Function calling verificado con mock local de DeepSeek.
-- [x] Integraciones sin credenciales documentadas como bloqueadas.
-- [ ] Prueba real de YouTube, DeepSeek, Deepgram, ElevenLabs y Spotify (requiere claves).
+- [x] Function calling verificado con mock local y con DeepSeek real (tool de clima + acción de UI).
+- [x] Integraciones con claves reales verificadas: YouTube, DeepSeek, Deepgram y ElevenLabs; Spotify con credenciales/redirect validados.
+- [x] Prueba real de YouTube, DeepSeek, Deepgram y ElevenLabs (2026-10-20).
+- [ ] Vincular la cuenta de Spotify y probar reproducción (requiere autorización del usuario y dispositivo activo).
 - [ ] Verificación en navegador Tesla (requiere hardware).
 - [ ] Despliegue en Easypanel y tecla.live (requiere infraestructura).
 
@@ -68,10 +69,11 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 10 | Fase 6: cuentas PostgreSQL, sync, memoria, ajustes | auth y sync verificados | Completada |
 | 11 | Fase 7: pruebas, Docker, Compose, documentación | unit 45, e2e 26, imagen y compose OK | Completada |
 | 12 | Pulido de iconos de marca y transparencia de Waze | glyphs reales, atribución y mapa en vivo oficial | Completada |
+| 13 | Prueba de claves reales | YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify verificados | Completada con pendientes de hardware/autorización |
 
 ## ÚLTIMA ACCIÓN
 
-Pulido de iconos de marca reales (YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch) con atribución, y transparencia de Waze: tarjeta de avisos, enlace al mapa en vivo oficial y regla antiinvención en TECLA AI. Se ejecutaron typecheck, lint, 45 tests unitarios, 26 E2E y build; se reconstruirá la imagen Docker final.
+Prueba real de claves con build de producción en Docker: YouTube (búsqueda/tendencias/reproductor), DeepSeek (texto, herramienta de clima y acción de interfaz), ElevenLabs (MP3), Deepgram (transcripción del MP3), Spotify (credenciales y redirect). Evidencia en `docs/INTEGRATION-TEST.md`.
 
 ## RESULTADO
 
@@ -87,9 +89,11 @@ Pulido de iconos de marca reales (YouTube, Spotify, Waze, Google Maps, Netflix, 
 
 ## BLOQUEADORES
 
-- `YOUTUBE_API_KEY`, `DEEPSEEK_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`/`VOICE_ID`, `SPOTIFY_CLIENT_ID`/`SECRET`: no disponibles. Los adaptadores están listos; la prueba real no se puede hacer ni declarar.
-- Easypanel/tecla.live: sin acceso; despliegue no verificado.
+- Spotify: las credenciales y el redirect son válidos, pero falta que el usuario autorice su cuenta para probar reproducción; además requiere Premium y dispositivo activo.
+- Micrófono físico: no se pudo automatizar con el dispositivo simulado de Chromium (getUserMedia queda pendiente); la captura real debe probarse en un navegador con micrófono.
 - Navegador Tesla: sin hardware; autoplay, micrófono, fullscreen y HLS requieren prueba física.
+- Easypanel/tecla.live: sin acceso; despliegue no verificado.
+- Waze: alertas de huecos/cámaras sin API pública de consumidor; no se simulan.
 - Twitch: sin credenciales de API no hay búsqueda interna de directorio; embed oficial y búsqueda externa implementados.
 - Transcripción parcial: limitación de diseño del flujo REST actual.
 
@@ -99,7 +103,7 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 
 ## ESTADO
 
-**Completado en alcance verificable** · pruebas locales y Docker verdes · integraciones externas bloqueadas por credenciales/infraestructura.
+**Completado en alcance verificable** · pruebas locales, Docker e integraciones principales reales verdes · quedan Spotify link, micrófono físico, Tesla y Easypanel.
 
 ## REGLAS DEL CICLO
 
@@ -125,3 +129,4 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 - **2026-10-19 21:40** — Docker build, contenedor, migración y Compose verificados.
 - **2026-10-19 21:45** — Mock local de DeepSeek validó function calling, continuación y ledger; documentación de cierre.
 - **2026-10-20 05:10** — Iconos de marca reales con atribución; Waze documentado con enlace al mapa en vivo. Avisos de huecos/cámaras no son accesibles por API pública y no se simulan.
+- **2026-10-20 08:25** — Claves reales cargadas y verificadas: YouTube, DeepSeek + tool + acción, ElevenLabs, Deepgram y credenciales Spotify. Micrófono físico y link de Spotify quedan pendientes de prueba interactiva.

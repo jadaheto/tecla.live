@@ -79,13 +79,15 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - `npx playwright test`: **26 pruebas E2E aprobadas**, incluye registro/sincronización real contra PostgreSQL, navegación móvil, minirreproductor, IPTV y modo cine.
 - PostgreSQL 16 en Docker, migración inicial aplicada, health check con `database: connected`.
 - Dockerfile multi-stage compilado y ejecutado como usuario no root; `docker compose` levanta base de datos, aplica migraciones y arranca la app con health check.
-- Function calling de TECLA AI verificado de extremo a extremo con un **mock local de DeepSeek** (claro como prueba, no como integración real): herramienta de clima real, acción de cliente `set_theme`, continuación con resultados y registro de uso en PostgreSQL. DeepSeek real sigue pendiente de credenciales.
-- Rutas externas verificadas manualmente: clima Open-Meteo, geocodificación, Radio Browser, iTunes. YouTube, DeepSeek, Deepgram, ElevenLabs y Spotify **no pudieron probarse contra el proveedor real** por ausencia de credenciales; sus adaptadores, estados y errores están implementados y se declaran como pendientes.
+- Function calling de TECLA AI verificado de extremo a extremo con **DeepSeek real**: herramienta de clima en servidor, acción de cliente `set_display_mode` y registro de uso en PostgreSQL. También se probó antes con un mock local sin coste.
+- **Integraciones reales probadas el 2026-10-20:** YouTube (búsqueda, tendencias y reproductor), DeepSeek (texto + tool + acción UI), ElevenLabs (MP3), Deepgram (transcripción del MP3). Spotify validó credenciales y redirect; falta vincular la cuenta. Evidencia en [docs/INTEGRATION-TEST.md](docs/INTEGRATION-TEST.md).
+- Rutas externas verificadas manualmente: clima Open-Meteo, geocodificación, Radio Browser e iTunes.
 
 ## Limitaciones declaradas
 
-- No hay credenciales reales de YouTube, DeepSeek, Deepgram, ElevenLabs ni Spotify en este entorno. No se declaran esas integraciones como probadas.
 - No se probó en el navegador de un Tesla ni en Easypanel/tecla.live desde este entorno.
+- Spotify requiere que el usuario autorice su cuenta y tenga Premium con un dispositivo activo. La prueba de reproducción real queda pendiente.
+- El micrófono físico no se pudo automatizar con el dispositivo simulado de Chromium; el backend de Deepgram sí se probó con audio real. La captura desde micrófono queda para prueba manual.
 - La transcripción es push-to-talk con envío al backend; no hay transcripción parcial en streaming. Se documenta como limitación y se libera el micrófono al terminar.
 - Los podcasts reproducen el avance público de iTunes; el episodio completo se abre en su proveedor.
 - El rate limiting es en memoria (una instancia); para varias réplicas debe migrarse a PostgreSQL/Redis.
@@ -99,6 +101,6 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - [Plan técnico](PLAN.md) · [Tareas](TASKS.md) · [Memoria](memori.md) · [Goal Loop](GOAL_LOOP.md)
 - [Manual técnico y convenciones](DEEPSEEK.md) · [Reglas del agente](AGENTS.md)
 - [Despliegue en Easypanel](docs/EASYPANEL.md)
-- [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md)
+- [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md) · [Prueba real de integraciones](docs/INTEGRATION-TEST.md)
 
 Hecho para disfrutar el camino. No manipules la pantalla mientras conduces.
