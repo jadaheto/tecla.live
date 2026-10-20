@@ -36,8 +36,8 @@ npm run build         # build de producción
 npm run start         # servidor standalone de Next (tras build)
 npm run typecheck     # TypeScript estricto
 npm run lint          # ESLint
-npm run test:run      # Vitest (49 pruebas)
-npm run test:e2e      # Playwright (27 pruebas; requiere servidor y PostgreSQL para cuenta)
+npm run test:run      # Vitest (51 pruebas)
+npm run test:e2e      # Playwright (28 pruebas; requiere servidor y PostgreSQL para cuenta)
 npm run db:migrate    # migración de desarrollo
 npm run db:deploy     # migraciones en producción
 npm run db:seed       # semilla opcional
@@ -53,7 +53,7 @@ npm run db:seed       # semilla opcional
 - TECLA AI por texto y voz: orquestación DeepSeek con function calling, 21 herramientas tipadas, puente de acciones del navegador, límites de uso, presupuesto, memoria de preferencias consentida.
 - Deepgram para transcripción push-to-talk, ElevenLabs para respuestas habladas con interrupción, selector de voces autorizadas y fallback textual.
 - Radio Browser, iTunes Podcasts, M3U/IPTV con hls.js, Twitch embed, Waze/Google Maps con deep links oficiales y accesos a Netflix/Disney+.
-- **TECLA DRIVE** (`/drive`): experiencia original de conducción estacionaria, con escenas Canvas, gauge de velocidad simulada y sonido sintetizado con Web Audio. Sin GPS, sin samples y sin afiliación con EV Sound FX. Ver [docs/DRIVE.md](docs/DRIVE.md).
+- **TECLA DRIVE** (`/drive`): experiencia original de conducción estacionaria, con escenas Canvas, gauge, sonido sintetizado con Web Audio y **modo GPS opcional** (o demo estacionaria). Sin samples y sin afiliación con EV Sound FX. Ver [docs/DRIVE.md](docs/DRIVE.md).
 - **Iconos de marca reales** para YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch (Simple Icons, con atribución), integrados en el diseño TECLA.
 - **Waze**: preparación de ruta y enlace al mapa en vivo oficial. Los avisos de huecos/cámaras pertenecen a Waze y no se reciben ni simulan dentro de TECLA LIVE.
 - Spotify OAuth con tokens cifrados AES-256-GCM y controles remotos; sin simular reproducción local.
@@ -78,8 +78,8 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 
 - `npm run typecheck`: sin errores.
 - `npm run lint`: sin errores (5 avisos de la regla nueva `react-hooks/set-state-in-effect` en detecciones de hidratación/tiempo).
-- `npm run test:run`: **49 pruebas unitarias aprobadas**.
-- `npx playwright test`: **27 pruebas E2E aprobadas**, incluye registro/sincronización real contra PostgreSQL, navegación móvil, minirreproductor, IPTV y modo cine.
+- `npm run test:run`: **51 pruebas unitarias aprobadas**.
+- `npx playwright test`: **28 pruebas E2E aprobadas**, incluye registro/sincronización real contra PostgreSQL, navegación móvil, minirreproductor, IPTV y modo cine.
 - PostgreSQL 16 en Docker, migración inicial aplicada, health check con `database: connected`.
 - Dockerfile multi-stage compilado y ejecutado como usuario no root; `docker compose` levanta base de datos, aplica migraciones y arranca la app con health check.
 - Function calling de TECLA AI verificado de extremo a extremo con **DeepSeek real**: herramienta de clima en servidor, acción de cliente `set_display_mode` y registro de uso en PostgreSQL. También se probó antes con un mock local sin coste.

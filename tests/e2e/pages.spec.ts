@@ -65,9 +65,47 @@ test.describe("páginas y estados de configuración", () => {
   test("TECLA Drive inicia la simulación y cambia de escena", async ({ page }) => {
     await page.goto("/drive");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("TECLA");
+    await page.getByRole("button", { name: "Demo", exact: true }).click();
     await page.getByRole("button", { name: "Costa" }).click();
     await expect(page.getByRole("button", { name: "Costa" })).toHaveAttribute("aria-pressed", "true");
     await page.locator("button:visible").filter({ hasText: /Iniciar paseo/ }).first().click();
+    await expect(page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first()).toBeVisible();
+    await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+    await page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first().click();
+  });
+
+  test("TECLA Drive usa la velocidad del GPS cuando está disponible", async ({ page }) => {
+    await page.addInitScript(() => {
+      const watchPosition = (success: (position: unknown) => void) => {
+        let speed = 8;
+        return window.setInterval(() => {
+          speed += 1;
+          success({
+            coords: {
+              latitude: 9.3047,
+              longitude: -75.3978,
+              accuracy: 8,
+              altitude: null,
+              altitudeAccuracy: null,
+              heading: null,
+              speed,
+            },
+            timestamp: Date.now(),
+          });
+        }, 650);
+      };
+      Object.defineProperty(navigator, "geolocation", {
+        configurable: true,
+        value: {
+          watchPosition,
+          clearWatch: (id: number) => window.clearInterval(id),
+        },
+      });
+    });
+    await page.goto("/drive");
+    await page.locator("button:visible").filter({ hasText: /Activar GPS/ }).first().click();
+    await expect(page.getByText(/GPS activo/).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("GPS REAL").first()).toBeVisible();
     await expect(page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first()).toBeVisible();
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
     await page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first().click();

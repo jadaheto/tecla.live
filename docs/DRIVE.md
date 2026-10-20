@@ -11,8 +11,9 @@ Experiencia original de sonido y paisaje integrada en TECLA LIVE, inspirada conc
   - **Órbita**: campo de estrellas, planeta y horizonte.
   - **Costa**: atardecer, agua, silueta costera y camino.
   - **Cañón**: capas de montañas, estrellas y camino.
-- Gauge circular con velocidad simulada de 0 a 140 km/h.
-- Paseo virtual 0–100 en un toque, con acelerador y freno de pulsación sostenida.
+- Gauge circular de 0 a 140 km/h con dos fuentes:
+  - **GPS real**: usa la velocidad del navegador; requiere permiso de ubicación.
+  - **Demo**: paseo virtual 0–100 con acelerador y freno de pulsación sostenida.
 - Cuatro paisajes sonoros originales, sintetizados con Web Audio:
   - **Viento**
   - **Eléctrico**
@@ -23,18 +24,20 @@ Experiencia original de sonido y paisaje integrada en TECLA LIVE, inspirada conc
 
 ## Privacidad y seguridad
 
-- **No usa GPS ni datos del vehículo.** La velocidad es una simulación estacionaria.
-- No reproduce audio hasta que el usuario pulsa **Iniciar paseo**.
+- **GPS opcional:** solo se activa cuando el usuario pulsa **Activar GPS**. La ubicación se procesa en el navegador y no se envía ni se guarda.
+- **Modo Demo** para usar la experiencia sin ubicación: la velocidad es una simulación estacionaria.
+- No reproduce audio hasta que el usuario pulsa **Activar GPS** o inicia la Demo.
 - El sonido se sintetiza en el navegador mediante osciladores y ruido filtrado; no hay samples descargados.
 - No controla el vehículo ni la bocina de peatones.
 - La UI recuerda no manipular la pantalla mientras se conduce.
-- No se solicita micrófono, ubicación ni cámara.
+- En modo Demo no se solicita ubicación. No se solicita micrófono ni cámara.
 
 ## Restricciones
 
 - La calidad percibida del audio depende de los altavoces, el volumen del navegador y las políticas de autoplay del vehículo.
 - Algunos navegadores de Tesla pueden suspender el audio al cambiar de pestaña o al entrar en segundo plano; la experiencia se detiene de forma segura.
 - El renderizado usa Canvas 2D y un `AudioContext`; si Web Audio no está disponible, la simulación visual sigue funcionando y se muestra un aviso.
+- El GPS requiere un contexto seguro (HTTPS). En `tecla.live` hay que corregir el certificado autofirmado para que el permiso de ubicación no sea bloqueado.
 - El rendimiento del canvas se limita a DPR 1.75 y se pausa cuando la página no está visible.
 
 ## Implementación
@@ -49,8 +52,9 @@ Experiencia original de sonido y paisaje integrada en TECLA LIVE, inspirada conc
 ## Verificación
 
 - Typecheck/build de producción correctos a través de la imagen Docker.
-- 49 pruebas unitarias aprobadas.
-- 27 pruebas E2E aprobadas, incluida la apertura de TECLA Drive, cambio de escena e inicio del paseo.
+- 51 pruebas unitarias aprobadas.
+- 28 pruebas E2E aprobadas, incluida la apertura de TECLA Drive, cambio de escena, inicio del paseo y **GPS con geolocalización simulada**. La prueba con GPS físico queda pendiente.
 - Verificación de audio en Chromium: 1 `AudioContext` en estado `running` y 5 osciladores creados para el preset V8.
+- GPS verificado en Chromium con un `watchPosition` simulado: la UI muestra `GPS activo`, precisión y velocidad; la prueba con hardware/GPS real queda pendiente.
 
 ![TECLA DRIVE en móvil](assets/drive-mobile.png)

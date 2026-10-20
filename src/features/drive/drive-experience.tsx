@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronUp,
   Maximize2,
+  Navigation,
   Play,
   Square,
   Volume2,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { getMediaController } from "@/features/media/player-bridge";
 import { DriveAudioEngine } from "./audio-engine";
 import { DriveCanvas } from "./drive-canvas";
+import { useDriveGeolocation } from "./drive-geolocation";
 import {
   DRIVE_SCENES,
   DRIVE_SOUNDS,
@@ -31,7 +33,15 @@ import {
 } from "./drive-config";
 import { useDriveSimulation } from "./use-drive-simulation";
 
-function DriveGauge({ speed, accent }: { speed: number; accent: string }) {
+function DriveGauge({
+  speed,
+  accent,
+  label,
+}: {
+  speed: number;
+  accent: string;
+  label: string;
+}) {
   const ratio = speedRatio(speed);
   const path = "M 53.64 206.36 A 108 108 0 1 1 206.36 206.36";
   const ticks = Array.from({ length: 29 }, (_, index) => {
@@ -52,7 +62,7 @@ function DriveGauge({ speed, accent }: { speed: number; accent: string }) {
     <div
       className="relative size-[224px] shrink-0 sm:size-[292px]"
       role="img"
-      aria-label={`Velocidad simulada ${formatSpeed(speed)} kilómetros por hora`}
+      aria-label={`Velocidad ${formatSpeed(speed)} kilómetros por hora`}
     >
       <div
         className="absolute inset-[14%] rounded-full opacity-70 blur-3xl"
@@ -109,7 +119,7 @@ function DriveGauge({ speed, accent }: { speed: number; accent: string }) {
       </svg>
 
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pt-5">
-        <span className="eyebrow !text-[9px] !tracking-[0.28em] text-white/40">SIMULADO</span>
+        <span className="eyebrow !text-[9px] !tracking-[0.28em] text-white/40">{label}</span>
         <span
           className="mt-1 text-[4.4rem] font-medium leading-none tracking-[-0.08em] text-white tabular-nums sm:text-[5.2rem]"
           style={{ textShadow: `0 0 42px ${accent}33` }}
@@ -180,15 +190,35 @@ function HoldButton({
 export function DriveExperience() {
   const [sound, setSound] = React.useState<DriveSoundId>("electric");
   const [scene, setScene] = React.useState<DriveSceneId>("orbit");
+  const [mode, setMode] = React.useState<"gps" | "demo">("gps");
   const [volume, setVolume] = React.useState(0.55);
   const [muted, setMuted] = React.useState(false);
+  const [audioActive, setAudioActive] = React.useState(false);
   const [audioError, setAudioError] = React.useState<string | null>(null);
   const engineRef = React.useRef<DriveAudioEngine | null>(null);
   const stageRef = React.useRef<HTMLDivElement>(null);
   const simulation = useDriveSimulation();
+  const handleGeoError = React.useCallback((message: string) => {
+    setAudioError(message);
+    engineRef.current?.stop();
+    setAudioActive(false);
+  }, []);
+  const geo = useDriveGeolocation(handleGeoError);
   const currentSound = findSound(sound);
   const currentScene = findScene(scene);
-  const inMotion = simulation.speed > 0.5;
+  const gpsMode = mode === "gps";
+  const speed = gpsMode ? geo.speedKmh : simulation.speed;
+  const inMotion = speed > 0.5;
+  const stopSimulatedDrive = simulation.stop;
+  const stopGeolocation = geo.stop;
+  const gpsLabel =
+    geo.status === "active"
+      ? `GPS ±${Math.round(geo.accuracyM ?? 0)} m`
+      : geo.status === "requesting"
+        ? "Buscando GPS…"
+        : geo.status === "idle"
+          ? "GPS opcional"
+          : "GPS no disponible";
 
   const getEngine = React.useCallback(() => {
     if (!engineRef.current) engineRef.current = new DriveAudioEngine();
@@ -200,8 +230,15 @@ export function DriveExperience() {
   }, []);
 
   React.useEffect(() => {
-    engineRef.current?.update(simulation.speed, simulation.accelerating || simulation.autoPilot ? 1 : 0);
-  }, [simulation.speed, simulation.accelerating, simulation.autoPilot]);
+    const throttle = gpsMode
+      ? speed > 1
+        ? 0.35
+        : 0
+      : simulation.accelerating || simulation.autoPilot
+        ? 1
+        : 0;
+    engineRef.current?.update(speed, throttle);
+  }, [speed, gpsMode, simulation.accelerating, simulation.autoPilot]);
 
   React.useEffect(() => {
     engineRef.current?.setPreset(sound);
@@ -212,17 +249,17 @@ export function DriveExperience() {
     engineRef.current?.setMuted(muted);
   }, [volume, muted]);
 
-  const { running: simulationRunning, stop: stopSimulation } = simulation;
-
   React.useEffect(() => {
     const handleVisibility = () => {
-      if (!document.hidden || !simulationRunning) return;
+      if (!document.hidden || !audioActive) return;
       engineRef.current?.stop();
-      stopSimulation();
+      setAudioActive(false);
+      stopSimulatedDrive();
+      stopGeolocation();
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [simulationRunning, stopSimulation]);
+  }, [audioActive, stopGeolocation, stopSimulatedDrive]);
 
   async function start() {
     setAudioError(null);
@@ -236,12 +273,23 @@ export function DriveExperience() {
     } catch {
       setAudioError("El navegador no permitió iniciar el audio. El paisaje sigue disponible.");
     }
-    simulation.start();
+    setAudioActive(true);
+    if (gpsMode) geo.start();
+    else simulation.start();
   }
 
   function stop() {
     engineRef.current?.stop();
+    setAudioActive(false);
+    geo.stop();
     simulation.stop();
+  }
+
+  function changeMode(next: "gps" | "demo") {
+    if (next === mode) return;
+    if (audioActive) stop();
+    setMode(next);
+    setAudioError(null);
   }
 
   function toggleMuted() {
@@ -270,7 +318,7 @@ export function DriveExperience() {
       ref={stageRef}
       className="relative isolate min-h-[calc(100dvh-110px)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#04070c] text-white shadow-[0_30px_100px_-30px_rgba(0,0,0,0.9)] lg:min-h-[calc(100dvh-125px)]"
     >
-      <DriveCanvas scene={scene} speed={simulation.speed} />
+      <DriveCanvas scene={scene} speed={speed} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,9,0.42)_0%,transparent_30%,transparent_58%,rgba(2,5,9,0.86)_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:54px_54px] [mask-image:linear-gradient(to_bottom,black,transparent_54%)]" />
 
@@ -296,8 +344,17 @@ export function DriveExperience() {
 
           <div className="flex items-center gap-2">
             <span className="hidden items-center gap-2 rounded-full border border-white/12 bg-black/25 px-3 py-2 text-[9px] font-medium uppercase tracking-[0.15em] text-white/50 backdrop-blur-md sm:flex">
-              <span className="size-1.5 rounded-full bg-[#5eead4] shadow-[0_0_10px_#5eead4]" />
-              Demo estacionaria · sin GPS
+              <span
+                className={cn(
+                  "size-1.5 rounded-full shadow-[0_0_10px_currentColor]",
+                  geo.status === "active"
+                    ? "bg-[#5eead4] text-[#5eead4]"
+                    : geo.status === "requesting"
+                      ? "animate-pulse bg-amber-300 text-amber-300"
+                      : "bg-white/35 text-white/35",
+                )}
+              />
+              {gpsMode ? gpsLabel : "Demo estacionaria"}
             </span>
             <button
               type="button"
@@ -325,48 +382,95 @@ export function DriveExperience() {
             <span className="text-white/20">·</span>
             {currentSound.label}
           </div>
-          <DriveGauge speed={simulation.speed} accent={currentScene.accent} />
+          <DriveGauge
+            speed={speed}
+            accent={currentScene.accent}
+            label={gpsMode ? (geo.status === "active" ? "GPS REAL" : "GPS") : "SIMULADO"}
+          />
           <p className="mt-3 hidden max-w-[420px] text-center text-[11px] leading-relaxed text-white/45 sm:block">
-            {inMotion
-              ? simulation.autoPilot
-                ? "Paseo virtual en curso. La velocidad es una simulación."
-                : "Paisaje y sonido responden a tu pie. Todo ocurre en esta pantalla."
-              : currentScene.subtitle}
+            {gpsMode
+              ? geo.status === "active"
+                ? "Velocidad, paisaje y sonido siguen tu GPS. La ubicación no se guarda."
+                : geo.status === "requesting"
+                  ? "Buscando señal GPS. Acepta el permiso de ubicación."
+                  : "Activa GPS para usar tu velocidad real."
+              : inMotion
+                ? simulation.autoPilot
+                  ? "Paseo virtual en curso. La velocidad es una simulación."
+                  : "Paisaje y sonido responden a tu pie. Todo ocurre en esta pantalla."
+                : currentScene.subtitle}
           </p>
           <div className="mt-2 flex items-center gap-2 sm:mt-3">
             <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] uppercase tracking-[0.18em] text-white/45">
-              {simulation.autoPilot ? "AUTO" : "MANUAL"}
+              {gpsMode ? "GPS" : simulation.autoPilot ? "AUTO" : "MANUAL"}
             </span>
             <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[9px] uppercase tracking-[0.18em] text-white/45">
-              {formatSpeed(simulation.speed)} / {MAX_SPEED} km/h
+              {formatSpeed(speed)} / {MAX_SPEED} km/h
             </span>
           </div>
           <button
             type="button"
-            onClick={() => (simulation.running ? stop() : void start())}
+            onClick={() => (audioActive ? stop() : void start())}
             className={cn(
               "mt-4 flex min-h-12 w-full max-w-[260px] items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-all sm:hidden",
-              simulation.running
+              audioActive
                 ? "border border-white/15 bg-white/10 text-white"
                 : "bg-[#ff6b4a] text-[#1a0703] shadow-[0_16px_42px_-18px_rgba(255,107,74,0.95)]",
             )}
           >
-            {simulation.running ? (
+            {audioActive ? (
               <>
                 <Square className="size-3.5 fill-current" aria-hidden />
                 Detener paseo
               </>
             ) : (
               <>
-                <Play className="size-4 fill-current" aria-hidden />
-                Iniciar paseo
-                <span className="ml-1 text-[10px] font-normal opacity-60">0–100</span>
+                {gpsMode ? <Navigation className="size-4" aria-hidden /> : <Play className="size-4 fill-current" aria-hidden />}
+                {gpsMode ? "Activar GPS" : "Iniciar paseo"}
+                <span className="ml-1 text-[10px] font-normal opacity-60">
+                  {gpsMode ? "Velocidad real" : "0–100"}
+                </span>
               </>
             )}
           </button>
         </div>
 
         <div className="mt-auto rounded-[1.6rem] border border-white/12 bg-black/35 p-4 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.2em] text-white/35">
+              <Navigation className="size-3" aria-hidden />
+              Fuente de velocidad
+            </div>
+            <div
+              role="group"
+              aria-label="Fuente de velocidad"
+              className="flex rounded-full border border-white/10 bg-black/25 p-0.5"
+            >
+              <button
+                type="button"
+                aria-pressed={gpsMode}
+                onClick={() => changeMode("gps")}
+                className={cn(
+                  "min-h-8 rounded-full px-3 text-[10px] font-medium transition-colors",
+                  gpsMode ? "bg-white/15 text-white" : "text-white/45 hover:text-white/75",
+                )}
+              >
+                GPS real
+              </button>
+              <button
+                type="button"
+                aria-pressed={!gpsMode}
+                onClick={() => changeMode("demo")}
+                className={cn(
+                  "min-h-8 rounded-full px-3 text-[10px] font-medium transition-colors",
+                  !gpsMode ? "bg-white/15 text-white" : "text-white/45 hover:text-white/75",
+                )}
+              >
+                Demo
+              </button>
+            </div>
+          </div>
+
           <div className="grid gap-4 lg:grid-cols-[1.05fr_.95fr] lg:gap-6">
             <section aria-label="Sonido de conducción" className="min-w-0">
               <div className="mb-2.5 flex items-center justify-between gap-2">
@@ -437,45 +541,63 @@ export function DriveExperience() {
           <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center">
             <button
               type="button"
-              onClick={() => (simulation.running ? stop() : void start())}
+              onClick={() => (audioActive ? stop() : void start())}
               className={cn(
                 "flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-all sm:shrink-0",
-                simulation.running
+                audioActive
                   ? "border border-white/15 bg-white/10 text-white hover:bg-white/15"
                   : "bg-[#ff6b4a] text-[#1a0703] shadow-[0_16px_42px_-18px_rgba(255,107,74,0.95)] hover:brightness-105",
                 "hidden sm:flex",
               )}
             >
-              {simulation.running ? (
+              {audioActive ? (
                 <>
                   <Square className="size-3.5 fill-current" aria-hidden />
                   Detener paseo
                 </>
               ) : (
                 <>
-                  <Play className="size-4 fill-current" aria-hidden />
-                  Iniciar paseo
-                  <span className="ml-1 text-[10px] font-normal opacity-60">0–100</span>
+                  {gpsMode ? <Navigation className="size-4" aria-hidden /> : <Play className="size-4 fill-current" aria-hidden />}
+                  {gpsMode ? "Activar GPS" : "Iniciar paseo"}
+                  <span className="ml-1 text-[10px] font-normal opacity-60">
+                    {gpsMode ? "Velocidad real" : "0–100"}
+                  </span>
                 </>
               )}
             </button>
 
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1">
-              <HoldButton
-                label="Acelerar"
-                icon={ChevronUp}
-                active={simulation.accelerating}
-                disabled={!simulation.running}
-                onPress={(pressed) => simulation.setPedal("accelerating", pressed)}
-              />
-              <HoldButton
-                label="Frenar"
-                icon={ChevronDown}
-                active={simulation.braking}
-                disabled={!simulation.running}
-                onPress={(pressed) => simulation.setPedal("braking", pressed)}
-              />
-            </div>
+            {gpsMode ? (
+              <div className="flex min-h-12 flex-1 flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-white/10 bg-white/[0.045] px-3.5 text-[10px] text-white/55">
+                <span className="flex items-center gap-1.5 text-white/75">
+                  <Navigation className="size-3.5" aria-hidden />
+                  {geo.status === "active"
+                    ? `GPS activo · precisión ±${Math.round(geo.accuracyM ?? 0)} m`
+                    : geo.status === "requesting"
+                      ? "Solicitando GPS…"
+                      : "GPS inactivo"}
+                </span>
+                <span className="hidden text-white/35 sm:inline">
+                  La ubicación se procesa solo en este navegador.
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1">
+                <HoldButton
+                  label="Acelerar"
+                  icon={ChevronUp}
+                  active={simulation.accelerating}
+                  disabled={!audioActive}
+                  onPress={(pressed) => simulation.setPedal("accelerating", pressed)}
+                />
+                <HoldButton
+                  label="Frenar"
+                  icon={ChevronDown}
+                  active={simulation.braking}
+                  disabled={!audioActive}
+                  onPress={(pressed) => simulation.setPedal("braking", pressed)}
+                />
+              </div>
+            )}
 
             <div className="flex items-center gap-2 sm:ml-auto sm:w-40">
               <button
@@ -508,7 +630,7 @@ export function DriveExperience() {
         <footer className="mt-3 hidden flex-wrap items-center justify-between gap-2 text-[9px] leading-relaxed text-white/30 sm:flex">
           <span className="flex items-center gap-1.5">
             <Wind className="size-3" aria-hidden />
-            Sonido sintetizado en tu navegador. No usa GPS ni controla el vehículo.
+            GPS opcional: la ubicación se procesa en tu navegador y no se guarda.
           </span>
           <span className="flex items-center gap-1.5">
             <Zap className="size-3" aria-hidden />

@@ -10,6 +10,7 @@ import {
   speedRatio,
   stepDriveSpeed,
 } from "@/features/drive/drive-config";
+import { estimateSpeedKmh } from "@/features/drive/drive-geolocation";
 
 describe("TECLA Drive simulation", () => {
   it("auto drive reaches the target and releases autopilot", () => {
@@ -57,5 +58,34 @@ describe("TECLA Drive simulation", () => {
     expect(new Set(DRIVE_SOUNDS.map((sound) => sound.id)).size).toBe(DRIVE_SOUNDS.length);
     expect(findScene("coast").label).toBe("Costa");
     expect(findSound("warp").label).toBe("Hiperespacio");
+  });
+});
+
+describe("TECLA Drive GPS helpers", () => {
+  it("converts device speed from m/s to km/h and caps it", () => {
+    const fix = {
+      latitude: 9.3047,
+      longitude: -75.3978,
+      timestamp: 1_000,
+      accuracy: 8,
+      speed: 10,
+    };
+    expect(estimateSpeedKmh(null, fix)).toBe(36);
+    expect(estimateSpeedKmh(null, { ...fix, speed: 80 })).toBe(MAX_SPEED);
+  });
+
+  it("derives speed from two nearby fixes when the device omits speed", () => {
+    const first = {
+      latitude: 9.3047,
+      longitude: -75.3978,
+      timestamp: 1_000,
+      accuracy: 8,
+      speed: null,
+    };
+    const second = { ...first, latitude: 9.3048, timestamp: 2_000 };
+    const speed = estimateSpeedKmh(first, second);
+    expect(speed).not.toBeNull();
+    expect(speed).toBeGreaterThan(30);
+    expect(speed).toBeLessThan(130);
   });
 });

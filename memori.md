@@ -40,7 +40,7 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Fase 0 completa: archivos de control, objetivo del harness, scaffold, Prisma, build y typecheck verdes.
 - [x] Dashboard cinematográfico responsive (1920×1080, tablet, móvil) con hero editorial, clima real de Sincelejo (Open-Meteo), accesos rápidos, carruseles, estados vacío/error/carga y pie.
 - [x] Búsqueda universal (⌘K), atajos (⌘J, ?), tema claro/oscuro/automático con horario, modos normal/cine/kiosco, fullscreen con fallback, reducción de movimiento.
-- [x] TECLA DRIVE (`/drive`): experiencia original de sonido y paisaje con Canvas 2D, gauge de velocidad simulada y Web Audio (viento, eléctrico, V8 sintético, hiperespacio). Sin GPS, samples ni assets de terceros.
+- [x] TECLA DRIVE (`/drive`): experiencia original de sonido y paisaje con Canvas 2D, gauge, Web Audio (viento, eléctrico, V8 sintético, hiperespacio) y modo GPS opcional para velocidad real, con Demo estacionaria. Sin samples ni assets de terceros.
 - [x] Iconos de marca reales con atribución: YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch; Radio/IPTV/TECLA AI conservan iconografía propia.
 - [x] YouTube: cliente Data API v3 con caché y cuota, búsqueda/tendencias CO, reproductor IFrame oficial, metadatos, historial con progreso, favoritos, listas, cola y minirreproductor. **Verificado con API real el 2026-10-20.** Fix del crash de `/watch` por reconciliación DOM del iframe y filtro de videos no embebibles.
 - [x] TECLA AI texto: 21 herramientas Zod, registro para DeepSeek, orquestación con máximo de pasos y resultados reales, rate limits, presupuesto, ledger de uso, system prompt antiinyección, panel flotante y página `/ai`. **DeepSeek real verificado (texto, tool de clima y action bridge).**
@@ -57,11 +57,11 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Cuentas: registro/login/logout, bcrypt, sesiones revocables, `/api/auth/me`, sincronización de favoritos/historial/preferencias y carga de preferencias desde la nube.
 - [x] Ajustes completos: apariencia, pantalla, IA/voz, clima, cuenta, orden del dashboard, privacidad, exportación y borrado local.
 - [x] Dockerfile multi-stage no root, health check; Dockerfile.migrate; docker-compose con PostgreSQL, migración y app; build e2e de contenedor verificado.
-- [x] 49 pruebas unitarias y 27 pruebas E2E (Playwright) aprobadas; lint sin errores.
+- [x] 51 pruebas unitarias y 28 pruebas E2E (Playwright) aprobadas; lint sin errores.
 
 ## ESTADO ACTUAL
 
-Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 49 unitarias, 27 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** La app está corriendo desde la imagen Docker final en `http://localhost:3000`, con claves reales inyectadas en runtime. **YouTube, DeepSeek, Deepgram y ElevenLabs fueron probados contra sus proveedores reales (2026-10-20).** Spotify validó credenciales y redirect; falta la autorización de la cuenta. Micrófono físico, Tesla y Easypanel siguen pendientes.
+Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 51 unitarias, 28 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** La app está corriendo desde la imagen Docker final en `http://localhost:3000`, con claves reales inyectadas en runtime. **YouTube, DeepSeek, Deepgram y ElevenLabs fueron probados contra sus proveedores reales (2026-10-20).** Spotify validó credenciales y redirect; falta la autorización de la cuenta. Micrófono físico, Tesla y Easypanel siguen pendientes.
 
 ## PROBLEMAS CONOCIDOS
 
@@ -113,4 +113,4 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 13:30 America/Bogota** — Añadido TECLA DRIVE, experiencia original de sonido/paisaje en `/drive`; audio Web Audio verificado, 49 unitarias y 27 E2E. Pendiente redesplegar en tecla.live, probar micrófono físico y corregir el certificado TLS autofirmado.
+**2026-10-20 13:51 America/Bogota** — Añadido TECLA DRIVE, experiencia original de sonido/paisaje en `/drive`; audio Web Audio verificado, 51 unitarias y 28 E2E. Pendiente redesplegar en tecla.live, probar micrófono físico y corregir el certificado TLS autofirmado.

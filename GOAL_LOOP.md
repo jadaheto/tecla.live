@@ -31,8 +31,8 @@ Estado: **Completado en alcance verificable.**
 - [x] `npm run typecheck` sin errores.
 - [x] `npm run lint` sin errores (6 avisos documentados).
 - [x] `npm run build` de producción correcto.
-- [x] 49 pruebas unitarias aprobadas.
-- [x] 27 pruebas E2E aprobadas.
+- [x] 51 pruebas unitarias aprobadas.
+- [x] 28 pruebas E2E aprobadas.
 - [x] Docker build correcto, contenedor no root, health check y conexión a base de datos.
 - [x] Docker Compose levanta PostgreSQL, aplica migraciones y arranca la app.
 - [x] Registro/login/sync verificados contra PostgreSQL.
@@ -72,19 +72,19 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 13 | Prueba de claves reales | YouTube, DeepSeek, ElevenLabs, Deepgram y credenciales Spotify verificados | Completada con pendientes de hardware/autorización |
 | 14 | Fix de producción `/watch` | iframe fuera de React, filtro de no embebibles, selección oficial y E2E verdes | Completada local; pendiente redespliegue |
 | 15 | Fix del flujo de micrófono | estado `transcribing` liberado; STT→chat→TTS verificado con audio inyectado | Completada local; pendiente hardware/redespliegue |
-| 16 | TECLA DRIVE | canvas original, audio sintetizado, integración y 49/27 pruebas | Completada local |
+| 16 | TECLA DRIVE | canvas original, audio, GPS opcional, modo demo y 51/28 pruebas | Completada local |
 
 ## ÚLTIMA ACCIÓN
 
-TECLA DRIVE integrado en `/drive`: tres escenas Canvas originales, gauge de velocidad simulada, paseo 0–100 y cuatro sonidos sintetizados con Web Audio. Sin GPS, samples ni assets de EV Sound FX. Typecheck y lint limpios en contenedor Node 22; 49 unitarias y 27 E2E verdes; build de 40 rutas.
+TECLA DRIVE integrado en `/drive`: tres escenas Canvas originales, cuatro sonidos sintetizados con Web Audio y dos fuentes de velocidad: **GPS real opcional** y **demo 0–100**. La ubicación se procesa solo en el navegador y no se guarda. Sin samples ni assets de EV Sound FX. Typecheck y lint limpios en contenedor Node 22; 51 unitarias y 28 E2E verdes; build de 40 rutas.
 
 ## RESULTADO
 
 - `npm run typecheck`: OK.
 - `npm run lint`: 0 errores, 6 avisos `set-state-in-effect` en hidratación/tiempo.
 - `npm run build`: OK, 40 rutas.
-- `npm run test:run`: 49/49.
-- `npx playwright test`: 27/27.
+- `npm run test:run`: 51/51.
+- `npx playwright test`: 28/28.
 - PostgreSQL: migración `20261020022821_init`, tablas creadas, registro/login/sync y uso de IA registrados.
 - Docker: imagen final construida con build arg `NEXT_PUBLIC_APP_URL=https://tecla.live`; contenedor no root, health check healthy y home HTTP 200.
 - Compose: DB + migrate + app; migración aplicada y health 200.
@@ -137,3 +137,4 @@ Configurar credenciales en un entorno seguro y ejecutar la matriz de verificaci�
 - **2026-10-20 10:05** — Corregido crash de `/watch` en producción: YouTube reemplazaba el nodo de React y lanzaba `removeChild`. Se añadió filtro de no embebibles y preferencia por canal oficial. En ese momento eran 26 E2E; la suite creció a 27 con TECLA DRIVE. Pendiente redeploy y TLS válido.
 - **2026-10-20 10:15** — Corregido flujo de micrófono: Deepgram transcribía, pero `send()` era rechazado por el estado `transcribing`; ahora se libera y la transcripción se envía. Verificado STT→chat→TTS con audio inyectado en Chromium.
 - **2026-10-20 13:30** — Añadido TECLA DRIVE: experiencia original en `/drive` con tres escenas Canvas, gauge, paseo 0–100 y cuatro sonidos sintetizados. AudioContext verificado; 49 unitarias y 27 E2E. Sin assets de EV Sound FX.
+- **2026-10-20 13:52** — TECLA DRIVE con GPS opcional: `watchPosition`, velocidad real o derivada de posiciones, permisos, caída segura a Demo y privacidad local. Prueba E2E con GPS simulado; 51 unitarias y 28 E2E. La captura con GPS físico sigue pendiente.
