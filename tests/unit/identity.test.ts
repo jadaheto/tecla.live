@@ -63,3 +63,26 @@ describe("Knight Rider style", () => {
     delete process.env.ELEVENLABS_KITT_VOICE_ID;
   });
 });
+
+import { parseVoicesPayload } from "@/lib/ai/elevenlabs/voices";
+
+describe("ElevenLabs voices payload", () => {
+  it("tolerates nulls and unknown fields and skips malformed entries", () => {
+    const result = parseVoicesPayload({
+      voices: [
+        { voice_id: "a1", name: "Alpha", category: null, labels: { accent: "latin", age: null, extra: { x: 1 } }, preview_url: null, new_field: true },
+        { voice_id: "b2", name: "Beta" },
+        { name: "Sin id" },
+        "basura",
+      ],
+      extra: 1,
+    });
+    expect(result.voices).toEqual([
+      { id: "a1", name: "Alpha", category: undefined, labels: { accent: "latin" } },
+      { id: "b2", name: "Beta", category: undefined, labels: undefined },
+    ]);
+    expect(result.skipped).toBe(2);
+    expect(parseVoicesPayload({ voices: null }).voices).toEqual([]);
+    expect(() => parseVoicesPayload("nope")).toThrow("ELEVENLABS_VOICES_INVALID");
+  });
+});

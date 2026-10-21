@@ -28,20 +28,24 @@ export async function GET() {
     return jsonError("RATE_LIMITED", "Espera un momento antes de volver a consultar.", 429, true);
   }
 
+  // La lista de la cuenta es opcional: si ElevenLabs falla, Ajustes sigue mostrando las voces curadas.
+  let voices: Awaited<ReturnType<typeof getElevenLabsVoices>> = [];
+  let accountVoicesError: string | null = null;
   try {
-    const voices = await getElevenLabsVoices();
-    const defaultVoiceName =
-      voices.find((voice) => voice.id === serverConfig.elevenLabsVoiceId)?.name ??
-      (await getElevenLabsVoiceName(serverConfig.elevenLabsVoiceId));
-    return jsonOk({
-      voices,
-      defaultVoiceId: serverConfig.elevenLabsVoiceId || null,
-      defaultVoiceName,
-      curated: getCuratedVoices(),
-      groups: CURATED_GROUP_LABELS,
-    });
+    voices = await getElevenLabsVoices();
   } catch (error) {
-    logger.warn("elevenlabs.voices_route_failed", { error });
-    return jsonError("VOICES_UNAVAILABLE", "No pudimos obtener las voces de la cuenta.", 503, true);
+    accountVoicesError = error instanceof Error ? error.message : "ELEVENLABS_VOICES_FAILED";
+    logger.warn("elevenlabs.voices_route_failed", { error: accountVoicesError });
   }
+  const defaultVoiceName =
+    voices.find((voice) => voice.id === serverConfig.elevenLabsVoiceId)?.name ??
+    (await getElevenLabsVoiceName(serverConfig.elevenLabsVoiceId));
+  return jsonOk({
+    voices,
+    accountVoicesError,
+    defaultVoiceId: serverConfig.elevenLabsVoiceId || null,
+    defaultVoiceName,
+    curated: getCuratedVoices(),
+    groups: CURATED_GROUP_LABELS,
+  });
 }

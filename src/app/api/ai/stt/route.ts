@@ -125,7 +125,32 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      logger.warn("ai.stt_provider_error", { status: response.status });
+      // Deepgram explica el rechazo en JSON (err_code/err_msg); se registra sin audio ni transcripción.
+      let providerCode: string | null = null;
+      let providerMessage: string | null = null;
+      try {
+        const detail = (await response.json()) as { err_code?: unknown; err_msg?: unknown; message?: unknown };
+        providerCode = typeof detail.err_code === "string" ? detail.err_code.slice(0, 60) : null;
+        const text = typeof detail.err_msg === "string" ? detail.err_msg : typeof detail.message === "string" ? detail.message : null;
+        providerMessage = text ? text.slice(0, 160) : null;
+      } catch {
+        // cuerpo no JSON
+      }
+      logger.warn("ai.stt_provider_error", {
+        status: response.status,
+        providerCode,
+        providerMessage,
+        mimeType,
+        bytes: audio.size,
+      });
+      if (response.status === 400) {
+        return jsonError(
+          "AUDIO_NOT_UNDERSTOOD",
+          "No se entendió el audio grabado. Intenta de nuevo hablando un poco más cerca del micrófono.",
+          422,
+          true,
+        );
+      }
       if (response.status === 401 || response.status === 403) {
         return jsonError("DEEPGRAM_AUTH_ERROR", "La clave de Deepgram no es válida.", 503, false);
       }
