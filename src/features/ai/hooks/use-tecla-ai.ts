@@ -84,7 +84,6 @@ export function useTeclaAI() {
   const abortRef = React.useRef<AbortController | null>(null);
   const runIdRef = React.useRef(0);
   const recorderRef = React.useRef<MediaRecorder | null>(null);
-  const chunksRef = React.useRef<Blob[]>([]);
   const streamRef = React.useRef<MediaStream | null>(null);
   const timerRef = React.useRef<number | null>(null);
   const discardRef = React.useRef(false);
@@ -661,7 +660,6 @@ export function useTeclaAI() {
     streamRef.current = stream;
     usePreferences.getState().setPreferences({ micConsent: true });
     discardRef.current = false;
-    chunksRef.current = [];
 
     // Fin de frase automático: tras voz detectada, 1,4 s de silencio envían la orden;
     // sin voz en 8 s se descarta. Así se puede hablar sin tocar la pantalla.
@@ -678,6 +676,9 @@ export function useTeclaAI() {
         const startedAt = Date.now();
         let voicedMs = 0;
         let lastVoiceAt = 0;
+        // Piso de ruido adaptativo: sigue el mínimo reciente y sube despacio. En el
+        // carro, el ruido de rodadura no debe contar como voz ni impedir el silencio.
+        let noiseFloor = 0;
         const interval = window.setInterval(() => {
           const active = recorderRef.current;
           if (!active || active.state !== "recording") {
@@ -688,9 +689,11 @@ export function useTeclaAI() {
           let energy = 0;
           for (let i = 0; i < samples.length; i += 1) energy += (samples[i] ?? 0) ** 2;
           const rms = Math.sqrt(energy / samples.length);
+          noiseFloor = rms < noiseFloor ? rms : Math.min(noiseFloor * 1.01 + 0.0002, 0.12);
+          const threshold = Math.max(0.02, noiseFloor * 2.5);
           setVoiceLevel(Math.min(1, rms * 6), "mic");
           const now = Date.now();
-          if (rms > 0.02) {
+          if (rms > threshold) {
             voicedMs += 100;
             lastVoiceAt = now;
           }
@@ -730,8 +733,12 @@ export function useTeclaAI() {
       return;
     }
 
+    // Los fragmentos pertenecen a ESTE grabador. Con una lista compartida, el último
+    // trozo de una grabación que se detiene podía colarse en la siguiente y el WebM
+    // perdía la cabecera (Deepgram: «corrupt or unsupported data»).
+    const chunks: Blob[] = [];
     recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) chunksRef.current.push(event.data);
+      if (event.data.size > 0) chunks.push(event.data);
     };
 
     recorder.onstop = () => {
@@ -741,19 +748,16 @@ export function useTeclaAI() {
       }
       const recordedType = recorder.mimeType || mimeType || "audio/webm";
       stopVad();
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-      recorderRef.current = null;
+      stream.getTracks().forEach((track) => track.stop());
+      if (streamRef.current === stream) streamRef.current = null;
+      if (recorderRef.current === recorder) recorderRef.current = null;
 
       if (discardRef.current) {
         discardRef.current = false;
-        chunksRef.current = [];
         useAi.getState().setStatus("idle");
         return;
       }
 
-      const chunks = chunksRef.current;
-      chunksRef.current = [];
       if (chunks.length === 0) {
         useAi.getState().setStatus("idle");
         useAi.getState().setError("No se capturó audio. Intenta de nuevo o escribe.");

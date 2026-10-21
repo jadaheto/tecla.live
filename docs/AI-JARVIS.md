@@ -66,6 +66,12 @@ Fortalezas: el modelo nunca anuncia acciones sin resultado real, las claves vive
 - **Voces curadas por entorno (2026-10-21):** la lista se define en `ELEVENLABS_VOICES` (`id|Nombre|grupo|género;…`, ver `.env.example`), el endpoint público `/api/ai/voices/public` la expone sin sesión y Ajustes la muestra a cualquier usuario: nadie necesita cuenta de ElevenLabs. Si la variable no existe, se usa una lista de respaldo en código.
 - **Voces curadas** (`src/lib/ai/elevenlabs/curated-voices.ts`): la voz del `.env` (Valeria, español latino, femenina) sigue siendo la predeterminada. En Ajustes se ofrecen además, en grupos: Español latino · Colombia (Alejandro, Alberto, Andrea de Medellín, Valentina de Medellín), Hombres populares (Brian, George, Daniel) y Mujeres populares (Sarah, Alice, Matilda), más cualquier otra voz de la cuenta. Los IDs son públicos; la clave sigue en el servidor y `/api/ai/tts` solo acepta voces curadas o de la cuenta. El modelo `eleven_flash_v2_5` es multilingüe: las voces en inglés hablan español con acento; para Jarvis en español se recomienda Alberto o Alejandro.
 
+## Grabación de voz en el carro (2026-10-21)
+
+- Cada `MediaRecorder` guarda sus fragmentos en una lista propia (`use-tecla-ai.ts`). Antes una lista compartida mezclaba el final de una grabación con el inicio de la siguiente y Deepgram respondía 400 «corrupt or unsupported data» sobre un WebM sin cabecera.
+- Detección de fin de frase con piso de ruido adaptativo: el umbral de voz es `max(0,02, piso × 2,5)`, donde el piso sigue el mínimo reciente del RMS y sube despacio (tope 0,12). Así el ruido de rodadura no cuenta como voz y el silencio de 1,4 s se detecta en marcha.
+- La ruta `/api/ai/stt` registra el motivo de Deepgram (`providerCode`, `providerMessage`, mime y bytes) y responde 422 `AUDIO_NOT_UNDERSTOOD` reintentable ante un 400.
+
 ## Estilo «El auto fantástico» (KITT) y «Oye TECLA» en el Tesla (2026-10-21)
 
 - **Estilo visual `kitt`** (`[data-style="kitt"]` en `globals.css`): fondo negro, acento rojo escáner `#ff1a1a`, ámbar `#ffb000`, títulos en Orbitron y texto en Share Tech Mono (`next/font/google`, variables `--font-kitt` y `--font-kitt-mono`). Fuerza el tema oscuro como Cyberpunk. Referencias tomadas de la serie: Pontiac Trans Am negro de 1982, escáner frontal rojo con barrido Larson, tablero de LED rojos/ámbar y el modulador de voz de tres columnas.
