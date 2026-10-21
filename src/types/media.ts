@@ -1,7 +1,7 @@
 export type ThemeMode = "light" | "dark" | "auto";
 export type DisplayMode = "normal" | "cinema" | "kiosk";
 export type ResolvedTheme = "light" | "dark";
-export type VisualStyle = "tecla" | "cyberpunk";
+export type VisualStyle = "tecla" | "cyberpunk" | "kitt";
 export type AiPersona = "copiloto" | "jarvis";
 
 export type MediaKind =

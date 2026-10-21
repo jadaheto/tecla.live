@@ -47,3 +47,19 @@ describe("ELEVENLABS_VOICES parsing", () => {
     expect(FALLBACK_CURATED_VOICES.length).toBe(10);
   });
 });
+
+import { effectivePersona } from "@/features/ai/persona";
+import { getKittVoiceId } from "@/lib/ai/elevenlabs/curated-voices";
+
+describe("Knight Rider style", () => {
+  it("activates the KITT persona over the chosen one and picks a deep male voice", () => {
+    expect(effectivePersona({ aiPersona: "copiloto", visualStyle: "kitt" })).toBe("kitt");
+    expect(effectivePersona({ aiPersona: "copiloto", visualStyle: "tecla" })).toBe("copiloto");
+    expect(effectivePersona({ aiPersona: "jarvis", visualStyle: "cyberpunk" })).toBe("jarvis");
+    delete process.env.ELEVENLABS_KITT_VOICE_ID;
+    expect(getKittVoiceId()).toBe("UiSSTkQfzyt8mQUKITpS");
+    process.env.ELEVENLABS_KITT_VOICE_ID = "abcdefghij1234567890";
+    expect(getKittVoiceId()).toBe("abcdefghij1234567890");
+    delete process.env.ELEVENLABS_KITT_VOICE_ID;
+  });
+});

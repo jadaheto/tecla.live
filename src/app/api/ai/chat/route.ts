@@ -67,8 +67,8 @@ const ContextSchema = z
       )
       .max(12)
       .optional(),
-    persona: z.enum(["copiloto", "jarvis"]).optional(),
-    visualStyle: z.enum(["tecla", "cyberpunk"]).optional(),
+    persona: z.enum(["copiloto", "jarvis", "kitt"]).optional(),
+    visualStyle: z.enum(["tecla", "cyberpunk", "kitt"]).optional(),
     spotifyDeviceId: z.string().max(80).optional(),
     assistantName: z.string().max(24).optional(),
   })

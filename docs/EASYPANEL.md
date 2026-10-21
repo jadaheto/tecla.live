@@ -60,6 +60,7 @@ Configura en Easypanel (nunca en el repositorio):
 | `ELEVENLABS_VOICE_ID` | Opcional | ID real de una voz de tu cuenta |
 | `ELEVENLABS_MODEL_ID` | Opcional | `eleven_flash_v2_5` |
 | `ELEVENLABS_VOICES` | Opcional | Voces públicas de Ajustes: `id\|Nombre\|grupo\|género;…` (ver `.env.example`). Sin ella se usa una lista de respaldo. |
+| `ELEVENLABS_KITT_VOICE_ID` | Opcional | Voz grave para el estilo «El auto fantástico». Sin ella se usa la primera voz masculina grave de `ELEVENLABS_VOICES`. |
 | `SPOTIFY_CLIENT_ID` | Opcional | App de Spotify Developer |
 | `SPOTIFY_CLIENT_SECRET` | Opcional | App de Spotify Developer |
 | `SPOTIFY_REDIRECT_URI` | Opcional | `https://tecla.live/api/spotify/callback` |

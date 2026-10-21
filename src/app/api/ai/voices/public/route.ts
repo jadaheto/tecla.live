@@ -1,5 +1,5 @@
 import { getClientIp, jsonError, jsonOk } from "@/lib/api-response";
-import { CURATED_GROUP_LABELS, getCuratedVoices } from "@/lib/ai/elevenlabs/curated-voices";
+import { CURATED_GROUP_LABELS, getCuratedVoices, getKittVoiceId } from "@/lib/ai/elevenlabs/curated-voices";
 import { getElevenLabsVoiceName } from "@/lib/ai/elevenlabs/voices";
 import { serverConfig } from "@/lib/env";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     defaultVoiceId: serverConfig.elevenLabsVoiceId,
     defaultVoiceName,
     curated,
+    kittVoiceId: getKittVoiceId(),
     groups: CURATED_GROUP_LABELS,
     source: process.env.ELEVENLABS_VOICES?.trim() ? "env" : "fallback",
   });

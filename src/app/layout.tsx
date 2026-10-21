@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Rajdhani } from "next/font/google";
+import { Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
@@ -11,6 +11,20 @@ const cyberFont = Rajdhani({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-cyber",
+  display: "swap",
+});
+
+// «El auto fantástico»: Orbitron para títulos y Share Tech Mono para lecturas digitales.
+const kittFont = Orbitron({
+  subsets: ["latin"],
+  weight: ["500", "700", "900"],
+  variable: "--font-kitt",
+  display: "swap",
+});
+const kittMono = Share_Tech_Mono({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-kitt-mono",
   display: "swap",
 });
 
@@ -57,7 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           suppressHydrationWarning
         />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} font-sans antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} ${kittFont.variable} ${kittMono.variable} font-sans antialiased`}>
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

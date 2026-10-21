@@ -66,6 +66,8 @@ function waitForPlayback(videoId: string, timeoutMs: number): Promise<"playing" 
   });
 }
 
+const STYLE_LABELS = { tecla: "TECLA", cyberpunk: "Cyberpunk 2077", kitt: "El auto fantástico" } as const;
+
 function result(errorCode: string, message: string): ExecutionOutcome {
   return {
     ok: false,
@@ -293,8 +295,8 @@ async function executeAction(
       usePreferences.getState().setPreferences({ visualStyle: input.style });
       return {
         ok: true,
-        content: { ok: true, message: `Estilo ${input.style === "cyberpunk" ? "Cyberpunk 2077" : "TECLA"} aplicado.` },
-        summary: input.style === "cyberpunk" ? "Estilo Cyberpunk 2077 activado" : "Estilo TECLA restaurado",
+        content: { ok: true, message: `Estilo ${STYLE_LABELS[input.style]} aplicado.` },
+        summary: input.style === "tecla" ? "Estilo TECLA restaurado" : `Estilo ${STYLE_LABELS[input.style]} activado`,
       };
     }
 

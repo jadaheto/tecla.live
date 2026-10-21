@@ -107,7 +107,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: "set_visual_style",
     execution: "client",
     description:
-      "Cambia el estilo visual de TECLA LIVE: «tecla» (normal) o «cyberpunk» (Cyberpunk 2077: tipografía Rajdhani, neón amarillo y cian, scanlines).",
+      "Cambia el estilo visual de TECLA LIVE: «tecla» (normal), «cyberpunk» (Cyberpunk 2077: tipografía Rajdhani, neón amarillo y cian, scanlines) o «kitt» (El auto fantástico / Knight Rider: negro, escáner rojo, ámbar, tipografía Orbitron; activa la personalidad y la voz de KITT).",
     schema: TOOL_SCHEMAS.set_visual_style,
   },
   {

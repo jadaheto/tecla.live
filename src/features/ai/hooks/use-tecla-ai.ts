@@ -11,6 +11,8 @@ import { usePreferences } from "@/stores/preferences";
 import { useAiMemory } from "@/stores/ai-memory";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { getMediaController } from "@/features/media/player-bridge";
+import { effectivePersona } from "@/features/ai/persona";
+import { getKittVoiceId } from "@/features/ai/kitt-voice";
 import { getSpotifyWebPlayerState } from "@/features/music/spotify-web-player-bridge";
 import { clearVoiceLevel, setVoiceLevel } from "@/features/ai/voice-level";
 import { splitSentences, streamAiChat } from "@/features/ai/stream-client";
@@ -204,9 +206,7 @@ export function useTeclaAI() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             text: clean,
-            ...(usePreferences.getState().aiVoiceId
-              ? { voiceId: usePreferences.getState().aiVoiceId }
-              : {}),
+            ...voicePayload(),
           }),
           signal: controller.signal,
         });
@@ -376,7 +376,7 @@ export function useTeclaAI() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: clean.slice(0, 1000),
-          ...(usePreferences.getState().aiVoiceId ? { voiceId: usePreferences.getState().aiVoiceId } : {}),
+          ...voicePayload(),
         }),
         signal,
       })
@@ -417,7 +417,7 @@ export function useTeclaAI() {
 
       // Despedida por voz: respuesta local breve y cierre del HUD, sin DeepSeek.
       if (options?.speak && isFarewell(text)) {
-        const reply = farewellReply(text, usePreferences.getState().aiPersona);
+        const reply = farewellReply(text, effectivePersona(usePreferences.getState()));
         store.addMessage({ role: "assistant", content: reply });
         closeAfterSpeakRef.current = true;
         if (ttsConfiguredRef.current && usePreferences.getState().voiceEnabled) {
@@ -452,7 +452,7 @@ export function useTeclaAI() {
           fullscreen: capabilities.fullscreen,
           webSpeech: capabilities.webSpeech,
         },
-        persona: usePreferences.getState().aiPersona,
+        persona: effectivePersona(usePreferences.getState()),
         visualStyle: usePreferences.getState().visualStyle,
         assistantName: usePreferences.getState().aiName,
         ...(getSpotifyWebPlayerState().deviceId
@@ -921,3 +921,17 @@ export function useTeclaAI() {
 }
 
 export { screenLabel };
+
+/**
+ * Voz para ElevenLabs: la elegida en Ajustes; si no hay, con el estilo
+ * «El auto fantástico» se usa la voz grave recomendada por el servidor.
+ */
+function voicePayload(): { voiceId?: string } {
+  const prefs = usePreferences.getState();
+  if (prefs.aiVoiceId) return { voiceId: prefs.aiVoiceId };
+  if (prefs.visualStyle === "kitt") {
+    const kitt = getKittVoiceId();
+    if (kitt) return { voiceId: kitt };
+  }
+  return {};
+}

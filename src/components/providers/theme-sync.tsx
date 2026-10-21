@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePreferences } from "@/stores/preferences";
 import { getBogotaMinutes, isWithinWindow, parseTimeToMinutes } from "@/lib/theme";
+import { prefetchKittVoiceId } from "@/features/ai/kitt-voice";
 
 export function ThemeSync() {
   const theme = usePreferences((state) => state.theme);
@@ -16,8 +17,9 @@ export function ThemeSync() {
 
   React.useEffect(() => {
     const apply = () => {
-      let dark = theme === "dark" || visualStyle === "cyberpunk";
-      if (theme === "auto" && visualStyle !== "cyberpunk") {
+      const forcedDark = visualStyle === "cyberpunk" || visualStyle === "kitt";
+      let dark = theme === "dark" || forcedDark;
+      if (theme === "auto" && !forcedDark) {
         if (!autoThemeEnabled) {
           dark = true;
         } else {
@@ -42,6 +44,8 @@ export function ThemeSync() {
 
   React.useEffect(() => {
     document.documentElement.dataset.style = visualStyle;
+    // «El auto fantástico» habla con la voz grave de KITT: se consulta por adelantado.
+    if (visualStyle === "kitt") void prefetchKittVoiceId();
   }, [visualStyle]);
 
   React.useEffect(() => {

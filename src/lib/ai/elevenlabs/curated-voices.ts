@@ -68,6 +68,22 @@ export function getCuratedVoices(): CuratedVoice[] {
   return voices;
 }
 
+const KITT_PREFERRED_IDS = ["UiSSTkQfzyt8mQUKITpS", "onwK4e9ZLuTAKqWW03F9", "nPczCjzI2devNBz1zQrb", "cAiEyIv3FkdNcqX4j2lu"];
+
+/**
+ * Voz para el estilo «El auto fantástico»: ELEVENLABS_KITT_VOICE_ID si está
+ * definida; si no, la primera voz masculina grave de la lista curada.
+ */
+export function getKittVoiceId(): string | null {
+  const fromEnv = process.env.ELEVENLABS_KITT_VOICE_ID?.trim();
+  if (fromEnv && VOICE_ID.test(fromEnv)) return fromEnv;
+  const voices = getCuratedVoices();
+  for (const preferred of KITT_PREFERRED_IDS) {
+    if (voices.some((voice) => voice.id === preferred)) return preferred;
+  }
+  return voices.find((voice) => voice.gender === "male")?.id ?? null;
+}
+
 export function isCuratedVoice(id: string): boolean {
-  return getCuratedVoices().some((voice) => voice.id === id);
+  return getCuratedVoices().some((voice) => voice.id === id) || id === process.env.ELEVENLABS_KITT_VOICE_ID?.trim();
 }

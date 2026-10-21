@@ -133,6 +133,7 @@
 - [x] Netflix y Disney+ como accesos externos.
 - [x] Tests unitarios de deep links, M3U y validación; E2E de páginas y navegación.
 - [x] Credenciales Spotify y redirect validados (client_credentials 200, authorize sin error de redirect).
+- [x] Estilo «El auto fantástico» (2026-10-21): tema KITT (negro, escáner rojo, ámbar, Orbitron/Share Tech Mono), escáner Larson en la cabecera, modulador de voz en el HUD, personalidad y voz de KITT, «Oye KITT». «Oye TECLA» robusto para el Tesla: alternativas, variantes fonéticas, backoff, vigilante y reactivación por toque. Pruebas unitarias nuevas (wake word, persona, saludo, despedida).
 - [x] Reproducción de fondo (2026-10-21): la radio y el reproductor web de Spotify viven fuera de las páginas y siguen sonando al cambiar de pantalla (Inicio, Drive, Ajustes…); barra flotante con portada y controles; árbitro de fuentes (al elegir YouTube, podcast, IPTV o la otra fuente se pausa la anterior; cerrar la barra detiene). Pruebas: `tests/unit/playback.test.ts` y E2E `tests/e2e/background-playback.spec.ts` (stream sustituido por WAV local).
 - [ ] Vincular la cuenta de Spotify y probar reproducción con Premium/dispositivo activo.
 - [ ] Verificación de listas IPTV y canales reales autorizados (requiere contenido del usuario).

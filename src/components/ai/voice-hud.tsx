@@ -4,6 +4,8 @@ import * as React from "react";
 import { Keyboard, Mic, Square, X } from "lucide-react";
 import { Waveform } from "@/components/ai/visualizer";
 import { SiriOrb } from "@/components/ai/siri-orb";
+import { KittVoiceBox } from "@/components/kitt/kitt-voice-box";
+import { effectivePersona } from "@/features/ai/persona";
 import { useAi } from "@/features/ai/store";
 import { useTeclaAI } from "@/features/ai/hooks/use-tecla-ai";
 import { useIntegrations } from "@/features/integrations/hooks";
@@ -17,10 +19,10 @@ import { cn } from "@/lib/utils";
 const CLOSE_AFTER_REPLY_MS = 4_000;
 const CLOSE_AFTER_ERROR_MS = 6_000;
 
-function hudLabel(status: string, persona: "jarvis" | "copiloto"): string {
+function hudLabel(status: string, persona: "jarvis" | "copiloto" | "kitt"): string {
   switch (status) {
     case "listening":
-      return persona === "jarvis" ? "Le escucho, señor." : "Te escucho…";
+      return persona === "kitt" ? "Le escucho, señor. Escáner activo." : persona === "jarvis" ? "Le escucho, señor." : "Te escucho…";
     case "transcribing":
       return "Entendiendo…";
     case "thinking":
@@ -28,11 +30,11 @@ function hudLabel(status: string, persona: "jarvis" | "copiloto"): string {
     case "executing":
       return "Ejecutando…";
     case "speaking":
-      return persona === "jarvis" ? "Respondiendo." : "Respondiendo…";
+      return persona === "copiloto" ? "Respondiendo…" : "Respondiendo.";
     case "error":
       return "No pude completar la orden.";
     default:
-      return "Toca el orbe para hablar.";
+      return "Toca el indicador para hablar.";
   }
 }
 
@@ -47,7 +49,9 @@ export function VoiceHud({ open, onClose, onOpenText }: { open: boolean; onClose
   const configured = integrations.data?.integrations.deepseek ?? false;
   const micConsent = usePreferences((state) => state.micConsent);
   const setPreferences = usePreferences((state) => state.setPreferences);
-  const persona = usePreferences((state) => state.aiPersona);
+  const aiPersona = usePreferences((state) => state.aiPersona);
+  const visualStyle = usePreferences((state) => state.visualStyle);
+  const persona = effectivePersona({ aiPersona, visualStyle });
   const assistantName = usePreferences((state) => state.aiName);
   const conversationMode = usePreferences((state) => state.conversationMode);
   const speakGreeting = usePreferences((state) => state.speakGreeting);
@@ -154,7 +158,7 @@ export function VoiceHud({ open, onClose, onOpenText }: { open: boolean; onClose
             listening && "scale-105",
           )}
         >
-          <SiriOrb status={status} size={92} />
+          {visualStyle === "kitt" ? <KittVoiceBox status={status} /> : <SiriOrb status={status} size={92} />}
           {listening ? (
             <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-red-500 text-white shadow">
               <Mic className="size-3.5" aria-hidden />
@@ -173,7 +177,7 @@ export function VoiceHud({ open, onClose, onOpenText }: { open: boolean; onClose
               {!voiceReady
                 ? "La voz no está disponible en este navegador."
                 : !micConsent
-                  ? "Toca el orbe para permitir el micrófono."
+                  ? "Toca el indicador para permitir el micrófono."
                   : hudLabel(status, persona)}
             </p>
           </div>

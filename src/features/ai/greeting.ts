@@ -4,15 +4,16 @@
  */
 export function buildGreeting(input: {
   hour: number;
-  persona: "jarvis" | "copiloto";
+  persona: "jarvis" | "copiloto" | "kitt";
   weather: { temperature: number; label: string; location: string } | null;
   pendingTitle: string | null;
 }): string {
   const { hour, persona, weather, pendingTitle } = input;
   const moment = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
-  const jarvis = persona === "jarvis";
+  const kitt = persona === "kitt";
+  const jarvis = persona === "jarvis" || kitt;
   const parts: string[] = [];
-  parts.push(jarvis ? `${moment}, señor. Sistemas en línea.` : `${moment}.`);
+  parts.push(kitt ? `${moment}, señor. Escáner activo y sistemas en línea.` : jarvis ? `${moment}, señor. Sistemas en línea.` : `${moment}.`);
   if (weather) {
     const city = weather.location.split(",")[0]?.trim() ?? weather.location;
     parts.push(`${Math.round(weather.temperature)} grados y ${weather.label.toLowerCase()} en ${city}.`);
@@ -21,6 +22,6 @@ export function buildGreeting(input: {
     const title = pendingTitle.length > 60 ? `${pendingTitle.slice(0, 57)}…` : pendingTitle;
     parts.push(jarvis ? `Dejó a medias «${title}»; puedo retomarlo.` : `Dejaste a medias «${title}»; puedo retomarlo.`);
   }
-  parts.push(jarvis ? "¿Qué desea escuchar?" : "¿Qué quieres escuchar?");
+  parts.push(kitt ? "¿Adónde vamos hoy, señor? ¿Qué desea escuchar?" : jarvis ? "¿Qué desea escuchar?" : "¿Qué quieres escuchar?");
   return parts.join(" ");
 }

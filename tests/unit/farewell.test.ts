@@ -18,5 +18,6 @@ describe("voice farewells", () => {
     expect(farewellReply("No, gracias.", "jarvis")).toBe("A sus órdenes, señor. Quedo disponible.");
     expect(farewellReply("buenas noches", "jarvis")).toBe("Buenas noches, señor. Quedo disponible.");
     expect(farewellReply("adiós", "copiloto")).toBe("Listo. Aquí estaré.");
+    expect(farewellReply("gracias", "kitt")).toBe("Para eso estoy, señor. Conduzca con cuidado.");
   });
 });
