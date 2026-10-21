@@ -48,15 +48,16 @@ npm run db:seed       # semilla opcional
 ## Qué está implementado
 
 - Dashboard cinematográfico responsive con hero, clima real de Sincelejo, accesos rápidos, carruseles y estados de carga/error/vacío.
-- Temas claro/oscuro/automático por horario, modos normal/cine/kiosco, pantalla completa con fallback y reducción de movimiento.
+- Temas claro/oscuro/automático por horario, **estilo visual Cyberpunk 2077** (tipografía Rajdhani, neón amarillo y cian, rejilla y scanlines), modos normal/cine/kiosco, pantalla completa con fallback y reducción de movimiento.
 - YouTube Data API + reproductor oficial IFrame, tendencias de Colombia, búsqueda, historial, progreso, favoritos, listas y cola/minirreproductor.
-- TECLA AI por texto y voz: orquestación DeepSeek con function calling, 21 herramientas tipadas, puente de acciones del navegador, límites de uso, presupuesto, memoria de preferencias consentida.
+- TECLA AI por texto y voz: orquestación DeepSeek con function calling, 24 herramientas tipadas, puente de acciones del navegador, límites de uso, presupuesto, memoria de preferencias consentida. **Persona Jarvis** configurable (trato de «señor», confirmaciones breves, reportes de estado) y control por voz del estilo visual y de Spotify. Ver [docs/AI-JARVIS.md](docs/AI-JARVIS.md).
 - Deepgram para transcripción push-to-talk, ElevenLabs para respuestas habladas con interrupción, selector de voces autorizadas y fallback textual.
 - Radio Browser, iTunes Podcasts, M3U/IPTV con hls.js, Twitch embed, Waze/Google Maps con deep links oficiales y accesos a Netflix/Disney+.
-- **TECLA DRIVE** (`/drive`): experiencia original de conducción estacionaria, con escenas Canvas, gauge, sonido sintetizado con Web Audio y **modo GPS opcional** (o demo estacionaria). Sin samples y sin afiliación con EV Sound FX. Ver [docs/DRIVE.md](docs/DRIVE.md).
+- Reproducción de fondo: la radio y el reproductor web de Spotify siguen sonando al cambiar de pantalla (incluido TECLA Drive) con una barra flotante de control; al elegir otra fuente, la anterior se pausa sola.
+- **TECLA DRIVE** (`/drive`): simulador de sonido de motor y paisaje con carretera pseudo-3D, 10 escenarios animados, 26 motores sintetizados por arquitectura (V8, V10/V12, bóxer, rotativo, EV, sci-fi), transmisión de 7 marchas, REV, arrancada 0–100, paseo automático, estudio de sonido y **modo GPS opcional**. Todo se dibuja y se sintetiza en el navegador, sin samples ni marcas comerciales. Ver [docs/DRIVE.md](docs/DRIVE.md).
 - **Iconos de marca reales** para YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch (Simple Icons, con atribución), integrados en el diseño TECLA.
 - **Waze**: preparación de ruta y enlace al mapa en vivo oficial. Los avisos de huecos/cámaras pertenecen a Waze y no se reciben ni simulan dentro de TECLA LIVE.
-- Spotify OAuth con tokens cifrados AES-256-GCM y controles remotos; sin simular reproducción local.
+- Spotify OAuth con tokens cifrados AES-256-GCM, **búsqueda y reproducción de canciones** por URI, selector de dispositivos y **reproductor web oficial** (Web Playback SDK) para que la música suene en la pantalla sin usar el celular (requiere Premium, permiso `streaming` y DRM en el navegador).
 - Cuentas con sesión JWT HttpOnly, bcrypt, aislamiento por usuario y sincronización de biblioteca/preferencias con PostgreSQL.
 - Docker multi-stage, usuario no root, health checks, migraciones y documentación de Easypanel.
 
@@ -69,7 +70,7 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 | YouTube | `YOUTUBE_API_KEY` |
 | DeepSeek | `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` (`deepseek-chat` por defecto) |
 | Deepgram | `DEEPGRAM_API_KEY`, `DEEPGRAM_MODEL` (`nova-3` por defecto) |
-| ElevenLabs | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` |
+| ElevenLabs | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_VOICES` (voces públicas en Ajustes) |
 | Spotify | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI` |
 | Base de datos / cuentas | `DATABASE_URL`, `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` |
 | Clima / radio / podcasts | Sin claves |
@@ -96,6 +97,7 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - El rate limiting es en memoria (una instancia); para varias réplicas debe migrarse a PostgreSQL/Redis.
 - Las variables `NEXT_PUBLIC_*` se inyectan al compilar. Configura `NEXT_PUBLIC_APP_URL=https://tecla.live` como build arg al construir la imagen de producción.
 - `npm audit --omit=dev` marca 3 avisos altos en la cadena del CLI de Prisma (`deepmerge-ts`). El CLI no forma parte de la imagen runtime; solo lo usa la imagen de migración con el schema del repositorio. La corrección requiere migrar a Prisma 7 (cambio mayor) y queda como deuda técnica declarada.
+- El navegador del Tesla bloquea el video (no el audio) cuando el carro no está en Park. TECLA LIVE no lo elude; ofrece un **Modo conducción** con carátula y controles sobre el reproductor. Ver [docs/TESLA-VIDEO.md](docs/TESLA-VIDEO.md).
 - TECLA AI no sustituye controles manuales: si una acción del navegador se bloquea, se informa y se ofrece alternativa.
 - El agente de programación (DeepSeek Harness) es distinto de TECLA AI de producto. Este repositorio documenta ambos en [AGENTS.md](AGENTS.md), [DEEPSEEK.md](DEEPSEEK.md), [memori.md](memori.md) y [GOAL_LOOP.md](GOAL_LOOP.md).
 
@@ -105,6 +107,6 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - [Manual técnico y convenciones](DEEPSEEK.md) · [Reglas del agente](AGENTS.md)
 - [Despliegue en Easypanel](docs/EASYPANEL.md)
 - [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md) · [Prueba real de integraciones](docs/INTEGRATION-TEST.md)
-- [TECLA DRIVE](docs/DRIVE.md)
+- [TECLA DRIVE](docs/DRIVE.md) · [TECLA AI estilo Jarvis](docs/AI-JARVIS.md) · [Video en marcha en el Tesla](docs/TESLA-VIDEO.md) · [Hoja de ruta](docs/ROADMAP.md)
 
 Hecho para disfrutar el camino. No manipules la pantalla mientras conduces.

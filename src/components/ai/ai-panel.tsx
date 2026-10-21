@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Maximize2, Settings2, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { AiComposer } from "@/components/ai/ai-composer";
 import { AiMessageList } from "@/components/ai/ai-messages";
-import { AiOrb, statusColor, statusLabel, Waveform } from "@/components/ai/visualizer";
+import { statusColor, statusLabel, Waveform } from "@/components/ai/visualizer";
+import { SiriOrb } from "@/components/ai/siri-orb";
 import { useAi } from "@/features/ai/store";
 import { useTeclaAI } from "@/features/ai/hooks/use-tecla-ai";
 import { useIntegrations } from "@/features/integrations/hooks";
@@ -34,13 +35,30 @@ export function AiPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (
   const configured = integrations.data?.integrations.deepseek ?? false;
   const muted = integrations.data;
   const voiceEnabled = usePreferences((state) => state.voiceEnabled);
+  const aiAutoListen = usePreferences((state) => state.aiAutoListen);
+  const micConsent = usePreferences((state) => state.micConsent);
+  const assistantName = usePreferences((state) => state.aiName);
   const setPreferences = usePreferences((state) => state.setPreferences);
+  const autoListenedRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!open || !pendingPrompt || busy) return;
     setPendingPrompt(null);
     void send(pendingPrompt);
   }, [busy, open, pendingPrompt, send, setPendingPrompt]);
+
+  // Manos libres: al abrir el panel con un toque, el micrófono se activa de inmediato.
+  React.useEffect(() => {
+    if (!open) {
+      autoListenedRef.current = false;
+      return;
+    }
+    if (autoListenedRef.current || !aiAutoListen || !micConsent || !configured) return;
+    if (!canListen || !voiceInputAvailable || busy || status !== "idle" || pendingPrompt) return;
+    autoListenedRef.current = true;
+    const timer = window.setTimeout(() => void startListening(), 260);
+    return () => window.clearTimeout(timer);
+  }, [open, aiAutoListen, micConsent, configured, canListen, voiceInputAvailable, busy, status, pendingPrompt, startListening]);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -56,10 +74,10 @@ export function AiPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (
             <div className="sm:hidden absolute inset-x-0 top-1.5 flex justify-center">
               <span className="h-1 w-10 rounded-full bg-border" aria-hidden />
             </div>
-            <AiOrb size="sm" pulse={false} />
+            <SiriOrb status={status} size={40} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-[15px] font-semibold tracking-tight">TECLA AI</p>
+                <p className="text-[15px] font-semibold tracking-tight">{assistantName === "TECLA" ? "TECLA AI" : `${assistantName} · TECLA AI`}</p>
                 <span className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-2 py-0.5 text-[9px] font-medium text-muted">
                   <span className={`size-1.5 rounded-full ${statusColor(status)}`} aria-hidden />
                   {statusLabel(status)}
@@ -132,7 +150,8 @@ export function AiPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (
             status={status}
             canListen={canListen}
             voiceInputAvailable={voiceInputAvailable}
-            autoFocus={open}
+            autoFocus={open && !(aiAutoListen && micConsent)}
+            promptConsent={open && aiAutoListen && !micConsent}
           />
 
           <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[9px] text-muted/60">

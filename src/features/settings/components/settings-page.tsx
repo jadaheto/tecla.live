@@ -52,7 +52,7 @@ import { useAiMemory } from "@/stores/ai-memory";
 import { DASHBOARD_SECTIONS, type DashboardSectionId } from "@/lib/catalog";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { toast } from "@/stores/toast";
-import type { DisplayMode, ThemeMode } from "@/types";
+import type { AiPersona, DisplayMode, ThemeMode, VisualStyle } from "@/types";
 
 interface MeResponse {
   user: { id: string; email: string; name: string | null } | null;
@@ -69,6 +69,9 @@ interface VoiceOption {
 interface VoicesResponse {
   voices: VoiceOption[];
   defaultVoiceId: string | null;
+  defaultVoiceName?: string | null;
+  curated?: Array<{ id: string; name: string; group: "latino" | "hombres" | "mujeres"; description: string }>;
+  groups?: Record<"latino" | "hombres" | "mujeres", string>;
 }
 
 interface PlaceResponse {
@@ -104,6 +107,13 @@ export function SettingsPage() {
     staleTime: 60_000,
   });
 
+  const publicVoices = useQuery({
+    queryKey: ["ai-voices-public"],
+    queryFn: () => apiFetch<VoicesResponse>("/api/ai/voices/public"),
+    enabled: Boolean(integrations.data?.integrations.elevenlabs),
+    staleTime: 10 * 60_000,
+    retry: 0,
+  });
   const voices = useQuery({
     queryKey: ["ai-voices"],
     queryFn: () => apiFetch<VoicesResponse>("/api/ai/voices"),
@@ -317,6 +327,21 @@ export function SettingsPage() {
             ) : null}
 
             <SettingRow
+              title="Estilo visual"
+              description="Cyberpunk 2077 aplica tipografía Rajdhani, neón amarillo y cian, rejilla y scanlines. Fuerza el tema oscuro."
+            >
+              <Segmented<VisualStyle>
+                ariaLabel="Estilo visual"
+                value={preferences.visualStyle}
+                onChange={(visualStyle) => setPreferences({ visualStyle })}
+                options={[
+                  { value: "tecla", label: "TECLA" },
+                  { value: "cyberpunk", label: "Cyberpunk 2077" },
+                ]}
+              />
+            </SettingRow>
+
+            <SettingRow
               title="Fondo ambiental"
               description="Resplandores y textura sutil. Desactívalo para un fondo más plano."
             >
@@ -387,6 +412,37 @@ export function SettingsPage() {
             description="Voz, conversación y memoria opcional."
           >
             <SettingRow
+              title="Nombre del asistente"
+              description="Cómo lo llamas: «TECLA», «Jarvis», el que prefieras. Se usa en las respuestas, en el panel y en «Oye <nombre>»."
+            >
+              <Input
+                value={preferences.aiName}
+                maxLength={24}
+                onChange={(event) => setPreferences({ aiName: event.target.value.slice(0, 24) })}
+                onBlur={(event) => {
+                  if (!event.target.value.trim()) setPreferences({ aiName: "TECLA" });
+                }}
+                aria-label="Nombre del asistente"
+                className="h-10 w-[160px] text-sm"
+              />
+            </SettingRow>
+
+            <SettingRow
+              title="Personalidad"
+              description="Jarvis: trato de «señor», tono sereno, ingenio seco y reportes de estado. Copiloto: cercano y de tú."
+            >
+              <Segmented<AiPersona>
+                ariaLabel="Personalidad de TECLA AI"
+                value={preferences.aiPersona}
+                onChange={(aiPersona) => setPreferences({ aiPersona })}
+                options={[
+                  { value: "jarvis", label: "Jarvis" },
+                  { value: "copiloto", label: "Copiloto" },
+                ]}
+              />
+            </SettingRow>
+
+            <SettingRow
               title="Respuestas con voz"
               description={
                 elevenLabsReady
@@ -398,6 +454,51 @@ export function SettingsPage() {
                 checked={preferences.voiceEnabled}
                 onCheckedChange={(checked) => setPreferences({ voiceEnabled: checked })}
                 aria-label="Respuestas con voz"
+                disabled={!elevenLabsReady}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title="Escuchar al abrir"
+              description="Al tocar TECLA AI, el micrófono se activa de inmediato y la orden se envía sola al terminar de hablar. Pensado para pedir música sin escribir."
+            >
+              <Switch
+                checked={preferences.aiAutoListen}
+                onCheckedChange={(checked) => setPreferences({ aiAutoListen: checked })}
+                aria-label="Escuchar al abrir TECLA AI"
+                disabled={!deepgramReady}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title="«Oye TECLA» (palabra de activación)"
+              description="Mantiene el reconocimiento de voz del navegador escuchando solo esa frase y abre TECLA AI por voz. Muestra un indicador visible y se apaga al salir de la app. El audio no pasa por los servidores de TECLA LIVE."
+            >
+              <Switch
+                checked={preferences.wakeWordEnabled}
+                onCheckedChange={(checked) => {
+                  setPreferences({ wakeWordEnabled: checked, ...(checked ? { micConsent: true } : {}) });
+                  if (checked) {
+                    toast({
+                      title: "«Oye TECLA» activado",
+                      description: "Di «Oye TECLA» para hablar sin tocar la pantalla. Verás el indicador arriba.",
+                      variant: "info",
+                    });
+                  }
+                }}
+                aria-label="Palabra de activación Oye TECLA"
+                disabled={!deepgramReady}
+              />
+            </SettingRow>
+
+            <SettingRow
+              title="Saludo al iniciar"
+              description="Al abrir TECLA AI por voz la primera vez en la sesión, Jarvis saluda con la hora, el clima real y lo que dejaste a medias. Solo cuesta una síntesis de voz."
+            >
+              <Switch
+                checked={preferences.speakGreeting}
+                onCheckedChange={(checked) => setPreferences({ speakGreeting: checked })}
+                aria-label="Saludo al iniciar"
                 disabled={!elevenLabsReady}
               />
             </SettingRow>
@@ -426,14 +527,12 @@ export function SettingsPage() {
             <SettingRow
               title="Voz autorizada"
               description={
-                me.data?.user
-                  ? "Voces disponibles en tu cuenta de ElevenLabs."
-                  : elevenLabsReady
-                    ? "Inicia sesión para elegir entre las voces autorizadas. Se usa la voz definida en el servidor."
-                    : "Configura ELEVENLABS_API_KEY y ELEVENLABS_VOICE_ID en el servidor."
+                elevenLabsReady
+                  ? "Elige la voz de TECLA AI. Las voces las define el servidor (ELEVENLABS_VOICES); no necesitas cuenta de ElevenLabs."
+                  : "Configura ELEVENLABS_API_KEY y ELEVENLABS_VOICE_ID en el servidor."
               }
             >
-              {me.data?.user && elevenLabsReady ? (
+              {elevenLabsReady ? (
                 <select
                   aria-label="Voz autorizada de TECLA AI"
                   value={preferences.aiVoiceId}
@@ -442,21 +541,40 @@ export function SettingsPage() {
                     toast({ title: "Voz actualizada", variant: "success" });
                   }}
                   className="min-h-10 max-w-[220px] rounded-xl border border-border bg-surface px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-                  disabled={voices.isLoading || voices.isError}
+                  disabled={publicVoices.isLoading || publicVoices.isError}
                 >
                   <option value="">
-                    {voices.data?.defaultVoiceId ? "Voz predeterminada del servidor" : "Voz predeterminada"}
+                    {publicVoices.data?.defaultVoiceName
+                      ? `${publicVoices.data.defaultVoiceName.split(" - ")[0]} · Colombia (predeterminada)`
+                      : "Voz predeterminada del servidor"}
                   </option>
-                  {(voices.data?.voices ?? []).map((voice) => (
-                    <option key={voice.id} value={voice.id}>
-                      {voice.name}
-                    </option>
-                  ))}
+                  {(["latino", "hombres", "mujeres"] as const).map((group) => {
+                    const items = (publicVoices.data?.curated ?? []).filter((voice) => voice.group === group);
+                    if (items.length === 0) return null;
+                    return (
+                      <optgroup key={group} label={publicVoices.data?.groups?.[group] ?? group}>
+                        {items.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                  {me.data?.user && (voices.data?.voices ?? []).filter((voice) => !(publicVoices.data?.curated ?? []).some((item) => item.id === voice.id) && voice.id !== publicVoices.data?.defaultVoiceId).length > 0 ? (
+                    <optgroup label="Otras voces de la cuenta del servidor">
+                      {(voices.data?.voices ?? [])
+                        .filter((voice) => !(publicVoices.data?.curated ?? []).some((item) => item.id === voice.id) && voice.id !== publicVoices.data?.defaultVoiceId)
+                        .map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </option>
+                        ))}
+                    </optgroup>
+                  ) : null}
                 </select>
               ) : (
-                <Badge variant={elevenLabsReady ? "outline" : "warning"}>
-                  {elevenLabsReady ? "Requiere cuenta" : "Pendiente"}
-                </Badge>
+                <Badge variant="warning">Pendiente</Badge>
               )}
             </SettingRow>
 

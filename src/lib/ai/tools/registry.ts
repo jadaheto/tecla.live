@@ -21,10 +21,12 @@ export const CLIENT_TOOL_NAMES: ReadonlySet<ToolName> = new Set<ToolName>([
   "search_waze",
   "open_google_maps",
   "set_theme",
+  "set_visual_style",
   "set_display_mode",
   "request_fullscreen",
   "play_radio",
   "open_spotify",
+  "drive_control",
   "get_playback_state",
   "remember_preference",
 ]);
@@ -102,9 +104,16 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     schema: TOOL_SCHEMAS.set_theme,
   },
   {
+    name: "set_visual_style",
+    execution: "client",
+    description:
+      "Cambia el estilo visual de TECLA LIVE: «tecla» (normal) o «cyberpunk» (Cyberpunk 2077: tipografía Rajdhani, neón amarillo y cian, scanlines).",
+    schema: TOOL_SCHEMAS.set_visual_style,
+  },
+  {
     name: "set_display_mode",
     execution: "client",
-    description: "Cambia el modo de pantalla: normal, cine o kiosco.",
+    description: "Cambia el modo de pantalla: normal, cine, kiosco o audio (modo conducción del reproductor de YouTube: carátula y controles grandes mientras suena el audio).",
     schema: TOOL_SCHEMAS.set_display_mode,
   },
   {
@@ -154,11 +163,32 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     schema: TOOL_SCHEMAS.open_spotify,
   },
   {
+    name: "drive_control",
+    execution: "client",
+    description:
+      "Controla TECLA Drive (simulador de sonido de motor y paisaje): abrirlo, encender o apagar el motor, cambiar el motor (IDs: v8_biturbo, v8_plano, v8_biturbo_sport, v8_compresor_62, rotativo_turbo, seis_linea_turbo, boxer_rally, v12_pista, v10_sport, v8_pushrod, v8_pushrod_compresor, v8_compresor_52, seis_linea_itb, cuatro_formula, v6_hot_v, v6_biturbo, v8_gt3, v8_big_block, v8_sport, ev_trimotor, ev_inverter, hover, warp, crucero_estelar, fantasma, cyber) o la escena. Encender el audio puede requerir un toque del usuario; informa el resultado real.",
+    schema: TOOL_SCHEMAS.drive_control,
+  },
+  {
     name: "remember_preference",
     execution: "client",
     description:
       "Guarda una preferencia duradera solo si el usuario lo pide o confirma explícitamente y la memoria está activada. Nunca guardes secretos, salud, ubicación exacta ni datos sensibles.",
     schema: TOOL_SCHEMAS.remember_preference,
+  },
+  {
+    name: "search_spotify",
+    execution: "server",
+    description:
+      "Busca canciones, álbumes o artistas reales en Spotify del usuario conectado y devuelve sus URIs. Úsala antes de play_spotify cuando pidan una canción concreta. Requiere cuenta vinculada.",
+    schema: TOOL_SCHEMAS.search_spotify,
+  },
+  {
+    name: "play_spotify",
+    execution: "server",
+    description:
+      "Reproduce en Spotify un URI exacto devuelto por search_spotify, en el reproductor web de TECLA LIVE si está activo o en el dispositivo activo del usuario. Requiere cuenta vinculada y Premium.",
+    schema: TOOL_SCHEMAS.play_spotify,
   },
   {
     name: "spotify_control",

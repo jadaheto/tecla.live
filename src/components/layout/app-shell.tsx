@@ -6,8 +6,10 @@ import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { AiDock } from "@/components/ai/ai-dock";
+import { WakeWordListener } from "@/components/ai/wake-word-listener";
 import { ShortcutsDialog } from "@/components/layout/shortcuts-dialog";
 import { MiniPlayer } from "@/components/media/mini-player";
+import { PlaybackProvider } from "@/components/media/playback-provider";
 import { usePreferences } from "@/stores/preferences";
 import { cn } from "@/lib/utils";
 
@@ -58,8 +60,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MobileNav />
       <SearchDialog />
       <ShortcutsDialog />
-      {!isPlayer && pathname !== "/ai" && pathname !== "/drive" ? <MiniPlayer /> : null}
+      <PlaybackProvider />
+      <MiniPlayer pathname={pathname} />
       <AiDock />
+      <WakeWordListener />
     </div>
   );
 }

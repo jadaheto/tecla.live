@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Radio, Search, Settings2, Sparkles } from "lucide-react";
-import { useAi } from "@/features/ai/store";
+import { openAssistant } from "@/features/ai/open-assistant";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
@@ -15,7 +15,6 @@ const ITEMS = [
 
 export function MobileNav() {
   const pathname = usePathname();
-  const setAiOpen = useAi((state) => state.setPanelOpen);
 
   return (
     <nav
@@ -41,7 +40,7 @@ export function MobileNav() {
         })}
         <button
           type="button"
-          onClick={() => setAiOpen(true)}
+          onClick={() => openAssistant()}
           aria-label="Abrir TECLA AI"
           className="relative -mt-7 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-[#ff9a6b] via-[#ff5a3c] to-[#8b3dff] text-white shadow-[0_18px_40px_-14px_rgba(255,90,60,0.8)]"
         >

@@ -14,6 +14,7 @@ import {
   Heart,
   ListPlus,
   Monitor,
+  Music2,
   Play,
   Sparkles,
   TriangleAlert,
@@ -21,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { YouTubePlayer, type YouTubePlayerHandle } from "@/components/media/youtube-player";
+import { DrivingAudioOverlay } from "@/components/media/driving-audio-overlay";
 import { useYouTubeTrending, useYouTubeVideo } from "@/features/youtube/hooks";
 import { registerMediaController } from "@/features/media/player-bridge";
 import { useLibrary } from "@/stores/library";
@@ -65,7 +67,9 @@ export function WatchExperience({ videoId }: { videoId: string }) {
 
   const displayMode = usePreferences((state) => state.displayMode);
   const setPreferences = usePreferences((state) => state.setPreferences);
+  const audioMode = usePreferences((state) => state.watchAudioMode);
   const cinematic = displayMode === "cinema";
+  const [progressView, setProgressView] = React.useState({ position: 0, duration: 0 });
 
   const favorites = useLibrary((state) => state.favorites);
   const toggleFavoriteInLibrary = useLibrary((state) => state.toggleFavorite);
@@ -178,6 +182,7 @@ export function WatchExperience({ videoId }: { videoId: string }) {
   const onProgress = React.useCallback(
     (position: number, duration: number) => {
       playbackRef.current = { position, duration };
+      setProgressView({ position, duration });
       updateCurrent({ positionSeconds: position, durationSeconds: duration });
       if (!video || !Number.isFinite(duration) || duration <= 0) return;
       recordProgress({
@@ -285,6 +290,15 @@ export function WatchExperience({ videoId }: { videoId: string }) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={audioMode ? "primary" : "glass"}
+              size="sm"
+              aria-pressed={audioMode}
+              onClick={() => setPreferences({ watchAudioMode: !audioMode })}
+            >
+              <Music2 className="size-4" aria-hidden />
+              Modo conducción
+            </Button>
             <Button variant="glass" size="sm" onClick={() => setPreferences({ displayMode: "cinema" })}>
               <Monitor className="size-4" aria-hidden />
               Modo cine
@@ -312,22 +326,53 @@ export function WatchExperience({ videoId }: { videoId: string }) {
             ref={stageRef}
             className={
               cinematic
-                ? "h-[calc(100dvh-1.5rem)] overflow-hidden rounded-2xl bg-black"
-                : "aspect-video max-h-[76vh] w-full overflow-hidden rounded-[1.6rem] border border-white/10 bg-black shadow-[var(--shadow-float)]"
+                ? "relative h-[calc(100dvh-1.5rem)] overflow-hidden rounded-2xl bg-black"
+                : "relative aspect-video max-h-[76vh] w-full overflow-hidden rounded-[1.6rem] border border-white/10 bg-black shadow-[var(--shadow-float)]"
             }
           >
-            <YouTubePlayer
-              key={videoId}
-              videoId={videoId}
-              autoPlay
-              volume={80}
-              onReady={(handle) => {
-                handleRef.current = handle;
-              }}
-              onPlayingChange={onPlayingChange}
-              onProgress={onProgress}
-              onEnded={goNext}
-            />
+            <div className="relative size-full">
+              <YouTubePlayer
+                key={videoId}
+                videoId={videoId}
+                autoPlay
+                volume={80}
+                onReady={(handle) => {
+                  handleRef.current = handle;
+                }}
+                onPlayingChange={onPlayingChange}
+                onProgress={onProgress}
+                onEnded={goNext}
+              />
+              {audioMode ? (
+                <DrivingAudioOverlay
+                  videoId={videoId}
+                  title={video?.title ?? "Video de YouTube"}
+                  subtitle={video?.channelTitle}
+                  imageUrl={video?.thumbnail}
+                  playing={playing}
+                  positionSeconds={progressView.position}
+                  durationSeconds={progressView.duration || (video?.durationSeconds ?? 0)}
+                  onTogglePlay={() => {
+                    if (!handleRef.current) return;
+                    if (handleRef.current.isPlaying()) handleRef.current.pause();
+                    else handleRef.current.play();
+                  }}
+                  onNext={goNext}
+                  onShowVideo={() => setPreferences({ watchAudioMode: false })}
+                />
+              ) : null}
+            </div>
+            {cinematic ? (
+              <button
+                type="button"
+                onClick={() => setPreferences({ watchAudioMode: !audioMode })}
+                aria-pressed={audioMode}
+                className="absolute right-4 top-4 z-20 flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-black/50 px-4 text-xs font-semibold text-white/85 backdrop-blur-md"
+              >
+                <Music2 className="size-4" aria-hidden />
+                {audioMode ? "Ver video" : "Modo conducción"}
+              </button>
+            ) : null}
           </div>
 
           {!cinematic ? (

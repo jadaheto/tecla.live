@@ -1,10 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Rajdhani } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+
+const cyberFont = Rajdhani({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cyber",
+  display: "swap",
+});
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -49,7 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           suppressHydrationWarning
         />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} font-sans antialiased`}>
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

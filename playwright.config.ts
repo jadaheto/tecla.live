@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
@@ -8,7 +10,7 @@ export default defineConfig({
   expect: { timeout: 12_000 },
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     viewport: { width: 1920, height: 1080 },
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -21,7 +23,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000/api/health",
+    url: `${baseURL}/api/health`,
     reuseExistingServer: true,
     timeout: 120_000,
   },

@@ -37,3 +37,7 @@ npm-debug.log*
 
 # Docker local data
 .docker/data/
+
+# Paquetes y volcados locales
+*.zip
+tecla-live-production-schema.sql

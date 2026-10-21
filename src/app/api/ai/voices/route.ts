@@ -1,6 +1,7 @@
 import { jsonError, jsonOk } from "@/lib/api-response";
 import { getActiveSessionClaims } from "@/lib/auth/session";
-import { getElevenLabsVoices } from "@/lib/ai/elevenlabs/voices";
+import { getElevenLabsVoiceName, getElevenLabsVoices } from "@/lib/ai/elevenlabs/voices";
+import { CURATED_GROUP_LABELS, getCuratedVoices } from "@/lib/ai/elevenlabs/curated-voices";
 import { serverConfig } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -29,9 +30,15 @@ export async function GET() {
 
   try {
     const voices = await getElevenLabsVoices();
+    const defaultVoiceName =
+      voices.find((voice) => voice.id === serverConfig.elevenLabsVoiceId)?.name ??
+      (await getElevenLabsVoiceName(serverConfig.elevenLabsVoiceId));
     return jsonOk({
       voices,
       defaultVoiceId: serverConfig.elevenLabsVoiceId || null,
+      defaultVoiceName,
+      curated: getCuratedVoices(),
+      groups: CURATED_GROUP_LABELS,
     });
   } catch (error) {
     logger.warn("elevenlabs.voices_route_failed", { error });

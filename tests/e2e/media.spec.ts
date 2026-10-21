@@ -13,6 +13,12 @@ test.describe("media y reproductores", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       /Video de YouTube|Never Gonna Give You Up/,
     );
+    // Modo conducción: carátula y controles sobre el reproductor (el Tesla bloquea el video en marcha).
+    await page.getByRole("button", { name: "Modo conducción" }).click();
+    const drivingMode = page.getByRole("region", { name: "Modo conducción: solo audio" });
+    await expect(drivingMode).toBeVisible();
+    await drivingMode.getByRole("button", { name: "Ver video" }).click();
+    await expect(drivingMode).toBeHidden();
     await page.getByRole("link", { name: "Volver a YouTube" }).click();
     await expect(page).toHaveURL(/\/youtube/);
     const mini = page.locator('aside[aria-label="Minirreproductor"]');

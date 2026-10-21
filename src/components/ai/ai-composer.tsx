@@ -22,6 +22,7 @@ export function AiComposer({
   canListen,
   voiceInputAvailable,
   autoFocus = false,
+  promptConsent = false,
   compact = false,
 }: {
   onSend: (message: string) => void;
@@ -33,6 +34,8 @@ export function AiComposer({
   canListen: boolean;
   voiceInputAvailable: boolean;
   autoFocus?: boolean;
+  /** Abre el aviso de consentimiento del micrófono sin esperar un toque. */
+  promptConsent?: boolean;
   compact?: boolean;
 }) {
   const [value, setValue] = React.useState("");
@@ -45,6 +48,8 @@ export function AiComposer({
   const listening = status === "listening";
   const transcribing = status === "transcribing";
   const voiceReady = voiceInputAvailable && canListen;
+  const [consentDismissed, setConsentDismissed] = React.useState(false);
+  const showConsent = (consentOpen || (promptConsent && voiceReady && !consentDismissed)) && !micConsent;
 
   React.useEffect(() => {
     if (autoFocus) {
@@ -89,7 +94,7 @@ export function AiComposer({
 
   return (
     <div className="border-t border-border bg-[var(--header)] p-3 backdrop-blur-xl sm:p-4">
-      {consentOpen && !listening ? (
+      {showConsent && !listening ? (
         <div className="mb-2.5 rounded-2xl border border-accent/25 bg-accent/[0.06] p-3.5">
           <p className="flex items-center gap-2 text-xs font-semibold text-foreground">
             <Mic className="size-4 text-accent" aria-hidden />
@@ -107,7 +112,10 @@ export function AiComposer({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setConsentOpen(false)}
+              onClick={() => {
+                setConsentOpen(false);
+                setConsentDismissed(true);
+              }}
             >
               Ahora no
             </Button>

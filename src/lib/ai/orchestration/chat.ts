@@ -103,6 +103,8 @@ export async function runAiChat(input: {
   userName?: string | null;
   sessionId: string;
   tools?: DeepSeekToolDefinition[];
+  /** Texto parcial de la respuesta final, para streaming al cliente. */
+  onTextDelta?: (text: string) => void;
 }): Promise<AiChatResponse> {
   const budget = await checkAiBudget();
   if (!budget.allowed) throw new AiBudgetExceededError();
@@ -134,6 +136,7 @@ export async function runAiChat(input: {
       messages,
       tools,
       maxOutputTokens: serverConfig.limits.maxOutputTokens,
+      ...(input.onTextDelta ? { onTextDelta: input.onTextDelta } : {}),
     });
 
     const inputTokens = completion.usage.promptTokens || estimatePromptTokens(messages);
@@ -239,6 +242,7 @@ export async function runAiChat(input: {
       const execution = await executeServerTool(name, validated.data, {
         userId: input.userId,
         sessionId: input.sessionId,
+        spotifyDeviceId: input.request.context.spotifyDeviceId ?? null,
       });
       serverResults.push({
         toolCallId,

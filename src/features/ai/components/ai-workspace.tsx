@@ -208,7 +208,7 @@ export function AiWorkspace() {
             </ul>
             {current ? (
               <Link
-                href={current.kind === "youtube" ? `/watch/${current.id}` : "/radio"}
+                href={current.href ?? (current.kind === "youtube" ? `/watch/${current.id}` : current.kind === "spotify" ? "/music" : "/radio")}
                 className="mt-4 flex min-h-10 items-center justify-center rounded-xl border border-border text-[11px] font-medium text-muted transition-colors hover:text-foreground"
               >
                 Volver al reproductor

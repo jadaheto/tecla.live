@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CirclePlay, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePlayer } from "@/stores/player";
 
 interface YTPlayer {
   playVideo: () => void;
@@ -190,7 +191,10 @@ export function YouTubePlayer({
                   setNeedsGesture(true);
                 }
                 gestureTimer = window.setTimeout(() => {
-                  if (player.getPlayerState() !== 1) setNeedsGesture(true);
+                  if (player.getPlayerState() !== 1) {
+                    setNeedsGesture(true);
+                    usePlayer.getState().setPlaybackBlocked(true);
+                  }
                 }, 2600);
               }
             },
@@ -199,6 +203,7 @@ export function YouTubePlayer({
               callbackRef.current.onPlayingChange?.(state === 1);
               if (state === 1) {
                 setNeedsGesture(false);
+                usePlayer.getState().setPlaybackBlocked(false);
                 if (gestureTimer) window.clearTimeout(gestureTimer);
                 if (!progressTimer) {
                   progressTimer = window.setInterval(() => {

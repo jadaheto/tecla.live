@@ -2,18 +2,28 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DisplayMode, ThemeMode } from "@/types";
+import type { AiPersona, DisplayMode, ThemeMode, VisualStyle } from "@/types";
 import { DASHBOARD_SECTIONS, type DashboardSectionId } from "@/lib/catalog";
 
 export interface PreferencesState {
   theme: ThemeMode;
+  visualStyle: VisualStyle;
+  aiPersona: AiPersona;
   displayMode: DisplayMode;
+  /** Carátula y controles sobre el video de YouTube (el Tesla bloquea video en marcha). */
+  watchAudioMode: boolean;
   autoThemeEnabled: boolean;
   autoThemeStart: string;
   autoThemeEnd: string;
   reduceMotion: boolean;
   ambientBackground: boolean;
   voiceEnabled: boolean;
+  /** Al abrir TECLA AI, empieza a escuchar de inmediato (manos libres). */
+  /** Nombre con el que el usuario llama al asistente. */
+  aiName: string;
+  aiAutoListen: boolean;
+  /** Palabra de activación «Oye TECLA» con el reconocimiento del navegador. */
+  wakeWordEnabled: boolean;
   conversationMode: boolean;
   micConsent: boolean;
   memoryConsent: boolean;
@@ -31,13 +41,19 @@ export interface PreferencesState {
 
 export const DEFAULT_PREFERENCES = {
   theme: "auto" as ThemeMode,
+  visualStyle: "tecla" as VisualStyle,
+  aiPersona: "jarvis" as AiPersona,
   displayMode: "normal" as DisplayMode,
+  watchAudioMode: false,
   autoThemeEnabled: true,
   autoThemeStart: "18:30",
   autoThemeEnd: "06:30",
   reduceMotion: false,
   ambientBackground: true,
   voiceEnabled: true,
+  aiName: "TECLA",
+  aiAutoListen: true,
+  wakeWordEnabled: false,
   conversationMode: false,
   micConsent: false,
   memoryConsent: false,
@@ -76,13 +92,19 @@ export const usePreferences = create<PreferencesState>()(
       skipHydration: true,
       partialize: (state) => ({
         theme: state.theme,
+        visualStyle: state.visualStyle,
+        aiPersona: state.aiPersona,
         displayMode: state.displayMode,
+        watchAudioMode: state.watchAudioMode,
         autoThemeEnabled: state.autoThemeEnabled,
         autoThemeStart: state.autoThemeStart,
         autoThemeEnd: state.autoThemeEnd,
         reduceMotion: state.reduceMotion,
         ambientBackground: state.ambientBackground,
         voiceEnabled: state.voiceEnabled,
+        aiName: state.aiName,
+        aiAutoListen: state.aiAutoListen,
+        wakeWordEnabled: state.wakeWordEnabled,
         conversationMode: state.conversationMode,
         micConsent: state.micConsent,
         memoryConsent: state.memoryConsent,

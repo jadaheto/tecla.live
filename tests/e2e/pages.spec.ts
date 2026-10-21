@@ -65,13 +65,23 @@ test.describe("páginas y estados de configuración", () => {
   test("TECLA Drive inicia la simulación y cambia de escena", async ({ page }) => {
     await page.goto("/drive");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("TECLA");
-    await page.getByRole("button", { name: "Demo", exact: true }).click();
-    await page.getByRole("button", { name: "Costa" }).click();
-    await expect(page.getByRole("button", { name: "Costa" })).toHaveAttribute("aria-pressed", "true");
-    await page.locator("button:visible").filter({ hasText: /Iniciar paseo/ }).first().click();
-    await expect(page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Modo demo", exact: true }).click();
+    await page.getByRole("button", { name: "Arrancar TECLA Drive" }).click();
+    await expect(page.getByRole("button", { name: "Apagar motor" })).toBeVisible();
+    await page.getByRole("button", { name: "Sonidos y escenas" }).click();
+    await page.getByRole("button", { name: "Costa", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Costa", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: /^Rotativo Turbo/ }).click();
+    await expect(page.getByText("Rotativo Turbo").first()).toBeVisible();
+    await page.getByRole("button", { name: "Cerrar panel" }).click();
+    await page.getByRole("button", { name: "Paseo automático" }).click();
+    await expect(page.getByRole("button", { name: "Apagar motor" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Detener paseo" })).toBeVisible();
+    await expect(page.getByText("PASEO AUTOMÁTICO")).toBeVisible();
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first().click();
+    await page.getByRole("button", { name: "Detener paseo" }).click();
+    await page.getByRole("button", { name: "Apagar motor" }).click();
+    await expect(page.getByRole("button", { name: "Encender motor" })).toBeVisible();
   });
 
   test("TECLA Drive usa la velocidad del GPS cuando está disponible", async ({ page }) => {
@@ -103,12 +113,13 @@ test.describe("páginas y estados de configuración", () => {
       });
     });
     await page.goto("/drive");
-    await page.locator("button:visible").filter({ hasText: /Activar GPS/ }).first().click();
+    await page.getByRole("button", { name: "Arrancar TECLA Drive" }).click();
     await expect(page.getByText(/GPS activo/).first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("GPS REAL").first()).toBeVisible();
-    await expect(page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Desactivar GPS" })).toBeVisible();
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
-    await page.locator("button:visible").filter({ hasText: /Detener paseo/ }).first().click();
+    await page.getByRole("button", { name: "Desactivar GPS" }).click();
+    await expect(page.getByRole("button", { name: "Activar GPS" })).toBeVisible();
   });
 
   test("biblioteca permite crear una lista local", async ({ page }) => {
@@ -130,9 +141,11 @@ test.describe("experiencia móvil", () => {
     const nav = page.locator('nav[aria-label="Navegación rápida"]');
     await expect(nav).toBeVisible();
     await nav.getByRole("button", { name: "Abrir TECLA AI" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    const hud = page.getByRole("dialog", { name: "TECLA AI por voz" });
+    await expect(hud).toBeVisible();
+    await hud.getByRole("button", { name: "Escribir en TECLA AI" }).click();
     await expect(
-      page.getByRole("dialog").getByText("¿Qué quieres disfrutar hoy?"),
+      page.getByRole("dialog").getByText(/A sus órdenes, señor\.|¿Qué quieres disfrutar hoy\?/),
     ).toBeVisible();
     await page.getByRole("button", { name: "Cerrar TECLA AI" }).click();
     await expect(page.getByRole("dialog")).toBeHidden();

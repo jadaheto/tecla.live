@@ -1,6 +1,8 @@
 export type ThemeMode = "light" | "dark" | "auto";
 export type DisplayMode = "normal" | "cinema" | "kiosk";
 export type ResolvedTheme = "light" | "dark";
+export type VisualStyle = "tecla" | "cyberpunk";
+export type AiPersona = "copiloto" | "jarvis";
 
 export type MediaKind =
   | "youtube"
@@ -123,7 +125,7 @@ export interface Playlist {
 }
 
 export interface PlayerItem {
-  kind: "youtube" | "radio" | "podcast" | "iptv";
+  kind: "youtube" | "radio" | "podcast" | "iptv" | "spotify";
   id: string;
   title: string;
   subtitle?: string;

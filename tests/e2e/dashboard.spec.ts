@@ -46,9 +46,13 @@ test.describe("dashboard y shell", () => {
   test("TECLA AI abre y muestra el estado de configuración", async ({ page }) => {
     await page.goto("/");
     await page.locator("header").getByRole("button", { name: "Abrir TECLA AI" }).click();
-    const dialog = page.getByRole("dialog");
+    // Por defecto abre el HUD de solo voz; «Escribir» lleva al panel de texto.
+    const hud = page.getByRole("dialog", { name: "TECLA AI por voz" });
+    await expect(hud).toBeVisible();
+    await hud.getByRole("button", { name: "Escribir en TECLA AI" }).click();
+    const dialog = page.getByRole("dialog").filter({ hasNot: page.getByRole("button", { name: "Escribir en TECLA AI" }) });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("¿Qué quieres disfrutar hoy?")).toBeVisible();
+    await expect(dialog.getByText(/A sus órdenes, señor\.|¿Qué quieres disfrutar hoy\?/)).toBeVisible();
     await expect(
       dialog.getByText(/DeepSeek conectado|DeepSeek todavía no está configurado/),
     ).toBeVisible();

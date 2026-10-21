@@ -31,6 +31,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch, ApiError, errorMessage } from "@/lib/http";
 import { toast } from "@/stores/toast";
 import { formatDuration } from "@/lib/utils";
+import { SpotifySearch } from "@/features/music/components/spotify-search";
+import { SpotifyWebPlayer } from "@/features/music/components/spotify-web-player";
 
 interface MeResponse {
   user: { id: string; email: string } | null;
@@ -41,6 +43,7 @@ interface SpotifyStatus {
   configured: boolean;
   authenticated: boolean;
   connected: boolean;
+  streaming?: boolean;
   encrypted?: boolean;
 }
 
@@ -65,6 +68,7 @@ export function MusicPage() {
   const queryClient = useQueryClient();
   const [controlError, setControlError] = React.useState<string | null>(null);
   const [localVolume, setLocalVolume] = React.useState(70);
+  const [webDeviceId, setWebDeviceId] = React.useState<string | null>(null);
   const feedbackShown = React.useRef(false);
 
   const me = useQuery({
@@ -171,7 +175,7 @@ export function MusicPage() {
       <PageHeader
         eyebrow="Música"
         title="Tu banda sonora."
-        description="Spotify por control remoto, radio en vivo y podcasts. Sin simular reproducción dentro de TECLA LIVE."
+        description="Busca y reproduce canciones de Spotify en esta pantalla o en tus dispositivos, radio en vivo y podcasts. Sin simular reproducción."
         actions={
           <>
             <a
@@ -293,15 +297,15 @@ export function MusicPage() {
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="text-[11px] font-medium">Qué haremos</p>
                     <p className="mt-1 text-[10px] leading-relaxed text-white/45">
-                      Leer el estado, controlar play/pausa, siguiente, anterior y volumen en un
-                      dispositivo activo de Spotify.
+                      Buscar canciones y reproducirlas en esta pantalla (reproductor oficial de
+                      Spotify) o en tus otros dispositivos; play/pausa, siguiente, anterior y volumen.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <p className="text-[11px] font-medium">Qué no haremos</p>
                     <p className="mt-1 text-[10px] leading-relaxed text-white/45">
-                      No reproduciremos música dentro de TECLA LIVE ni guardaremos tu contraseña.
-                      Requiere Premium y un dispositivo activo.
+                      No guardaremos tu contraseña ni descargaremos audio. Reproducir en esta pantalla
+                      requiere Spotify Premium y un navegador con DRM.
                     </p>
                   </div>
                 </div>
@@ -419,6 +423,30 @@ export function MusicPage() {
                     {controlError}
                   </p>
                 ) : null}
+
+                <SpotifyWebPlayer
+                  enabled={Boolean(status.data?.streaming)}
+                  onDeviceReady={(id) => setWebDeviceId(id)}
+                  className="relative mt-6"
+                />
+                {status.data && !status.data.streaming ? (
+                  <p className="relative mt-2 text-[10px] text-amber-200/80">
+                    Tu vinculación actual no incluye el permiso de reproducción en el navegador.{" "}
+                    <a href="/api/spotify/login" className="underline underline-offset-2">
+                      Vuelve a vincular Spotify
+                    </a>{" "}
+                    para reproducir aquí sin usar el celular.
+                  </p>
+                ) : null}
+
+                <SpotifySearch
+                  webDeviceId={webDeviceId}
+                  onPlayed={() => {
+                    window.setTimeout(() => {
+                      void queryClient.invalidateQueries({ queryKey: ["spotify-now-playing"] });
+                    }, 600);
+                  }}
+                />
               </div>
 
               <div className="relative border-t border-white/10 bg-black/20 p-4 md:p-5">
@@ -488,8 +516,8 @@ export function MusicPage() {
                   </div>
                 </div>
                 <p className="mt-3 text-[9px] leading-relaxed text-white/25">
-                  El control remoto requiere Spotify Premium y un dispositivo activo. TECLA LIVE no
-                  reproduce audio de Spotify dentro de la app.
+                  Requiere Spotify Premium. Con el reproductor de esta pantalla activo, la música suena
+                  aquí mismo; si no, se usa tu dispositivo activo de Spotify.
                 </p>
               </div>
             </div>
@@ -545,8 +573,8 @@ export function MusicPage() {
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#1ed760]" />
-                El control remoto usa la Web API. Necesitas Spotify Premium y un dispositivo
-                activo.
+                Reproducir en esta pantalla usa el reproductor oficial de Spotify (Web Playback SDK).
+                Necesitas Spotify Premium.
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#1ed760]" />

@@ -60,6 +60,17 @@ export const APPS: AppDefinition[] = [
     category: "music",
   },
   {
+    id: "drive",
+    name: "TECLA Drive",
+    description: "Paisajes y sonido a bordo",
+    href: "/drive",
+    icon: TeclaDriveIcon,
+    gradient: "from-[#5eead4] via-[#0f766e] to-[#0b1026]",
+    accent: "#5eead4",
+    aiPrompt: "abre TECLA Drive",
+    category: "experience",
+  },
+  {
     id: "waze",
     name: "Waze",
     description: "Rutas y tráfico",
@@ -151,17 +162,6 @@ export const APPS: AppDefinition[] = [
     category: "live",
   },
   {
-    id: "drive",
-    name: "TECLA Drive",
-    description: "Paisajes y sonido a bordo",
-    href: "/drive",
-    icon: TeclaDriveIcon,
-    gradient: "from-[#5eead4] via-[#0f766e] to-[#0b1026]",
-    accent: "#5eead4",
-    aiPrompt: "abre TECLA Drive",
-    category: "experience",
-  },
-  {
     id: "ai",
     name: "TECLA AI",
     description: "Tu copiloto de entretenimiento",
@@ -214,6 +214,7 @@ export type DashboardSectionId = (typeof DASHBOARD_SECTIONS)[number]["id"];
 export const QUICK_ACCESS_IDS = [
   "youtube",
   "spotify",
+  "drive",
   "waze",
   "maps",
   "netflix",
@@ -222,7 +223,6 @@ export const QUICK_ACCESS_IDS = [
   "iptv",
   "podcasts",
   "twitch",
-  "drive",
   "ai",
 ] as const;
 

@@ -6,6 +6,7 @@ import { getBogotaMinutes, isWithinWindow, parseTimeToMinutes } from "@/lib/them
 
 export function ThemeSync() {
   const theme = usePreferences((state) => state.theme);
+  const visualStyle = usePreferences((state) => state.visualStyle);
   const autoThemeEnabled = usePreferences((state) => state.autoThemeEnabled);
   const autoThemeStart = usePreferences((state) => state.autoThemeStart);
   const autoThemeEnd = usePreferences((state) => state.autoThemeEnd);
@@ -15,8 +16,8 @@ export function ThemeSync() {
 
   React.useEffect(() => {
     const apply = () => {
-      let dark = theme === "dark";
-      if (theme === "auto") {
+      let dark = theme === "dark" || visualStyle === "cyberpunk";
+      if (theme === "auto" && visualStyle !== "cyberpunk") {
         if (!autoThemeEnabled) {
           dark = true;
         } else {
@@ -37,7 +38,11 @@ export function ThemeSync() {
     apply();
     const interval = window.setInterval(apply, 30_000);
     return () => window.clearInterval(interval);
-  }, [theme, autoThemeEnabled, autoThemeStart, autoThemeEnd]);
+  }, [theme, visualStyle, autoThemeEnabled, autoThemeStart, autoThemeEnd]);
+
+  React.useEffect(() => {
+    document.documentElement.dataset.style = visualStyle;
+  }, [visualStyle]);
 
   React.useEffect(() => {
     document.documentElement.dataset.displayMode = displayMode;

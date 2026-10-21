@@ -11,13 +11,51 @@ export interface DriveFix {
   timestamp: number;
   accuracy: number;
   speed: number | null;
+  heading: number | null;
 }
+
+export type DriveGeoQuality = "good" | "fair" | "poor";
 
 export interface DriveGeoState {
   status: DriveGeoStatus;
   speedKmh: number;
   accuracyM: number | null;
   error: string | null;
+  /** Calidad de la señal según la precisión reportada. */
+  quality: DriveGeoQuality | null;
+  /** Giro en grados por segundo (positivo a la derecha), suavizado. */
+  turnRateDegPerSec: number;
+  /** Segundos desde el último fix válido. */
+  staleSeconds: number;
+}
+
+/** Tras este tiempo sin fix se conserva la velocidad; después decae. */
+export const GPS_HOLD_SECONDS = 4;
+export const GPS_DECAY_SECONDS = 8;
+
+export function qualityFromAccuracy(accuracy: number | null): DriveGeoQuality | null {
+  if (accuracy === null || !Number.isFinite(accuracy)) return null;
+  if (accuracy <= 15) return "good";
+  if (accuracy <= 40) return "fair";
+  return "poor";
+}
+
+/** Diferencia angular mínima entre dos rumbos (−180…180). */
+export function headingDelta(previous: number, current: number): number {
+  let delta = current - previous;
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  return delta;
+}
+
+/**
+ * Velocidad a aplicar cuando el GPS deja de reportar: se mantiene durante
+ * GPS_HOLD_SECONDS y luego baja linealmente a cero en GPS_DECAY_SECONDS.
+ */
+export function holdSpeedWhenStale(lastSpeedKmh: number, staleSeconds: number): number {
+  if (staleSeconds <= GPS_HOLD_SECONDS) return lastSpeedKmh;
+  const decay = Math.min(1, (staleSeconds - GPS_HOLD_SECONDS) / GPS_DECAY_SECONDS);
+  return Math.max(0, lastSpeedKmh * (1 - decay));
 }
 
 const EARTH_RADIUS_METERS = 6_371_000;
@@ -61,8 +99,22 @@ function toFix(position: GeolocationPosition): DriveFix {
       typeof position.coords.speed === "number" && Number.isFinite(position.coords.speed)
         ? position.coords.speed
         : null,
+    heading:
+      typeof position.coords.heading === "number" && Number.isFinite(position.coords.heading)
+        ? position.coords.heading
+        : null,
   };
 }
+
+const IDLE_STATE: DriveGeoState = {
+  status: "idle",
+  speedKmh: 0,
+  accuracyM: null,
+  error: null,
+  quality: null,
+  turnRateDegPerSec: 0,
+  staleSeconds: 0,
+};
 
 function geoErrorMessage(code: number): string {
   if (code === 1) return "El GPS está bloqueado. Permite la ubicación o usa el modo Demo.";
@@ -72,15 +124,13 @@ function geoErrorMessage(code: number): string {
 
 export function useDriveGeolocation(onFailure?: (message: string) => void) {
   const failureRef = React.useRef(onFailure);
-  const [state, setState] = React.useState<DriveGeoState>({
-    status: "idle",
-    speedKmh: 0,
-    accuracyM: null,
-    error: null,
-  });
+  const [state, setState] = React.useState<DriveGeoState>(IDLE_STATE);
   const watchRef = React.useRef<number | null>(null);
   const lastFixRef = React.useRef<DriveFix | null>(null);
   const smoothedRef = React.useRef(0);
+  const turnRef = React.useRef(0);
+  const lastFixAtRef = React.useRef(0);
+  const staleTimerRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     failureRef.current = onFailure;
@@ -94,34 +144,47 @@ export function useDriveGeolocation(onFailure?: (message: string) => void) {
         // El navegador pudo invalidar el watch al salir de contexto seguro.
       }
     }
+    if (staleTimerRef.current !== null) {
+      window.clearInterval(staleTimerRef.current);
+      staleTimerRef.current = null;
+    }
     watchRef.current = null;
     lastFixRef.current = null;
     smoothedRef.current = 0;
-    setState({ status: "idle", speedKmh: 0, accuracyM: null, error: null });
+    turnRef.current = 0;
+    lastFixAtRef.current = 0;
+    setState(IDLE_STATE);
   }, []);
 
   const start = React.useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       const message = "Este navegador no ofrece GPS. Puedes usar el modo Demo.";
-      setState({ status: "unavailable", speedKmh: 0, accuracyM: null, error: message });
+      setState({ ...IDLE_STATE, status: "unavailable", error: message });
       failureRef.current?.(message);
       return;
     }
     if (typeof window !== "undefined" && !window.isSecureContext) {
       const message = "El GPS requiere HTTPS. Corrige el certificado o usa el modo Demo.";
-      setState({ status: "unavailable", speedKmh: 0, accuracyM: null, error: message });
+      setState({ ...IDLE_STATE, status: "unavailable", error: message });
       failureRef.current?.(message);
       return;
     }
     if (watchRef.current !== null) return;
 
-    setState((previous) => ({
-      ...previous,
-      status: "requesting",
-      speedKmh: 0,
-      accuracyM: null,
-      error: null,
-    }));
+    setState({ ...IDLE_STATE, status: "requesting" });
+
+    staleTimerRef.current = window.setInterval(() => {
+      if (!lastFixAtRef.current) return;
+      const staleSeconds = (Date.now() - lastFixAtRef.current) / 1_000;
+      if (staleSeconds < 1.5) return;
+      const held = holdSpeedWhenStale(smoothedRef.current, staleSeconds);
+      turnRef.current *= 0.8;
+      setState((previous) =>
+        previous.status === "active"
+          ? { ...previous, speedKmh: held, staleSeconds, turnRateDegPerSec: turnRef.current }
+          : previous,
+      );
+    }, 1_000);
 
     try {
       watchRef.current = navigator.geolocation.watchPosition(
@@ -130,36 +193,53 @@ export function useDriveGeolocation(onFailure?: (message: string) => void) {
           const previous = lastFixRef.current;
           const raw = estimateSpeedKmh(previous, fix);
           lastFixRef.current = fix;
+          lastFixAtRef.current = Date.now();
+
+          if (
+            previous &&
+            previous.heading !== null &&
+            fix.heading !== null &&
+            raw !== null &&
+            raw > 4
+          ) {
+            const seconds = (fix.timestamp - previous.timestamp) / 1_000;
+            if (seconds > 0.3 && seconds < 10) {
+              const rate = headingDelta(previous.heading, fix.heading) / seconds;
+              turnRef.current = turnRef.current * 0.5 + Math.max(-45, Math.min(45, rate)) * 0.5;
+            }
+          } else {
+            turnRef.current *= 0.6;
+          }
 
           if (raw !== null) {
             const smoothed =
               smoothedRef.current > 0 ? smoothedRef.current * 0.55 + raw * 0.45 : raw;
             smoothedRef.current = smoothed;
-            const speedKmh = Math.min(MAX_SPEED, Math.max(0, smoothed));
-            setState({
-              status: "active",
-              speedKmh,
-              accuracyM: fix.accuracy,
-              error: null,
-            });
-          } else {
-            setState({
-              status: "active",
-              speedKmh: 0,
-              accuracyM: fix.accuracy,
-              error: null,
-            });
           }
+          setState({
+            status: "active",
+            speedKmh: raw !== null ? Math.min(MAX_SPEED, Math.max(0, smoothedRef.current)) : 0,
+            accuracyM: fix.accuracy,
+            error: null,
+            quality: qualityFromAccuracy(fix.accuracy),
+            turnRateDegPerSec: turnRef.current,
+            staleSeconds: 0,
+          });
         },
         (error) => {
+          // Un timeout con fixes previos no es fatal: la retención de velocidad sigue activa.
+          if (error.code === 3 && lastFixAtRef.current) return;
+          if (staleTimerRef.current !== null) {
+            window.clearInterval(staleTimerRef.current);
+            staleTimerRef.current = null;
+          }
           watchRef.current = null;
           lastFixRef.current = null;
           smoothedRef.current = 0;
           const message = geoErrorMessage(error.code);
           setState({
+            ...IDLE_STATE,
             status: error.code === 1 ? "denied" : error.code === 2 ? "unavailable" : "error",
-            speedKmh: 0,
-            accuracyM: null,
             error: message,
           });
           failureRef.current?.(message);
@@ -173,7 +253,7 @@ export function useDriveGeolocation(onFailure?: (message: string) => void) {
     } catch {
       watchRef.current = null;
       const message = "No pudimos activar el GPS. Revisa el permiso o usa el modo Demo.";
-      setState({ status: "error", speedKmh: 0, accuracyM: null, error: message });
+      setState({ ...IDLE_STATE, status: "error", error: message });
       failureRef.current?.(message);
     }
   }, []);

@@ -27,10 +27,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRadioStation, useRadioStations } from "@/features/radio/hooks";
 import { useLibrary } from "@/stores/library";
-import { usePlayer } from "@/stores/player";
 import { usePreferences } from "@/stores/preferences";
 import { useAi } from "@/features/ai/store";
-import { registerMediaController } from "@/features/media/player-bridge";
+import { pauseRadio, playRadioStation, resumeRadio, useRadioAudio } from "@/features/radio/radio-audio";
 import { toast } from "@/stores/toast";
 import { cn } from "@/lib/utils";
 import type { RadioStation } from "@/types";
@@ -42,16 +41,19 @@ function stationImage(station: RadioStation): string | null {
 export function RadioExperience() {
   const searchParams = useSearchParams();
   const initialStationId = searchParams.get("station");
+  // `autoplay=1` lo añade TECLA AI al poner una emisora por voz: arranca sin tocar la pantalla.
+  const autoplayRequested = searchParams.get("autoplay") === "1";
+  const autoplayDoneRef = React.useRef(false);
   const [input, setInput] = React.useState("");
   const [activeQuery, setActiveQuery] = React.useState("");
   const stationsQuery = useRadioStations(activeQuery, 30);
-  const [selected, setSelected] = React.useState<RadioStation | null>(null);
-  const [playing, setPlaying] = React.useState(false);
-  const [loadingAudio, setLoadingAudio] = React.useState(false);
-  const [audioError, setAudioError] = React.useState<string | null>(null);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
-  const selectedRef = React.useRef<RadioStation | null>(null);
-  const playingRef = React.useRef(false);
+  // El audio vive en el reproductor global (sigue sonando al cambiar de pantalla).
+  const radio = useRadioAudio();
+  const [picked, setPicked] = React.useState<RadioStation | null>(null);
+  const selected = picked ?? radio.station;
+  const playing = radio.playing;
+  const loadingAudio = radio.loading;
+  const audioError = radio.error;
   const stationLookup = useRadioStation(selected ? null : initialStationId);
 
   const favorites = useLibrary((state) => state.favorites);
@@ -60,131 +62,47 @@ export function RadioExperience() {
   const volume = usePreferences((state) => state.volume);
   const setPreferences = usePreferences((state) => state.setPreferences);
   const openWithPrompt = useAi((state) => state.openWithPrompt);
-  const setCurrent = usePlayer((state) => state.setCurrent);
-  const setStorePlaying = usePlayer((state) => state.setPlaying);
 
   const isStationFavorite = (station: RadioStation) =>
     favorites.some((favorite) => favorite.kind === "radio" && favorite.providerId === station.id);
-
-  React.useEffect(() => {
-    selectedRef.current = selected;
-  }, [selected]);
-
-  React.useEffect(() => {
-    playingRef.current = playing;
-  }, [playing]);
 
   React.useEffect(() => {
     if (selected) return;
     const fromParam = initialStationId
       ? stationsQuery.data?.stations.find((station) => station.id === initialStationId)
       : undefined;
-    if (fromParam) setSelected(fromParam);
-    else if (stationLookup.data?.station) setSelected(stationLookup.data.station);
-  }, [initialStationId, selected, stationLookup.data, stationsQuery.data]);
-
-  React.useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = Math.min(1, Math.max(0, volume / 100));
-  }, [volume]);
-
-  React.useEffect(() => {
-    return registerMediaController({
-      getSnapshot: () => ({
-        active: Boolean(selectedRef.current),
-        kind: "radio",
-        title: selectedRef.current?.name ?? null,
-        isPlaying: playingRef.current,
-        positionSeconds: 0,
-        durationSeconds: 0,
-        canControl: Boolean(audioRef.current),
-      }),
-      play: async () => {
-        if (!audioRef.current || !selectedRef.current) {
-          return { ok: false, message: "No hay una emisora seleccionada." };
-        }
-        try {
-          await audioRef.current.play();
-          return { ok: true, message: "Emisora reanudada." };
-        } catch {
-          return { ok: false, message: "El navegador bloqueó el audio. Toca reproducir." };
-        }
-      },
-      pause: async () => {
-        audioRef.current?.pause();
-        return { ok: true, message: "Emisora pausada." };
-      },
-      next: async () => ({
-        ok: false,
-        message: "La radio en vivo no tiene una cola. Elige otra emisora en la lista.",
-      }),
-    });
-  }, []);
-
-  React.useEffect(() => {
-    const audio = audioRef.current;
-    return () => {
-      audio?.pause();
-    };
-  }, []);
+    const station = fromParam ?? stationLookup.data?.station ?? null;
+    if (!station) return;
+    if (autoplayRequested && !autoplayDoneRef.current) {
+      autoplayDoneRef.current = true;
+      playStation(station);
+      return;
+    }
+    setPicked(station);
+    // playStation es estable (usa el reproductor global); no se incluye para no reiniciar la emisora.
+  }, [initialStationId, selected, stationLookup.data, stationsQuery.data, autoplayRequested]);
 
   function playStation(station: RadioStation) {
-    const audio = audioRef.current;
-    if (!audio) return;
-    setAudioError(null);
-    setSelected(station);
-    setCurrent({
-      kind: "radio",
-      id: station.id,
-      title: station.name,
-      subtitle: station.tags?.join(" · "),
-      imageUrl: station.favicon,
-      href: `/radio?station=${station.id}`,
-    });
+    setPicked(station);
+    void playRadioStation(station);
     try {
       window.history.replaceState(null, "", `/radio?station=${encodeURIComponent(station.id)}`);
     } catch {
       // El historial puede no estar disponible.
     }
-    if (audio.src !== station.url) {
-      audio.src = station.url;
-      audio.load();
-    }
-    setLoadingAudio(true);
-    void audio
-      .play()
-      .then(() => {
-        setLoadingAudio(false);
-      })
-      .catch(() => {
-        setLoadingAudio(false);
-        setAudioError(
-          "El navegador bloqueó o no pudo reproducir la emisora. Toca el botón de reproducir o abre el enlace directo.",
-        );
-      });
   }
 
   function togglePlayback() {
-    const audio = audioRef.current;
-    if (!selected || !audio) return;
+    if (!selected) return;
     if (playing) {
-      audio.pause();
+      pauseRadio();
       return;
     }
-    if (!audio.src) {
-      playStation(selected);
+    if (radio.station?.id === selected.id) {
+      void resumeRadio();
       return;
     }
-    setAudioError(null);
-    setLoadingAudio(true);
-    void audio
-      .play()
-      .then(() => setLoadingAudio(false))
-      .catch(() => {
-        setLoadingAudio(false);
-        setAudioError("No pudimos reanudar la emisora. Prueba otra estación.");
-      });
+    playStation(selected);
   }
 
   function toggleStationFavorite(station: RadioStation) {
@@ -215,29 +133,6 @@ export function RadioExperience() {
 
   return (
     <div>
-      <audio
-        ref={audioRef}
-        preload="none"
-        onPlaying={() => {
-          setPlaying(true);
-          setStorePlaying(true);
-          setLoadingAudio(false);
-          setAudioError(null);
-        }}
-        onPause={() => {
-          setPlaying(false);
-          setStorePlaying(false);
-        }}
-        onWaiting={() => setLoadingAudio(true)}
-        onError={() => {
-          setPlaying(false);
-          setLoadingAudio(false);
-          setAudioError(
-            "La emisora no respondió. Puede estar fuera de línea o usar un formato no compatible con este navegador.",
-          );
-        }}
-      />
-
       <PageHeader
         eyebrow="En vivo"
         title="Radio para el camino."
@@ -446,7 +341,7 @@ export function RadioExperience() {
               {selected ? (
                 <>
                   <div className="mt-5 flex items-center gap-3">
-                    <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+                    <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/10">
                       <Radio className="absolute size-7 text-[#f6b756]" aria-hidden />
                       {stationImage(selected) ? (
                         <img

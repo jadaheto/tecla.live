@@ -32,6 +32,29 @@
 - [x] Estados de carga, error, vacío y «no configurado» reutilizables.
 - [x] Iconos de marca reales (YouTube, Spotify, Waze, Maps, Netflix, Disney+, Podcasts, Twitch) con atribución y proporciones correctas.
 - [x] TECLA DRIVE original: ruta `/drive`, escenas Canvas, gauge, paseo 0–100, cuatro sonidos sintetizados, controles táctiles, modo GPS opcional (velocidad real) y enlace desde el catálogo. Sin assets de EV Sound FX.
+- [x] TECLA DRIVE v2 (2026-10-20): carretera pseudo-3D con curvas, colinas, tráfico y sprites; 10 escenarios; 26 motores sintetizados por arquitectura (sin marcas); transmisión de 7 marchas auto/manual; REV, pedales táctiles, arrancada 0–100, paseo automático y GPS; estudio de sonido; favoritos y unidades persistidos en `tecla-drive-v1`. Evidencia: typecheck, lint (0 errores), 57 unitarias y E2E en imagen Docker (ver `GOAL_LOOP.md`).
+- [x] TECLA DRIVE v3 (2026-10-20): arranque de un toque (audio + GPS + pantalla completa + wake lock + modo cine), HUD que se oculta, panel de sonidos y escenas como capa con icono discreto, paseo/0–100/pedales solo en modo demo, REV solo detenido, GPS robusto (retención de velocidad, calidad, curvatura por rumbo), escena automática por hora y clima, estacionado con volumen bajo, modo rendimiento (auto en Tesla), `AudioWorklet` con respaldo y prueba de paridad, herramienta `drive_control` para TECLA AI y atenuación durante la voz.
+- [ ] TECLA DRIVE: verificar en el navegador del Tesla que `navigator.geolocation` entrega velocidad y rumbo (requiere hardware y TLS válido en tecla.live).
+- [ ] TECLA AI: respuesta en streaming (texto y voz) para bajar la latencia; cambio de protocolo pendiente de diseño.
+- [x] Voces públicas por entorno (`ELEVENLABS_VOICES`): selector en Ajustes para cualquier usuario, sin cuenta de ElevenLabs; respaldo en código si la variable falta (2026-10-21).
+- [x] Radio por voz con arranque automático y resultado real; «Oye TECLA» sin texto de depuración (2026-10-21).
+- [x] Identidad del asistente (nombre personalizable, bloque de identidad en el prompt) y voces curadas de ElevenLabs: predeterminada del `.env`, 4 latinas/colombianas, 3 hombres y 3 mujeres populares (2026-10-21).
+- [x] Despedidas por voz: cierre automático del HUD con respuesta local breve; cierre silencioso si la escucha automática no oye nada (2026-10-21).
+- [x] Fase C (2026-10-21): streaming SSE de DeepSeek con voz por frases, «Oye TECLA», saludo de arranque, memoria ampliada. Pendiente: elegir voz Jarvis en ElevenLabs (decisión del usuario).
+- [x] Fase D (2026-10-21): escenas Navidad, Ciudad lluviosa y Ciudad de día; clima real dibujado; sonido de cambio; modo silencioso; detalle automático por fps. Pendiente: umbrales con el carro real.
+- [ ] Fase B no implementada por decisión del usuario (2026-10-21). Fase E descartada por el usuario.
+- [ ] Hoja de ruta nueva en `docs/ROADMAP.md` (fases A–F): TLS y redespliegue, conducir escuchando, Jarvis con streaming, Drive, modo pasajero, operación.
+- [ ] Certificado TLS válido en tecla.live (bloquea GPS y micrófono en producción; infraestructura).
+- [x] Orbe fluido de TECLA AI (`siri-orb.tsx`): reacciona al nivel real del micrófono y de la voz sintetizada; usado en el HUD de voz, el panel y su estado vacío.
+- [x] TECLA AI solo voz: HUD flotante sin teclado (`voice-hud.tsx`, `openAssistant`), cierre automático tras responder, botón de voz en Drive; `play_youtube` reporta `playing`/`autoplayBlocked` y el prompt ya no añade la advertencia de autoplay.
+- [x] TECLA AI manos libres: `aiAutoListen` (micrófono al abrir el panel), fin de frase por silencio con `AnalyserNode`, consentimiento automático la primera vez, interruptor en Ajustes. Ver `docs/AI-JARVIS.md`.
+- [x] YouTube en marcha: diagnosticado como restricción del navegador del Tesla (video bloqueado, audio sigue). Añadido **Modo conducción** (`watchAudioMode`): carátula, título, progreso y controles grandes sobre el reproductor; `set_display_mode` acepta `audio`. No se elude la restricción. Ver `docs/TESLA-VIDEO.md`.
+- [x] Acceso rápido de TECLA Drive junto a Spotify (catálogo y lista blanca alineados; test de registro verde).
+- [x] Estilo visual Cyberpunk 2077 (`visualStyle`): tokens neón, tipografía Rajdhani, rejilla/scanlines, fuerza tema oscuro; selector en Ajustes y herramienta `set_visual_style` para TECLA AI.
+- [x] Persona Jarvis en TECLA AI (`aiPersona`, por defecto `jarvis`): bloque de personalidad en el prompt, saludo de sistema en el panel y selector en Ajustes. Análisis en `docs/AI-JARVIS.md`.
+- [x] Spotify: búsqueda de canciones, reproducción por URI, dispositivos, transferencia, token para el reproductor web oficial y herramientas `search_spotify`/`play_spotify`. Alcance `streaming` añadido (requiere volver a vincular).
+- [ ] Spotify: prueba real de reproducción en pantalla (requiere vincular cuenta Premium y navegador con DRM; no verificable sin la cuenta del usuario).
+- [ ] TECLA DRIVE: probar sonido y rendimiento del canvas en el navegador físico del Tesla.
 - [x] Layout responsive para 1920×1080, tablet y móvil, sin hover obligatorio.
 - [x] Modos normal, cine y kiosco; tema claro/oscuro/automático configurable.
 - [x] Búsqueda universal con atajos y debounce; resultados de apps y YouTube.
@@ -110,6 +133,7 @@
 - [x] Netflix y Disney+ como accesos externos.
 - [x] Tests unitarios de deep links, M3U y validación; E2E de páginas y navegación.
 - [x] Credenciales Spotify y redirect validados (client_credentials 200, authorize sin error de redirect).
+- [x] Reproducción de fondo (2026-10-21): la radio y el reproductor web de Spotify viven fuera de las páginas y siguen sonando al cambiar de pantalla (Inicio, Drive, Ajustes…); barra flotante con portada y controles; árbitro de fuentes (al elegir YouTube, podcast, IPTV o la otra fuente se pausa la anterior; cerrar la barra detiene). Pruebas: `tests/unit/playback.test.ts` y E2E `tests/e2e/background-playback.spec.ts` (stream sustituido por WAV local).
 - [ ] Vincular la cuenta de Spotify y probar reproducción con Premium/dispositivo activo.
 - [ ] Verificación de listas IPTV y canales reales autorizados (requiere contenido del usuario).
 - [ ] Búsqueda interna de Twitch (requiere credenciales de API; se usa búsqueda externa).

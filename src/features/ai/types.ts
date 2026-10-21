@@ -57,6 +57,10 @@ export interface AiChatRequest {
       webSpeech?: boolean;
     };
     memory?: Array<{ key: string; value: string }>;
+    persona?: "copiloto" | "jarvis";
+    visualStyle?: "tecla" | "cyberpunk";
+    spotifyDeviceId?: string;
+    assistantName?: string;
   };
   toolExchange?: AiToolExchange;
 }

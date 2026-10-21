@@ -67,6 +67,10 @@ const ContextSchema = z
       )
       .max(12)
       .optional(),
+    persona: z.enum(["copiloto", "jarvis"]).optional(),
+    visualStyle: z.enum(["tecla", "cyberpunk"]).optional(),
+    spotifyDeviceId: z.string().max(80).optional(),
+    assistantName: z.string().max(24).optional(),
   })
   .strict();
 
@@ -150,6 +154,56 @@ export async function POST(request: Request) {
   }
 
   const sessionId = usageSessionId({ ip, userId: claims?.userId });
+  const wantsStream = (request.headers.get("accept") ?? "").includes("text/event-stream");
+
+  if (wantsStream) {
+    // Respuesta en streaming (SSE): `delta` con texto parcial, `done` con la
+    // respuesta completa (misma forma que el JSON) o `error`.
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (event: string, data: unknown) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        };
+        try {
+          const result = await runAiChat({
+            request: parsed.data,
+            userId: claims?.userId ?? null,
+            userName: null,
+            sessionId,
+            onTextDelta: (text) => send("delta", { text }),
+          });
+          logger.info("ai.chat_completed", {
+            authenticated: Boolean(claims),
+            pendingActions: result.pendingActions.length,
+            inputTokens: result.usage.inputTokens,
+            outputTokens: result.usage.outputTokens,
+            stream: true,
+          });
+          send("done", result);
+        } catch (error) {
+          if (error instanceof AiBudgetExceededError) {
+            send("error", { code: "AI_BUDGET_EXCEEDED", message: "Se alcanzó el presupuesto mensual configurado para TECLA AI." });
+          } else if (error instanceof DeepSeekError) {
+            send("error", { code: error.code, message: error.message });
+          } else {
+            logger.error("ai.chat_unexpected", { error });
+            send("error", { code: "AI_UNAVAILABLE", message: "TECLA AI no está disponible en este momento." });
+          }
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-store, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  }
 
   try {
     const result = await runAiChat({

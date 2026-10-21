@@ -110,10 +110,128 @@ function mapHttpError(status: number): DeepSeekError {
   );
 }
 
+const StreamChunkSchema = z.object({
+  choices: z
+    .array(
+      z.object({
+        delta: z
+          .object({
+            content: z.string().nullable().optional(),
+            tool_calls: z
+              .array(
+                z.object({
+                  index: z.number(),
+                  id: z.string().optional(),
+                  type: z.literal("function").optional(),
+                  function: z
+                    .object({ name: z.string().optional(), arguments: z.string().optional() })
+                    .optional(),
+                }),
+              )
+              .optional(),
+          })
+          .optional(),
+        finish_reason: z.string().nullable().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+  usage: z
+    .object({
+      prompt_tokens: z.number().optional().default(0),
+      completion_tokens: z.number().optional().default(0),
+    })
+    .nullable()
+    .optional(),
+});
+
+/**
+ * Lee la respuesta SSE de DeepSeek (`stream: true`), entrega el texto por
+ * trozos a `onTextDelta` y reconstruye las llamadas a herramientas.
+ */
+async function readStream(
+  response: Response,
+  onTextDelta: (text: string) => void,
+): Promise<DeepSeekCompletion> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new DeepSeekError("DEEPSEEK_INVALID_RESPONSE", "DeepSeek no entregó un flujo de datos.", 502, true);
+  }
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let content = "";
+  let finishReason = "stop";
+  let promptTokens = 0;
+  let completionTokens = 0;
+  const calls = new Map<number, DeepSeekToolCall>();
+
+  const handleLine = (line: string) => {
+    if (!line.startsWith("data:")) return;
+    const payload = line.slice(5).trim();
+    if (!payload || payload === "[DONE]") return;
+    let json: unknown;
+    try {
+      json = JSON.parse(payload);
+    } catch {
+      return;
+    }
+    const parsed = StreamChunkSchema.safeParse(json);
+    if (!parsed.success) return;
+    if (parsed.data.usage) {
+      promptTokens = parsed.data.usage.prompt_tokens;
+      completionTokens = parsed.data.usage.completion_tokens;
+    }
+    for (const choice of parsed.data.choices) {
+      if (choice.finish_reason) finishReason = choice.finish_reason;
+      const delta = choice.delta;
+      if (!delta) continue;
+      if (delta.content) {
+        content += delta.content;
+        onTextDelta(delta.content);
+      }
+      for (const call of delta.tool_calls ?? []) {
+        const existing = calls.get(call.index) ?? {
+          id: "",
+          type: "function" as const,
+          function: { name: "", arguments: "" },
+        };
+        if (call.id) existing.id = call.id;
+        if (call.function?.name) existing.function.name += call.function.name;
+        if (call.function?.arguments) existing.function.arguments += call.function.arguments;
+        calls.set(call.index, existing);
+      }
+    }
+  };
+
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let newline = buffer.indexOf("\n");
+    while (newline >= 0) {
+      handleLine(buffer.slice(0, newline).trim());
+      buffer = buffer.slice(newline + 1);
+      newline = buffer.indexOf("\n");
+    }
+  }
+  if (buffer.trim()) handleLine(buffer.trim());
+
+  return {
+    message: {
+      content: content.trim(),
+      toolCalls: [...calls.entries()].sort((a, b) => a[0] - b[0]).map(([, call]) => call),
+    },
+    usage: { promptTokens, completionTokens },
+    finishReason,
+  };
+}
+
 export async function createDeepSeekCompletion(input: {
   messages: DeepSeekMessage[];
   tools: DeepSeekToolDefinition[];
   maxOutputTokens: number;
+  /** Si se indica, la respuesta llega por streaming y el texto se entrega por trozos. */
+  onTextDelta?: (text: string) => void;
 }): Promise<DeepSeekCompletion> {
   if (!serverConfig.deepseekApiKey) {
     throw new DeepSeekError(
@@ -131,7 +249,8 @@ export async function createDeepSeekCompletion(input: {
     tool_choice: input.tools.length > 0 ? "auto" : undefined,
     temperature: 0.35,
     max_tokens: input.maxOutputTokens,
-    stream: false,
+    stream: Boolean(input.onTextDelta),
+    ...(input.onTextDelta ? { stream_options: { include_usage: true } } : {}),
   };
 
   let lastError: unknown;
@@ -142,10 +261,10 @@ export async function createDeepSeekCompletion(input: {
         headers: {
           Authorization: `Bearer ${serverConfig.deepseekApiKey}`,
           "Content-Type": "application/json",
-          Accept: "application/json",
+          Accept: input.onTextDelta ? "text/event-stream" : "application/json",
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(35_000),
+        signal: AbortSignal.timeout(input.onTextDelta ? 60_000 : 35_000),
         cache: "no-store",
       });
 
@@ -157,6 +276,10 @@ export async function createDeepSeekCompletion(input: {
           continue;
         }
         throw error;
+      }
+
+      if (input.onTextDelta) {
+        return await readStream(response, input.onTextDelta);
       }
 
       const parsed = CompletionSchema.safeParse(await response.json());

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const ALLOWED_APP_IDS = [
   "youtube",
   "spotify",
+  "drive",
   "waze",
   "maps",
   "netflix",
@@ -11,7 +12,6 @@ export const ALLOWED_APP_IDS = [
   "iptv",
   "podcasts",
   "twitch",
-  "drive",
 ] as const;
 
 export const FAVORITE_KINDS = ["youtube", "radio", "podcast", "channel", "iptv"] as const;
@@ -91,9 +91,19 @@ export const SetThemeArgs = z
   })
   .strict();
 
+export const SetVisualStyleArgs = z
+  .object({
+    style: z
+      .enum(["tecla", "cyberpunk"])
+      .describe("Estilo visual: «tecla» (identidad normal) o «cyberpunk» (Cyberpunk 2077, neón amarillo y cian)."),
+  })
+  .strict();
+
 export const SetDisplayModeArgs = z
   .object({
-    mode: z.enum(["normal", "cinema", "kiosk"]).describe("Modo de pantalla solicitado."),
+    mode: z
+      .enum(["normal", "cinema", "kiosk", "audio"])
+      .describe("Modo de pantalla: normal, cine, kiosco o «audio» (modo conducción: carátula y controles sobre el video de YouTube, útil porque el Tesla bloquea el video en marcha)."),
   })
   .strict();
 
@@ -147,10 +157,46 @@ export const SpotifyControlArgs = z
   })
   .strict();
 
+export const SearchSpotifyArgs = z
+  .object({
+    query: z.string().trim().min(2).max(120).describe("Canción, artista o álbum a buscar en Spotify."),
+    limit: z.number().int().min(1).max(10).default(5).describe("Cantidad máxima de resultados."),
+  })
+  .strict();
+
+export const PlaySpotifyArgs = z
+  .object({
+    uri: z
+      .string()
+      .trim()
+      .regex(/^spotify:(track|album|playlist|artist):[A-Za-z0-9]{10,40}$/)
+      .describe("URI exacto devuelto por search_spotify (spotify:track:…)."),
+    title: z.string().trim().max(200).optional().describe("Título conocido, para confirmar al usuario."),
+  })
+  .strict();
+
+export const DriveControlArgs = z
+  .object({
+    action: z
+      .enum(["open", "engine_on", "engine_off", "set_engine", "set_scene"])
+      .describe("Acción sobre TECLA Drive."),
+    engineId: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9_]{2,40}$/)
+      .optional()
+      .describe("ID de motor de TECLA Drive (por ejemplo v8_biturbo, v12_pista, rotativo_turbo, ev_trimotor)."),
+    sceneId: z
+      .enum(["halloween", "neon", "canyon", "coast", "alpine", "aurora", "galaxy", "stars", "plaid", "portal", "christmas", "rainy_city", "city_day"])
+      .optional()
+      .describe("Escena de TECLA Drive."),
+  })
+  .strict();
+
 export const RememberPreferenceArgs = z
   .object({
     key: z
-      .enum(["musica", "videos", "emisoras", "apps", "tema", "idioma", "ciudad"])
+      .enum(["musica", "videos", "emisoras", "apps", "tema", "idioma", "ciudad", "motor", "escena", "podcast", "artista", "horario"])
       .describe("Categoría de la preferencia."),
     value: z
       .string()
@@ -173,6 +219,7 @@ export const TOOL_SCHEMAS = {
   search_waze: SearchWazeArgs,
   open_google_maps: OpenGoogleMapsArgs,
   set_theme: SetThemeArgs,
+  set_visual_style: SetVisualStyleArgs,
   set_display_mode: SetDisplayModeArgs,
   request_fullscreen: RequestFullscreenArgs,
   search_radio: SearchRadioArgs,
@@ -182,10 +229,13 @@ export const TOOL_SCHEMAS = {
   get_playback_state: GetPlaybackStateArgs,
   open_spotify: OpenSpotifyArgs,
   spotify_control: SpotifyControlArgs,
+  search_spotify: SearchSpotifyArgs,
+  play_spotify: PlaySpotifyArgs,
+  drive_control: DriveControlArgs,
   remember_preference: RememberPreferenceArgs,
 } as const;
 
 export type ToolName = keyof typeof TOOL_SCHEMAS;
 export type ToolArgs<T extends ToolName> = z.infer<(typeof TOOL_SCHEMAS)[T]>;
 
-export const DEPRECATED_TOOL_NAMES = ["search_spotify"] as const;
+export const DEPRECATED_TOOL_NAMES: readonly string[] = [];

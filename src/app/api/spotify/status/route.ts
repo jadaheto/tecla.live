@@ -2,6 +2,7 @@ import { jsonOk } from "@/lib/api-response";
 import { getActiveSessionClaims } from "@/lib/auth/session";
 import { isDatabaseConfigured, prisma } from "@/lib/db/prisma";
 import {
+  scopeAllowsStreaming,
   spotifyConfigured,
   spotifyEncryptionConfigured,
 } from "@/lib/integrations/spotify";
@@ -32,6 +33,7 @@ export async function GET() {
       configured,
       authenticated: true,
       connected: Boolean(account),
+      streaming: scopeAllowsStreaming(account?.scope),
       account: account
         ? {
             providerAccountId: account.providerAccountId,

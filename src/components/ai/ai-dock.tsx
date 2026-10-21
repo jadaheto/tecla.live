@@ -4,21 +4,25 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { AiPanel } from "@/components/ai/ai-panel";
+import { VoiceHud } from "@/components/ai/voice-hud";
 import { useAi } from "@/features/ai/store";
+import { openAssistant } from "@/features/ai/open-assistant";
 
 export function AiDock() {
   const pathname = usePathname();
   const open = useAi((state) => state.panelOpen);
   const setOpen = useAi((state) => state.setPanelOpen);
+  const voiceOpen = useAi((state) => state.voiceOpen);
+  const setVoiceOpen = useAi((state) => state.setVoiceOpen);
   if (pathname === "/ai") return null;
   const hideLauncher = pathname === "/drive";
 
   return (
     <>
-      {!open && !hideLauncher ? (
+      {!open && !voiceOpen && !hideLauncher ? (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => openAssistant()}
           aria-label="Abrir TECLA AI"
           className="group fixed bottom-[88px] right-4 z-[70] hidden items-center gap-2 rounded-full lg:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-4 focus-visible:ring-offset-background lg:bottom-7 lg:right-7"
         >
@@ -36,6 +40,9 @@ export function AiDock() {
       ) : null}
 
       <AiPanel open={open} onOpenChange={setOpen} />
+      {!open ? (
+        <VoiceHud open={voiceOpen} onClose={() => setVoiceOpen(false)} onOpenText={() => openAssistant({ mode: "text" })} />
+      ) : null}
     </>
   );
 }

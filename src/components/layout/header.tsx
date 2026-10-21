@@ -10,7 +10,7 @@ import { FullscreenButton } from "@/components/layout/fullscreen-button";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUi } from "@/stores/ui";
-import { useAi } from "@/features/ai/store";
+import { openAssistant } from "@/features/ai/open-assistant";
 import { usePreferences } from "@/stores/preferences";
 import { toast } from "@/stores/toast";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,6 @@ const NAV_LINKS = [
 export function Header() {
   const pathname = usePathname();
   const setSearchOpen = useUi((state) => state.setSearchOpen);
-  const setAiOpen = useAi((state) => state.setPanelOpen);
   const theme = usePreferences((state) => state.theme);
   const setPreferences = usePreferences((state) => state.setPreferences);
 
@@ -99,7 +98,7 @@ export function Header() {
           </Tooltip>
           <Button
             variant="primary"
-            onClick={() => setAiOpen(true)}
+            onClick={() => openAssistant()}
             className="gap-2 px-3.5 sm:px-5"
             aria-label="Abrir TECLA AI"
           >

@@ -4,15 +4,18 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { useAi } from "@/features/ai/store";
 import { useTeclaActions } from "@/features/ai/hooks/use-tecla-actions";
-import { apiFetch, errorMessage } from "@/lib/http";
+import { errorMessage } from "@/lib/http";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { usePlayer } from "@/stores/player";
 import { usePreferences } from "@/stores/preferences";
 import { useAiMemory } from "@/stores/ai-memory";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { getMediaController } from "@/features/media/player-bridge";
+import { getSpotifyWebPlayerState } from "@/features/music/spotify-web-player-bridge";
+import { clearVoiceLevel, setVoiceLevel } from "@/features/ai/voice-level";
+import { splitSentences, streamAiChat } from "@/features/ai/stream-client";
+import { farewellReply, isFarewell } from "@/features/ai/farewell";
 import type {
-  AiChatResponse,
   AiToolExchange,
   AiToolResult,
 } from "@/features/ai/types";
@@ -88,7 +91,59 @@ export function useTeclaAI() {
   const audioUrlRef = React.useRef<string | null>(null);
   const resumeAfterSpeakRef = React.useRef(false);
   const autoListenRef = React.useRef(false);
+  /** La escucha actual la inició el modo conversación (no un toque): si no hay voz, cerrar en silencio. */
+  const autoStartedRef = React.useRef(false);
+  /** Tras una despedida: al terminar de hablar, cerrar el HUD y no volver a escuchar. */
+  const closeAfterSpeakRef = React.useRef(false);
   const startListeningRef = React.useRef<() => Promise<void>>(async () => {});
+  /** Detector de silencio: cierra la grabación sola cuando el usuario termina de hablar. */
+  const vadRef = React.useRef<{ context: AudioContext; interval: number } | null>(null);
+
+  const stopVad = React.useCallback(() => {
+    const vad = vadRef.current;
+    clearVoiceLevel();
+    if (!vad) return;
+    vadRef.current = null;
+    window.clearInterval(vad.interval);
+    void vad.context.close().catch(() => undefined);
+  }, []);
+  /** Medidor de la voz sintetizada, para que el orbe lata al responder. */
+  const ttsContextRef = React.useRef<AudioContext | null>(null);
+  const ttsMeterRef = React.useRef<number | null>(null);
+
+  const stopTtsMeter = React.useCallback(() => {
+    if (ttsMeterRef.current !== null) {
+      window.clearInterval(ttsMeterRef.current);
+      ttsMeterRef.current = null;
+    }
+    clearVoiceLevel();
+  }, []);
+
+  const attachTtsMeter = React.useCallback((audio: HTMLAudioElement) => {
+    try {
+      const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtor) return;
+      if (!ttsContextRef.current) ttsContextRef.current = new AudioCtor();
+      const context = ttsContextRef.current;
+      void context.resume().catch(() => undefined);
+      // Si el contexto no corre, enrutar el audio por él lo silenciaría: no medimos.
+      if (context.state !== "running") return;
+      const source = context.createMediaElementSource(audio);
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      analyser.connect(context.destination);
+      const samples = new Float32Array(analyser.fftSize);
+      ttsMeterRef.current = window.setInterval(() => {
+        analyser.getFloatTimeDomainData(samples);
+        let energy = 0;
+        for (let i = 0; i < samples.length; i += 1) energy += (samples[i] ?? 0) ** 2;
+        setVoiceLevel(Math.min(1, Math.sqrt(energy / samples.length) * 3), "tts");
+      }, 50);
+    } catch {
+      // Sin medidor: el orbe usa su animación base.
+    }
+  }, []);
   const ttsConfiguredRef = React.useRef(false);
   const elevenLabsAvailable = integrations.data?.integrations.elevenlabs ?? false;
   const deepgramAvailable = integrations.data?.integrations.deepgram ?? false;
@@ -108,6 +163,7 @@ export function useTeclaAI() {
       audio.pause();
     }
     audioRef.current = null;
+    stopTtsMeter();
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
       audioUrlRef.current = null;
@@ -116,7 +172,7 @@ export function useTeclaAI() {
       resumeAfterSpeakRef.current = false;
       void getMediaController()?.play().catch(() => undefined);
     }
-  }, []);
+  }, [stopTtsMeter]);
 
   const stopPlayback = React.useCallback(() => {
     resumeAfterSpeakRef.current = false;
@@ -177,6 +233,7 @@ export function useTeclaAI() {
         const audio = new Audio(url);
         audio.volume = Math.min(1, Math.max(0, usePreferences.getState().volume / 100));
         audioRef.current = audio;
+        attachTtsMeter(audio);
 
         await new Promise<void>((resolve, reject) => {
           audio.onended = () => resolve();
@@ -193,8 +250,17 @@ export function useTeclaAI() {
         if (controller.signal.aborted) return;
         useAi.getState().setStatus("idle");
         cleanupAudio(true);
-        if (usePreferences.getState().conversationMode && useAi.getState().panelOpen) {
+        if (closeAfterSpeakRef.current) {
+          closeAfterSpeakRef.current = false;
+          useAi.getState().setVoiceOpen(false);
+          return;
+        }
+        if (
+          usePreferences.getState().conversationMode &&
+          (useAi.getState().panelOpen || useAi.getState().voiceOpen)
+        ) {
           autoListenRef.current = true;
+          autoStartedRef.current = true;
           window.setTimeout(() => {
             if (autoListenRef.current) void startListeningRef.current();
           }, 350);
@@ -206,8 +272,128 @@ export function useTeclaAI() {
         cleanupAudio(true);
       }
     },
-    [cleanupAudio],
+    [cleanupAudio, attachTtsMeter],
   );
+
+  /**
+   * Voz por frases: mientras el texto llega en streaming, cada frase completa
+   * se convierte en voz y se reproduce en orden. La primera frase suena
+   * mucho antes de que termine la respuesta.
+   */
+  const speechRef = React.useRef<{
+    active: boolean;
+    finished: boolean;
+    playing: boolean;
+    queue: Array<Promise<Blob | null>>;
+    controller: AbortController | null;
+  }>({ active: false, finished: false, playing: false, queue: [], controller: null });
+
+  const finalizeSpeech = React.useCallback(() => {
+    const speech = speechRef.current;
+    speech.active = false;
+    speech.playing = false;
+    speech.queue = [];
+    speech.controller = null;
+    useAi.getState().setStatus("idle");
+    cleanupAudio(true);
+    if (closeAfterSpeakRef.current) {
+      closeAfterSpeakRef.current = false;
+      useAi.getState().setVoiceOpen(false);
+      return;
+    }
+    if (
+      usePreferences.getState().conversationMode &&
+      (useAi.getState().panelOpen || useAi.getState().voiceOpen)
+    ) {
+      autoListenRef.current = true;
+      autoStartedRef.current = true;
+      window.setTimeout(() => {
+        if (autoListenRef.current) void startListeningRef.current();
+      }, 350);
+    }
+  }, [cleanupAudio]);
+
+  const drainSpeech = React.useCallback(async () => {
+    const speech = speechRef.current;
+    if (speech.playing) return;
+    speech.playing = true;
+    while (speech.active && speech.queue.length > 0) {
+      const next = speech.queue.shift();
+      if (!next) break;
+      const blob = await next.catch(() => null);
+      if (!speech.active) return;
+      if (!blob || !blob.size) continue;
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.volume = Math.min(1, Math.max(0, usePreferences.getState().volume / 100));
+      audioRef.current = audio;
+      audioUrlRef.current = url;
+      attachTtsMeter(audio);
+      await new Promise<void>((resolve) => {
+        audio.onended = () => resolve();
+        audio.onerror = () => resolve();
+        audio.play().catch(() => resolve());
+      });
+      stopTtsMeter();
+      if (audioUrlRef.current === url) {
+        URL.revokeObjectURL(url);
+        audioUrlRef.current = null;
+      }
+      audioRef.current = null;
+    }
+    speech.playing = false;
+    if (speech.active && speech.finished && speech.queue.length === 0) finalizeSpeech();
+  }, [attachTtsMeter, finalizeSpeech, stopTtsMeter]);
+
+  const beginSpeech = React.useCallback(async () => {
+    const speech = speechRef.current;
+    if (speech.active) return;
+    cleanupAudio(false);
+    autoListenRef.current = false;
+    const controller = new AbortController();
+    ttsAbortRef.current = controller;
+    speech.active = true;
+    speech.finished = false;
+    speech.playing = false;
+    speech.queue = [];
+    speech.controller = controller;
+    useAi.getState().setStatus("speaking");
+    const media = getMediaController();
+    if (media?.getSnapshot().isPlaying) {
+      const paused = await media.pause();
+      resumeAfterSpeakRef.current = paused.ok;
+    }
+  }, [cleanupAudio]);
+
+  const enqueueSpeech = React.useCallback(
+    (sentence: string) => {
+      const speech = speechRef.current;
+      const clean = sentence.trim();
+      if (!speech.active || !clean || !speech.controller) return;
+      const signal = speech.controller.signal;
+      const request = fetch("/api/ai/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: clean.slice(0, 1000),
+          ...(usePreferences.getState().aiVoiceId ? { voiceId: usePreferences.getState().aiVoiceId } : {}),
+        }),
+        signal,
+      })
+        .then((response) => (response.ok ? response.blob() : null))
+        .catch(() => null);
+      speech.queue.push(request);
+      void drainSpeech();
+    },
+    [drainSpeech],
+  );
+
+  const finishSpeech = React.useCallback(() => {
+    const speech = speechRef.current;
+    if (!speech.active) return;
+    speech.finished = true;
+    if (!speech.playing && speech.queue.length === 0) finalizeSpeech();
+  }, [finalizeSpeech]);
 
   const send = React.useCallback(
     async (raw: string, options?: { speak?: boolean }) => {
@@ -215,8 +401,10 @@ export function useTeclaAI() {
       if (!text) return;
 
       const currentStatus = useAi.getState().status;
-      if (currentStatus === "speaking") stopPlayback();
-      else if (isBusyStatus(currentStatus)) return;
+      if (currentStatus === "speaking") {
+        speechRef.current.active = false;
+        stopPlayback();
+      } else if (isBusyStatus(currentStatus)) return;
 
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -226,6 +414,22 @@ export function useTeclaAI() {
       const store = useAi.getState();
       store.setError(null);
       store.addMessage({ role: "user", content: text });
+
+      // Despedida por voz: respuesta local breve y cierre del HUD, sin DeepSeek.
+      if (options?.speak && isFarewell(text)) {
+        const reply = farewellReply(text, usePreferences.getState().aiPersona);
+        store.addMessage({ role: "assistant", content: reply });
+        closeAfterSpeakRef.current = true;
+        if (ttsConfiguredRef.current && usePreferences.getState().voiceEnabled) {
+          await speak(reply);
+        } else {
+          closeAfterSpeakRef.current = false;
+          useAi.getState().setStatus("idle");
+          window.setTimeout(() => useAi.getState().setVoiceOpen(false), 1_200);
+        }
+        return;
+      }
+
       store.setStatus("thinking");
 
       const player = usePlayer.getState();
@@ -248,6 +452,12 @@ export function useTeclaAI() {
           fullscreen: capabilities.fullscreen,
           webSpeech: capabilities.webSpeech,
         },
+        persona: usePreferences.getState().aiPersona,
+        visualStyle: usePreferences.getState().visualStyle,
+        assistantName: usePreferences.getState().aiName,
+        ...(getSpotifyWebPlayerState().deviceId
+          ? { spotifyDeviceId: getSpotifyWebPlayerState().deviceId ?? undefined }
+          : {}),
         ...(usePreferences.getState().memoryConsent
           ? {
               memory: useAiMemory
@@ -260,6 +470,10 @@ export function useTeclaAI() {
 
       let toolExchange: AiToolExchange | undefined;
       const actionSummaries: NonNullable<(typeof store.messages)[number]["actions"]> = [];
+      const wantsVoice = Boolean(options?.speak) && ttsConfiguredRef.current && usePreferences.getState().voiceEnabled;
+      let placeholderId: string | null = null;
+      let partial = "";
+      let spokenUpTo = 0;
 
       try {
         for (let round = 0; round < MAX_ROUNDS; round += 1) {
@@ -267,34 +481,73 @@ export function useTeclaAI() {
 
           const history = useAi
             .getState()
-            .messages.slice(-12)
+            .messages.filter((message) => message.id !== placeholderId)
+            .slice(-12)
             .map((message) => ({ role: message.role, content: message.content }));
 
-          const response = await apiFetch<AiChatResponse>("/api/ai/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          partial = "";
+          spokenUpTo = 0;
+          const response = await streamAiChat(
+            {
               messages: history,
               context,
               ...(toolExchange ? { toolExchange } : {}),
-            }),
-            signal: controller.signal,
-          });
+            },
+            (delta) => {
+              if (runIdRef.current !== runId) return;
+              partial += delta;
+              if (!placeholderId) {
+                placeholderId = useAi.getState().addMessage({ role: "assistant", content: partial });
+              } else {
+                useAi.getState().updateMessage(placeholderId, { content: partial });
+              }
+              if (wantsVoice) {
+                const { sentences, consumed } = splitSentences(partial.slice(spokenUpTo));
+                if (sentences.length > 0) {
+                  spokenUpTo += consumed;
+                  void beginSpeech().then(() => {
+                    if (runIdRef.current !== runId) return;
+                    for (const sentence of sentences) enqueueSpeech(sentence);
+                  });
+                }
+              }
+            },
+            controller.signal,
+          );
 
           if (runIdRef.current !== runId) return;
 
           if (response.pendingActions.length === 0) {
-            const finalContent = response.content || "Listo.";
-            useAi.getState().addMessage({
-              role: "assistant",
-              content: finalContent,
-              actions: actionSummaries.length > 0 ? actionSummaries : undefined,
-            });
-            useAi.getState().setStatus("idle");
-            if (options?.speak && ttsConfiguredRef.current) {
-              await speak(finalContent);
+            const finalContent = response.content || partial || "Listo.";
+            if (placeholderId) {
+              useAi.getState().updateMessage(placeholderId, {
+                content: finalContent,
+                actions: actionSummaries.length > 0 ? actionSummaries : undefined,
+              });
+            } else {
+              useAi.getState().addMessage({
+                role: "assistant",
+                content: finalContent,
+                actions: actionSummaries.length > 0 ? actionSummaries : undefined,
+              });
+            }
+            if (wantsVoice) {
+              const tail = finalContent.slice(spokenUpTo).trim();
+              if (speechRef.current.active) {
+                if (tail) enqueueSpeech(tail);
+                finishSpeech();
+              } else {
+                useAi.getState().setStatus("idle");
+                await speak(finalContent);
+              }
+            } else {
+              useAi.getState().setStatus("idle");
             }
             return;
+          }
+          // Hubo acciones: el texto parcial de este paso no es la respuesta final.
+          if (placeholderId && partial) {
+            useAi.getState().updateMessage(placeholderId, { content: "" });
           }
 
           useAi.getState().setStatus("executing");
@@ -345,7 +598,7 @@ export function useTeclaAI() {
         useAi.getState().setStatus("error");
       }
     },
-    [capabilities, executeActions, pathname, speak, stopPlayback],
+    [capabilities, executeActions, pathname, speak, stopPlayback, beginSpeech, enqueueSpeech, finishSpeech],
   );
 
   const stopListening = React.useCallback(() => {
@@ -378,6 +631,8 @@ export function useTeclaAI() {
     }
 
     if (recorderRef.current?.state === "recording") return;
+    // Si llegamos aquí por un toque (no por el modo conversación), no es escucha automática.
+    if (!autoListenRef.current) autoStartedRef.current = false;
     autoListenRef.current = false;
     useAi.getState().setError(null);
 
@@ -408,6 +663,60 @@ export function useTeclaAI() {
     discardRef.current = false;
     chunksRef.current = [];
 
+    // Fin de frase automático: tras voz detectada, 1,4 s de silencio envían la orden;
+    // sin voz en 8 s se descarta. Así se puede hablar sin tocar la pantalla.
+    stopVad();
+    try {
+      const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtor) {
+        const context = new AudioCtor();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 1024;
+        source.connect(analyser);
+        const samples = new Float32Array(analyser.fftSize);
+        const startedAt = Date.now();
+        let voicedMs = 0;
+        let lastVoiceAt = 0;
+        const interval = window.setInterval(() => {
+          const active = recorderRef.current;
+          if (!active || active.state !== "recording") {
+            stopVad();
+            return;
+          }
+          analyser.getFloatTimeDomainData(samples);
+          let energy = 0;
+          for (let i = 0; i < samples.length; i += 1) energy += (samples[i] ?? 0) ** 2;
+          const rms = Math.sqrt(energy / samples.length);
+          setVoiceLevel(Math.min(1, rms * 6), "mic");
+          const now = Date.now();
+          if (rms > 0.02) {
+            voicedMs += 100;
+            lastVoiceAt = now;
+          }
+          const spoke = voicedMs >= 400;
+          if (spoke && now - lastVoiceAt >= 1_400) {
+            stopVad();
+            active.stop();
+          } else if (!spoke && now - startedAt >= 8_000) {
+            discardRef.current = true;
+            stopVad();
+            active.stop();
+            if (autoStartedRef.current) {
+              // Escucha automática tras responder: sin voz, el HUD se cierra en silencio.
+              autoStartedRef.current = false;
+              useAi.getState().setVoiceOpen(false);
+            } else {
+              useAi.getState().setError("No escuché nada. Toca el micrófono y vuelve a intentarlo.");
+            }
+          }
+        }, 100);
+        vadRef.current = { context, interval };
+      }
+    } catch {
+      // Sin analizador: la grabación se cierra con el botón o el tiempo máximo.
+    }
+
     const mimeType = pickMimeType();
     let recorder: MediaRecorder;
     try {
@@ -431,6 +740,7 @@ export function useTeclaAI() {
         timerRef.current = null;
       }
       const recordedType = recorder.mimeType || mimeType || "audio/webm";
+      stopVad();
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
       recorderRef.current = null;
@@ -516,6 +826,7 @@ export function useTeclaAI() {
     maxAudioSeconds,
     send,
     stopPlayback,
+    stopVad,
   ]);
 
   React.useEffect(() => {

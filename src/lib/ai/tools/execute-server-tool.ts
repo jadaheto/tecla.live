@@ -7,7 +7,7 @@ import { fetchPodcastEpisodes } from "@/lib/integrations/podcasts";
 import { fetchWeather, fetchWeatherForLocation } from "@/lib/integrations/weather";
 import { TOOL_SCHEMAS, type ToolName } from "@/features/ai/tools/schemas";
 import { logger } from "@/lib/logger";
-import { controlSpotify, SpotifyError } from "@/lib/integrations/spotify";
+import { controlSpotify, playSpotifyUri, searchSpotifyTracks, SpotifyError } from "@/lib/integrations/spotify";
 
 export interface ServerToolResult {
   ok: boolean;
@@ -17,6 +17,8 @@ export interface ServerToolResult {
 export interface ServerToolContext {
   userId: string | null;
   sessionId: string;
+  /** Dispositivo del reproductor web de Spotify de TECLA LIVE, si está activo. */
+  spotifyDeviceId?: string | null;
 }
 
 function serialize(value: unknown): string {
@@ -144,7 +146,12 @@ export async function executeServerTool(
           );
         }
         try {
-          const result = await controlSpotify(context.userId, input.action, input.volume);
+          const result = await controlSpotify(
+            context.userId,
+            input.action,
+            input.volume,
+            context.spotifyDeviceId ?? null,
+          );
           return {
             ok: true,
             content: serialize({
@@ -158,6 +165,64 @@ export async function executeServerTool(
           if (error instanceof SpotifyError) {
             return failure(error.code, error.message);
           }
+          throw error;
+        }
+      }
+
+      case "search_spotify": {
+        const input = TOOL_SCHEMAS.search_spotify.parse(args);
+        if (!context.userId) {
+          return failure(
+            "AUTH_REQUIRED",
+            "Para buscar en Spotify el usuario debe iniciar sesión y vincular su cuenta en Música. Ofrece YouTube como alternativa.",
+          );
+        }
+        try {
+          const tracks = await searchSpotifyTracks(context.userId, input.query, input.limit);
+          return {
+            ok: true,
+            content: serialize({
+              ok: true,
+              query: input.query,
+              results: tracks.map((track) => ({
+                uri: track.uri,
+                name: track.name,
+                artists: track.artists,
+                album: track.album,
+                durationSeconds: Math.round(track.durationMs / 1000),
+              })),
+            }),
+          };
+        } catch (error) {
+          if (error instanceof SpotifyError) return failure(error.code, error.message);
+          throw error;
+        }
+      }
+
+      case "play_spotify": {
+        const input = TOOL_SCHEMAS.play_spotify.parse(args);
+        if (!context.userId) {
+          return failure(
+            "AUTH_REQUIRED",
+            "Para reproducir en Spotify el usuario debe iniciar sesión y vincular su cuenta en Música.",
+          );
+        }
+        try {
+          const result = await playSpotifyUri(context.userId, input.uri, context.spotifyDeviceId ?? null);
+          return {
+            ok: true,
+            content: serialize({
+              ok: true,
+              uri: result.uri,
+              deviceId: result.deviceId,
+              playedHere: Boolean(context.spotifyDeviceId && result.deviceId === context.spotifyDeviceId),
+              message: context.spotifyDeviceId
+                ? "Spotify está reproduciendo en el reproductor web de TECLA LIVE."
+                : "Spotify está reproduciendo en el dispositivo activo del usuario.",
+            }),
+          };
+        } catch (error) {
+          if (error instanceof SpotifyError) return failure(error.code, error.message);
           throw error;
         }
       }

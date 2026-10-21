@@ -6,6 +6,7 @@ import { serverConfig } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getElevenLabsVoices } from "@/lib/ai/elevenlabs/voices";
+import { isCuratedVoice } from "@/lib/ai/elevenlabs/curated-voices";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,8 +75,10 @@ export async function POST(request: Request) {
 
   let voiceId = serverConfig.elevenLabsVoiceId;
   if (parsed.data.voiceId && parsed.data.voiceId !== serverConfig.elevenLabsVoiceId) {
-    const voices = await getElevenLabsVoices().catch(() => []);
-    const selected = voices.find((voice) => voice.id === parsed.data.voiceId);
+    const voices = isCuratedVoice(parsed.data.voiceId) ? [] : await getElevenLabsVoices().catch(() => []);
+    const selected = isCuratedVoice(parsed.data.voiceId)
+      ? { id: parsed.data.voiceId }
+      : voices.find((voice) => voice.id === parsed.data.voiceId);
     if (!selected) {
       return jsonError(
         "VOICE_NOT_ALLOWED",

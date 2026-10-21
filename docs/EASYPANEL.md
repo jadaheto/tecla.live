@@ -36,7 +36,7 @@ No uses `localhost` dentro de un contenedor: usa el hostname interno que Easypan
 3. Puerto expuesto: **3000**.
 4. Health check: `GET /api/health` (responde 200 y muestra el estado de la base de datos).
 5. Build arg recomendado: `NEXT_PUBLIC_APP_URL=https://tecla.live`. Next inyecta las variables `NEXT_PUBLIC_*` en el build; si cambias el dominio, vuelve a compilar la imagen.
-6. No configures `HOSTNAME` ni `PORT`: la imagen ya usa `0.0.0.0:3000`.
+6. Si Easypanel inyecta `PORT=80` (verás «Local: http://localhost:80» en el log), configura el puerto del dominio/proxy en **80**; si no defines `PORT`, usa **3000**. El health check de la imagen sigue al valor de `PORT`, así que cualquiera de las dos opciones queda verde. Un servicio en amarillo con «Ready» en el log casi siempre es un desajuste entre `PORT` y el puerto del proxy.
 7. La imagen corre con usuario no root (`nextjs`).
 
 ## 4. Variables de entorno
@@ -59,6 +59,7 @@ Configura en Easypanel (nunca en el repositorio):
 | `ELEVENLABS_API_KEY` | Opcional | ElevenLabs |
 | `ELEVENLABS_VOICE_ID` | Opcional | ID real de una voz de tu cuenta |
 | `ELEVENLABS_MODEL_ID` | Opcional | `eleven_flash_v2_5` |
+| `ELEVENLABS_VOICES` | Opcional | Voces públicas de Ajustes: `id\|Nombre\|grupo\|género;…` (ver `.env.example`). Sin ella se usa una lista de respaldo. |
 | `SPOTIFY_CLIENT_ID` | Opcional | App de Spotify Developer |
 | `SPOTIFY_CLIENT_SECRET` | Opcional | App de Spotify Developer |
 | `SPOTIFY_REDIRECT_URI` | Opcional | `https://tecla.live/api/spotify/callback` |

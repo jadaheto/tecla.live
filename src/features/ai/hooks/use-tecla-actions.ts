@@ -13,6 +13,9 @@ import { usePreferences } from "@/stores/preferences";
 import { useLibrary } from "@/stores/library";
 import { usePlayer } from "@/stores/player";
 import { useAiMemory } from "@/stores/ai-memory";
+import { useDriveStore } from "@/stores/drive";
+import { getDriveController } from "@/features/drive/drive-bridge";
+import { DRIVE_ENGINES, findEngine, findScene } from "@/features/drive/drive-config";
 import type { AiActionExecution, AiPendingAction } from "@/features/ai/types";
 import type { MediaKind } from "@/types";
 
@@ -37,6 +40,30 @@ function defaultHref(kind: MediaKind, providerId: string): string {
     default:
       return "/";
   }
+}
+
+/** Espera hasta `timeoutMs` a que el reproductor confirme reproducción o bloqueo de autoplay. */
+function waitForPlayback(videoId: string, timeoutMs: number): Promise<"playing" | "blocked" | "unknown"> {
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const check = () => {
+      const state = usePlayer.getState();
+      if (state.current?.id === videoId && state.isPlaying) {
+        resolve("playing");
+        return;
+      }
+      if (state.current?.id === videoId && state.playbackBlocked) {
+        resolve("blocked");
+        return;
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        resolve("unknown");
+        return;
+      }
+      window.setTimeout(check, 150);
+    };
+    check();
+  });
 }
 
 function result(errorCode: string, message: string): ExecutionOutcome {
@@ -118,14 +145,26 @@ async function executeAction(
         href: `/watch/${input.videoId}`,
       });
       router.push(`/watch/${input.videoId}`);
+      // Esperamos el resultado real: sonando, bloqueado por autoplay o sin confirmar.
+      const outcome = await waitForPlayback(input.videoId, 4_500);
       return {
         ok: true,
         content: {
           ok: true,
-          message: "Reproductor abierto con el video solicitado.",
           videoId: input.videoId,
+          playing: outcome === "playing",
+          autoplayBlocked: outcome === "blocked",
+          message:
+            outcome === "playing"
+              ? "El video ya está sonando en el reproductor."
+              : outcome === "blocked"
+                ? "El navegador bloqueó el autoplay: el usuario debe tocar «Reproducir con sonido»."
+                : "Reproductor abierto; la reproducción aún no se confirmó.",
         },
-        summary: `Abriendo «${input.title ?? "video de YouTube"}»`,
+        summary:
+          outcome === "playing"
+            ? `Sonando «${input.title ?? "video de YouTube"}»`
+            : `Abriendo «${input.title ?? "video de YouTube"}»`,
       };
     }
 
@@ -249,9 +288,27 @@ async function executeAction(
       };
     }
 
+    case "set_visual_style": {
+      const input = TOOL_SCHEMAS.set_visual_style.parse(args);
+      usePreferences.getState().setPreferences({ visualStyle: input.style });
+      return {
+        ok: true,
+        content: { ok: true, message: `Estilo ${input.style === "cyberpunk" ? "Cyberpunk 2077" : "TECLA"} aplicado.` },
+        summary: input.style === "cyberpunk" ? "Estilo Cyberpunk 2077 activado" : "Estilo TECLA restaurado",
+      };
+    }
+
     case "set_display_mode": {
       const input = TOOL_SCHEMAS.set_display_mode.parse(args);
-      usePreferences.getState().setPreferences({ displayMode: input.mode });
+      if (input.mode === "audio") {
+        usePreferences.getState().setPreferences({ watchAudioMode: true });
+        return {
+          ok: true,
+          content: { ok: true, message: "Modo conducción activado: carátula y controles sobre el video; el audio continúa." },
+          summary: "Modo conducción activado",
+        };
+      }
+      usePreferences.getState().setPreferences({ displayMode: input.mode, watchAudioMode: false });
       return {
         ok: true,
         content: { ok: true, message: `Modo ${input.mode} aplicado.` },
@@ -291,14 +348,23 @@ async function executeAction(
 
     case "play_radio": {
       const input = TOOL_SCHEMAS.play_radio.parse(args);
-      router.push(`/radio?station=${encodeURIComponent(input.stationId)}`);
+      router.push(`/radio?station=${encodeURIComponent(input.stationId)}&autoplay=1`);
+      const outcome = await waitForPlayback(input.stationId, 6_000);
       return {
         ok: true,
         content: {
           ok: true,
-          message: "Emisora abierta en Radio. El navegador puede requerir un toque para reproducir.",
+          stationId: input.stationId,
+          playing: outcome === "playing",
+          autoplayBlocked: outcome === "blocked",
+          message:
+            outcome === "playing"
+              ? "La emisora ya está sonando."
+              : outcome === "blocked"
+                ? "El navegador bloqueó el autoplay: el usuario debe tocar reproducir."
+                : "Emisora abierta en Radio; la reproducción aún no se confirmó.",
         },
-        summary: "Abriendo la emisora en Radio",
+        summary: outcome === "playing" ? "Emisora sonando" : "Abriendo la emisora en Radio",
       };
     }
 
@@ -335,6 +401,61 @@ async function executeAction(
       };
     }
 
+    case "drive_control": {
+      const input = TOOL_SCHEMAS.drive_control.parse(args);
+      const drive = useDriveStore.getState();
+      const live = getDriveController();
+      if (input.engineId && !DRIVE_ENGINES.some((engine) => engine.id === input.engineId)) {
+        return result("DRIVE_ENGINE_UNKNOWN", "Ese motor no existe en TECLA Drive. Usa un ID de la lista.");
+      }
+      if (input.engineId) {
+        drive.setEngine(input.engineId);
+        live?.setEngine(input.engineId);
+      }
+      if (input.sceneId) {
+        drive.setAutoScene(false);
+        drive.setScene(input.sceneId);
+        live?.setScene(input.sceneId);
+      }
+      const engineName = findEngine(input.engineId ?? drive.engineId).name;
+      const sceneLabel = findScene(input.sceneId ?? drive.sceneId).label;
+
+      if (input.action === "engine_off") {
+        if (!live) return result("DRIVE_NOT_OPEN", "TECLA Drive no está abierto; no hay motor que apagar.");
+        const outcome = live.engineOff();
+        return { ok: outcome.ok, content: { ok: outcome.ok, message: outcome.message }, summary: outcome.message };
+      }
+      if (input.action === "engine_on") {
+        if (!live) {
+          router.push("/drive");
+          return {
+            ok: true,
+            content: {
+              ok: true,
+              message: "Abriendo TECLA Drive. El navegador exige un toque en «Encender» para iniciar el audio; pídeselo al usuario.",
+              engine: engineName,
+            },
+            summary: `Abriendo TECLA Drive con ${engineName}`,
+          };
+        }
+        const outcome = await live.engineOn();
+        return { ok: outcome.ok, content: { ok: outcome.ok, message: outcome.message, engine: engineName }, summary: outcome.message };
+      }
+      if (input.action === "open" || !live) {
+        if (!live) router.push("/drive");
+        return {
+          ok: true,
+          content: { ok: true, message: `TECLA Drive listo con ${engineName} y escena ${sceneLabel}.` },
+          summary: `Abriendo TECLA Drive · ${engineName}`,
+        };
+      }
+      return {
+        ok: true,
+        content: { ok: true, message: `TECLA Drive actualizado: motor ${engineName}, escena ${sceneLabel}.`, state: live.getState() },
+        summary: input.action === "set_scene" ? `Escena ${sceneLabel}` : `Motor ${engineName}`,
+      };
+    }
+
     case "open_spotify": {
       router.push("/music");
       return {
@@ -348,6 +469,8 @@ async function executeAction(
     case "search_radio":
     case "search_podcasts":
     case "get_weather":
+    case "search_spotify":
+    case "play_spotify":
     case "spotify_control": {
       return result(
         "SERVER_TOOL_MISROUTED",

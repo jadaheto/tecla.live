@@ -12,7 +12,15 @@ export const SPOTIFY_SCOPES = [
   "user-read-private",
   "user-read-email",
   "playlist-read-private",
+  "streaming",
 ].join(" ");
+
+/** La reproducción dentro del navegador (Web Playback SDK) requiere este permiso. */
+export const SPOTIFY_STREAMING_SCOPE = "streaming";
+
+export function scopeAllowsStreaming(scope: string | null | undefined): boolean {
+  return (scope ?? "").split(/\s+/).includes(SPOTIFY_STREAMING_SCOPE);
+}
 
 export class SpotifyError extends Error {
   readonly code: string;
@@ -411,14 +419,174 @@ async function findDeviceId(userId: string): Promise<string | null> {
   return active?.id ?? fallback?.id ?? null;
 }
 
+export interface SpotifyDevice {
+  id: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  volumePercent: number | null;
+}
+
+const DevicesSchema = z.object({
+  devices: z
+    .array(
+      z.object({
+        id: z.string().nullable().optional(),
+        is_active: z.boolean().optional(),
+        name: z.string().optional(),
+        type: z.string().optional(),
+        volume_percent: z.number().nullable().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+export async function listSpotifyDevices(userId: string): Promise<SpotifyDevice[]> {
+  const response = await spotifyFetch(userId, "/me/player/devices");
+  if (!response.ok) {
+    throw new SpotifyError("SPOTIFY_DEVICES_UNAVAILABLE", "No pudimos listar los dispositivos de Spotify.", 502);
+  }
+  const parsed = DevicesSchema.safeParse(await response.json());
+  if (!parsed.success) return [];
+  return parsed.data.devices
+    .filter((device): device is typeof device & { id: string } => typeof device.id === "string" && device.id.length > 0)
+    .map((device) => ({
+      id: device.id,
+      name: device.name ?? "Dispositivo",
+      type: device.type ?? "Unknown",
+      isActive: device.is_active ?? false,
+      volumePercent: device.volume_percent ?? null,
+    }));
+}
+
+export async function transferSpotifyPlayback(userId: string, deviceId: string, play = true): Promise<void> {
+  const response = await spotifyFetch(userId, "/me/player", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ device_ids: [deviceId], play }),
+  });
+  if (response.status === 404) {
+    throw new SpotifyError("SPOTIFY_NO_ACTIVE_DEVICE", "Spotify no encontró ese dispositivo.", 409);
+  }
+  if (!response.ok && response.status !== 204) {
+    throw new SpotifyError("SPOTIFY_TRANSFER_FAILED", "Spotify no pudo cambiar de dispositivo.", 502);
+  }
+}
+
+export interface SpotifyTrackResult {
+  uri: string;
+  id: string;
+  name: string;
+  artists: string[];
+  album: string | null;
+  imageUrl: string | null;
+  durationMs: number;
+  explicit: boolean;
+}
+
+const SearchSchema = z.object({
+  tracks: z
+    .object({
+      items: z.array(
+        z.object({
+          uri: z.string(),
+          id: z.string(),
+          name: z.string(),
+          duration_ms: z.number().optional(),
+          explicit: z.boolean().optional(),
+          artists: z.array(z.object({ name: z.string() })).optional(),
+          album: z
+            .object({
+              name: z.string().optional(),
+              images: z.array(z.object({ url: z.string() })).optional(),
+            })
+            .optional(),
+        }),
+      ),
+    })
+    .optional(),
+});
+
+export async function searchSpotifyTracks(
+  userId: string,
+  query: string,
+  limit = 8,
+): Promise<SpotifyTrackResult[]> {
+  const params = new URLSearchParams({
+    q: query.slice(0, 120),
+    type: "track",
+    limit: String(Math.min(10, Math.max(1, limit))),
+    market: "from_token",
+  });
+  const response = await spotifyFetch(userId, `/search?${params.toString()}`);
+  if (!response.ok) {
+    throw new SpotifyError("SPOTIFY_SEARCH_FAILED", "Spotify no pudo completar la búsqueda.", 502);
+  }
+  const parsed = SearchSchema.safeParse(await response.json());
+  if (!parsed.success) {
+    throw new SpotifyError("SPOTIFY_INVALID_RESPONSE", "Spotify devolvió resultados inesperados.", 502);
+  }
+  return (parsed.data.tracks?.items ?? []).map((item) => ({
+    uri: item.uri,
+    id: item.id,
+    name: item.name,
+    artists: (item.artists ?? []).map((artist) => artist.name),
+    album: item.album?.name ?? null,
+    imageUrl: item.album?.images?.[0]?.url ?? null,
+    durationMs: item.duration_ms ?? 0,
+    explicit: item.explicit ?? false,
+  }));
+}
+
+const SPOTIFY_URI = /^spotify:(track|album|playlist|artist):[A-Za-z0-9]{10,40}$/;
+
+/**
+ * Reproduce un URI concreto. Prefiere el dispositivo indicado (por ejemplo el
+ * reproductor web de TECLA LIVE); si no, el dispositivo activo del usuario.
+ */
+export async function playSpotifyUri(
+  userId: string,
+  uri: string,
+  preferredDeviceId?: string | null,
+): Promise<{ uri: string; deviceId: string | null }> {
+  if (!SPOTIFY_URI.test(uri)) {
+    throw new SpotifyError("SPOTIFY_URI_INVALID", "El URI de Spotify no es válido.", 400);
+  }
+  const deviceId = preferredDeviceId ?? (await findDeviceId(userId));
+  const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
+  const body = uri.startsWith("spotify:track:") ? { uris: [uri] } : { context_uri: uri };
+  const response = await spotifyFetch(userId, `/me/player/play${query}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (response.status === 404) {
+    throw new SpotifyError(
+      "SPOTIFY_NO_ACTIVE_DEVICE",
+      "No hay un dispositivo activo de Spotify. Activa el reproductor de TECLA LIVE en Música o abre Spotify en otro dispositivo.",
+      409,
+    );
+  }
+  if (!response.ok && response.status !== 204) {
+    throw new SpotifyError(
+      "SPOTIFY_CONTROL_FAILED",
+      "Spotify no pudo reproducir. Verifica que haya un dispositivo activo y una cuenta Premium.",
+      502,
+    );
+  }
+  return { uri, deviceId };
+}
+
 export type SpotifyAction = "play" | "pause" | "next" | "previous" | "volume";
 
 export async function controlSpotify(
   userId: string,
   action: SpotifyAction,
   volume?: number,
+  preferredDeviceId?: string | null,
 ): Promise<{ action: SpotifyAction; deviceId: string | null }> {
-  const deviceId = await findDeviceId(userId);
+  const deviceId = preferredDeviceId ?? (await findDeviceId(userId));
   const query = deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : "";
   let path: string;
   let method = "POST";
@@ -455,11 +623,11 @@ export async function controlSpotify(
   if (response.status === 404) {
     throw new SpotifyError(
       "SPOTIFY_NO_ACTIVE_DEVICE",
-      "No hay un dispositivo activo de Spotify. Abre Spotify en el teléfono, la computadora o el Tesla y vuelve a intentar.",
+      "No hay un dispositivo activo de Spotify. Activa el reproductor de TECLA LIVE en Música o abre Spotify en otro dispositivo.",
       409,
     );
   }
-  if (!response.ok) {
+  if (!response.ok && response.status !== 204) {
     throw new SpotifyError(
       "SPOTIFY_CONTROL_FAILED",
       "Spotify no pudo ejecutar la acción. Verifica que haya un dispositivo activo y una cuenta Premium.",

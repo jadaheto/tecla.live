@@ -12,6 +12,11 @@ export const AI_MEMORY_KEYS = [
   "tema",
   "idioma",
   "ciudad",
+  "motor",
+  "escena",
+  "podcast",
+  "artista",
+  "horario",
 ] as const;
 
 export type AiMemoryKey = (typeof AI_MEMORY_KEYS)[number];

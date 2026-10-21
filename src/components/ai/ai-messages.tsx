@@ -12,8 +12,9 @@ import {
   TvMinimalPlay,
   Volume2,
 } from "lucide-react";
-import { AiOrb } from "@/components/ai/visualizer";
+import { SiriOrb } from "@/components/ai/siri-orb";
 import { useIntegrations } from "@/features/integrations/hooks";
+import { usePreferences } from "@/stores/preferences";
 import type { AiChatMessage, AiVisualState } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const SUGGESTIONS = [
   { label: "Busca un video de tecnología", prompt: "Busca videos de tecnología.", icon: TvMinimalPlay },
   { label: "¿Qué clima hace en Sincelejo?", prompt: "¿Qué temperatura hace en Sincelejo?", icon: Sparkles },
   { label: "Modo cine", prompt: "Activa el modo cine.", icon: Monitor },
+  { label: "Estilo Cyberpunk 2077", prompt: "Activa el estilo Cyberpunk 2077.", icon: Sparkles },
 ];
 
 export function AiMessageList({
@@ -41,6 +43,8 @@ export function AiMessageList({
 }) {
   const integrations = useIntegrations();
   const configured = integrations.data?.integrations.deepseek ?? false;
+  const persona = usePreferences((state) => state.aiPersona);
+  const jarvis = persona === "jarvis";
   const endRef = React.useRef<HTMLDivElement>(null);
   const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
 
@@ -58,13 +62,15 @@ export function AiMessageList({
       {messages.length === 0 ? (
         <div className="flex min-h-full flex-col justify-center py-6">
           <div className="flex flex-col items-center text-center">
-            <AiOrb size="lg" className="mb-5" />
-            <p className="eyebrow mb-2">Tu copiloto</p>
+            <SiriOrb status={status} size={112} className="mb-5" />
+            <p className="eyebrow mb-2">{jarvis ? "Sistemas en línea" : "Tu copiloto"}</p>
             <h2 className="text-display text-2xl text-balance">
-              ¿Qué quieres disfrutar hoy?
+              {jarvis ? "A sus órdenes, señor." : "¿Qué quieres disfrutar hoy?"}
             </h2>
             <p className="mt-2 max-w-[300px] text-sm leading-relaxed text-muted">
-              Pide un video, música, una ruta o el clima. Tú decides qué se reproduce y qué se guarda.
+              {jarvis
+                ? "Música, video, rutas, clima o el estilo de la pantalla. Ejecuto y reporto; usted decide qué se reproduce y qué se guarda."
+                : "Pide un video, música, una ruta o el clima. Tú decides qué se reproduce y qué se guarda."}
             </p>
           </div>
 

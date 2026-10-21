@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useUi } from "@/stores/ui";
+import { useAi } from "@/features/ai/store";
+import { openAssistant } from "@/features/ai/open-assistant";
 
 export function KeyboardShortcuts() {
   React.useEffect(() => {
@@ -20,7 +22,13 @@ export function KeyboardShortcuts() {
       }
       if (modifier && event.key.toLowerCase() === "j") {
         event.preventDefault();
-        useUi.getState().setAiOpen(!useUi.getState().aiOpen);
+        const ai = useAi.getState();
+        if (ai.panelOpen || ai.voiceOpen) {
+          ai.setPanelOpen(false);
+          ai.setVoiceOpen(false);
+        } else {
+          openAssistant();
+        }
         return;
       }
       if (!typing && event.key === "?") {

@@ -1,0 +1,49 @@
+import { describe, expect, it } from "vitest";
+import { identityBlock, normalizeAssistantName } from "@/lib/ai/identity";
+import { FALLBACK_CURATED_VOICES as CURATED_VOICES, isCuratedVoice } from "@/lib/ai/elevenlabs/curated-voices";
+
+describe("assistant identity", () => {
+  it("normalizes the custom name and falls back to TECLA", () => {
+    expect(normalizeAssistantName("  Jarvis ")).toBe("Jarvis");
+    expect(normalizeAssistantName("")).toBe("TECLA");
+    expect(normalizeAssistantName("<script>alert(1)</script>".repeat(3)).length).toBeLessThanOrEqual(24);
+    expect(normalizeAssistantName(null)).toBe("TECLA");
+  });
+
+  it("builds an identity block that names the assistant and its principles", () => {
+    const block = identityBlock("Jarvis");
+    expect(block).toContain("Tu nombre es «Jarvis»");
+    expect(block).toContain("También respondes si te llaman «TECLA»");
+    expect(block).toContain("No elude restricciones de seguridad del vehículo");
+    expect(identityBlock("TECLA")).not.toContain("También respondes");
+  });
+});
+
+describe("curated ElevenLabs voices", () => {
+  it("has three popular male, three popular female and Latin American voices with unique ids", () => {
+    expect(new Set(CURATED_VOICES.map((voice) => voice.id)).size).toBe(CURATED_VOICES.length);
+    expect(CURATED_VOICES.filter((voice) => voice.group === "hombres")).toHaveLength(3);
+    expect(CURATED_VOICES.filter((voice) => voice.group === "mujeres")).toHaveLength(3);
+    expect(CURATED_VOICES.filter((voice) => voice.group === "latino").length).toBeGreaterThanOrEqual(3);
+    for (const voice of CURATED_VOICES) expect(voice.id).toMatch(/^[A-Za-z0-9]{20}$/);
+    expect(isCuratedVoice("nPczCjzI2devNBz1zQrb")).toBe(true);
+    expect(isCuratedVoice("not-a-voice")).toBe(false);
+  });
+});
+
+import { parseCuratedVoices, FALLBACK_CURATED_VOICES } from "@/lib/ai/elevenlabs/curated-voices";
+
+describe("ELEVENLABS_VOICES parsing", () => {
+  it("parses the env format, ignores invalid entries and duplicates", () => {
+    const parsed = parseCuratedVoices(
+      "cAiEyIv3FkdNcqX4j2lu|Alejandro · sereno|latino|male; bad entry ;EXAVITQu4vr4xnSDxMaL|Sarah|mujeres|female;cAiEyIv3FkdNcqX4j2lu|dup|latino|male;nPczCjzI2devNBz1zQrb|Brian|hombres",
+    );
+    expect(parsed).toEqual([
+      { id: "cAiEyIv3FkdNcqX4j2lu", name: "Alejandro · sereno", group: "latino", gender: "male" },
+      { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah", group: "mujeres", gender: "female" },
+      { id: "nPczCjzI2devNBz1zQrb", name: "Brian", group: "hombres", gender: "male" },
+    ]);
+    expect(parseCuratedVoices("")).toEqual([]);
+    expect(FALLBACK_CURATED_VOICES.length).toBe(10);
+  });
+});
