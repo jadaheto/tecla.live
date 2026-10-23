@@ -199,15 +199,10 @@ export const ALLOWED_EXTERNAL_HOSTS = [
   "www.radio-browser.info",
 ] as const;
 
-export const DASHBOARD_SECTIONS = [
-  { id: "continue", label: "Continuar viendo" },
-  { id: "trending", label: "Tendencias en Colombia" },
-  { id: "recommended", label: "Recomendados" },
-  { id: "favorites", label: "Favoritos" },
-  { id: "music", label: "Música" },
-  { id: "lists", label: "Mis listas" },
-  { id: "apps", label: "Aplicaciones" },
-] as const;
+// La pantalla principal se simplificó (2026-10-23): saludo, destacado, clima, TECLA AI,
+// accesos rápidos y «Continuar viendo». Las filas de tendencias, recomendados, favoritos,
+// música, listas y aplicaciones viven en sus propias pantallas.
+export const DASHBOARD_SECTIONS = [{ id: "continue", label: "Continuar viendo" }] as const;
 
 export type DashboardSectionId = (typeof DASHBOARD_SECTIONS)[number]["id"];
 

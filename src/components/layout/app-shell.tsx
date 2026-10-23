@@ -10,6 +10,7 @@ import { WakeWordListener } from "@/components/ai/wake-word-listener";
 import { ShortcutsDialog } from "@/components/layout/shortcuts-dialog";
 import { MiniPlayer } from "@/components/media/mini-player";
 import { PlaybackProvider } from "@/components/media/playback-provider";
+import { StyleIntro } from "@/components/style-intro";
 import { usePreferences } from "@/stores/preferences";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MiniPlayer pathname={pathname} />
       <AiDock />
       <WakeWordListener />
+      <StyleIntro />
     </div>
   );
 }

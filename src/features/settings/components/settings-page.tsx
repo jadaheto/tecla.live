@@ -6,22 +6,18 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Accessibility,
   Check,
-  ChevronDown,
-  ChevronUp,
   Cloud,
   Database,
   Download,
   ExternalLink,
   Expand,
   KeyRound,
-  ListOrdered,
   MapPin,
   Mic,
   Monitor,
   Moon,
   Palette,
   RefreshCw,
-  RotateCcw,
   Server,
   ShieldCheck,
   Sparkles,
@@ -49,7 +45,6 @@ import { usePreferences } from "@/stores/preferences";
 import { useLibrary } from "@/stores/library";
 import { useAi } from "@/features/ai/store";
 import { useAiMemory } from "@/stores/ai-memory";
-import { DASHBOARD_SECTIONS, type DashboardSectionId } from "@/lib/catalog";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { toast } from "@/stores/toast";
 import type { AiPersona, DisplayMode, ThemeMode, VisualStyle } from "@/types";
@@ -78,14 +73,10 @@ interface PlaceResponse {
   place: { lat: number; lon: number; label: string };
 }
 
-const SECTION_LABELS = new Map(
-  DASHBOARD_SECTIONS.map((section) => [section.id, section.label]),
-);
 
 export function SettingsPage() {
   const preferences = usePreferences();
   const setPreferences = usePreferences((state) => state.setPreferences);
-  const moveSection = usePreferences((state) => state.moveSection);
   const integrations = useIntegrations();
   const favorites = useLibrary((state) => state.favorites);
   const history = useLibrary((state) => state.history);
@@ -770,65 +761,6 @@ export function SettingsPage() {
             <AccountSection />
           </SettingsSection>
 
-          <SettingsSection
-            id="orden"
-            icon={ListOrdered}
-            title="Orden del dashboard"
-            description="Personaliza el orden de las secciones sin panel administrativo."
-          >
-            <div className="px-5 py-4 md:px-6">
-              <ul className="space-y-1">
-                {preferences.dashboardOrder.map((sectionId: DashboardSectionId, index) => (
-                  <li
-                    key={sectionId}
-                    className="flex min-h-12 items-center gap-3 rounded-xl border border-transparent px-2 transition-colors hover:border-border hover:bg-surface/50"
-                  >
-                    <span className="w-5 text-center font-mono text-[10px] text-muted">
-                      {index + 1}
-                    </span>
-                    <span className="flex-1 text-[13px] font-medium">
-                      {SECTION_LABELS.get(sectionId) ?? sectionId}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-9"
-                        onClick={() => moveSection(sectionId, "up")}
-                        disabled={index === 0}
-                        aria-label={`Subir ${SECTION_LABELS.get(sectionId) ?? sectionId}`}
-                      >
-                        <ChevronUp className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-9"
-                        onClick={() => moveSection(sectionId, "down")}
-                        disabled={index === preferences.dashboardOrder.length - 1}
-                        aria-label={`Bajar ${SECTION_LABELS.get(sectionId) ?? sectionId}`}
-                      >
-                        <ChevronDown className="size-4" />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-3"
-                onClick={() =>
-                  setPreferences({
-                    dashboardOrder: DASHBOARD_SECTIONS.map((section) => section.id),
-                  })
-                }
-              >
-                <RotateCcw className="size-3.5" aria-hidden />
-                Restablecer orden
-              </Button>
-            </div>
-          </SettingsSection>
 
           <SettingsSection
             id="privacidad"
