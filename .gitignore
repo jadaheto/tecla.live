@@ -42,5 +42,5 @@ npm-debug.log*
 *.zip
 tecla-live-production-schema.sql
 
-# Imágenes de referencia de diseño (no se publican)
-roadster/
+# Imágenes de referencia de diseño en la raíz (no se publican). Anclado a la raíz: src/components/roadster sí se versiona.
+/roadster/
