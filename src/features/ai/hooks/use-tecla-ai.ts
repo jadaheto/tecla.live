@@ -13,6 +13,7 @@ import { useIntegrations } from "@/features/integrations/hooks";
 import { getMediaController } from "@/features/media/player-bridge";
 import { effectivePersona } from "@/features/ai/persona";
 import { getKittVoiceId } from "@/features/ai/kitt-voice";
+import { claimPlayback } from "@/features/media/playback-sources";
 import { getSpotifyWebPlayerState } from "@/features/music/spotify-web-player-bridge";
 import { clearVoiceLevel, setVoiceLevel } from "@/features/ai/voice-level";
 import { splitSentences, streamAiChat } from "@/features/ai/stream-client";
@@ -562,6 +563,8 @@ export function useTeclaAI() {
           }
 
           const serverResults = response.toolExchange?.toolResults ?? [];
+          // Spotify se ordenó desde el servidor: lo que sonaba en esta pantalla se pausa.
+          if (serverResults.some((item) => item.name === "play_spotify" && item.ok)) claimPlayback("spotify");
           const clientResults: AiToolResult[] = executions.map((execution) => ({
             toolCallId: execution.toolCallId,
             name: execution.name,

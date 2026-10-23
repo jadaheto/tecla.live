@@ -24,6 +24,8 @@ export interface PreferencesState {
   aiAutoListen: boolean;
   /** Palabra de activación «Oye TECLA» con el reconocimiento del navegador. */
   wakeWordEnabled: boolean;
+  /** El usuario activó «Reproducir en esta pantalla»: se reconecta solo al volver a abrir la app. */
+  spotifyWebPlayer: boolean;
   conversationMode: boolean;
   micConsent: boolean;
   memoryConsent: boolean;
@@ -54,6 +56,7 @@ export const DEFAULT_PREFERENCES = {
   aiName: "TECLA",
   aiAutoListen: true,
   wakeWordEnabled: false,
+  spotifyWebPlayer: false,
   conversationMode: false,
   micConsent: false,
   memoryConsent: false,
@@ -105,6 +108,7 @@ export const usePreferences = create<PreferencesState>()(
         aiName: state.aiName,
         aiAutoListen: state.aiAutoListen,
         wakeWordEnabled: state.wakeWordEnabled,
+        spotifyWebPlayer: state.spotifyWebPlayer,
         conversationMode: state.conversationMode,
         micConsent: state.micConsent,
         memoryConsent: state.memoryConsent,

@@ -5,6 +5,7 @@ import { claimPlayback, registerPlaybackSource } from "@/features/media/playback
 import type { MediaController } from "@/features/media/player-bridge";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { usePlayer } from "@/stores/player";
+import { usePreferences } from "@/stores/preferences";
 
 /**
  * Reproductor web de Spotify (Web Playback SDK oficial) como instancia única
@@ -176,9 +177,44 @@ function handleStateChanged(payload: Record<string, unknown> | null): void {
   if (after.current?.kind === "spotify" && after.current.id === track.uri) after.setPlaying(!paused);
 }
 
-/** Conecta este navegador como dispositivo de Spotify. Idempotente mientras esté listo. */
-export async function connectSpotifyPlayer(): Promise<void> {
+let connecting: Promise<void> | null = null;
+
+/**
+ * Conecta este navegador como dispositivo de Spotify. Idempotente mientras
+ * esté listo o conectando. `remember` guarda la preferencia para reconectar
+ * solo al volver a abrir la app (tras recargar, el dispositivo anterior muere
+ * y Spotify seguiría apuntando a él: «suena» pero no se oye).
+ */
+export async function connectSpotifyPlayer(options: { remember?: boolean } = {}): Promise<void> {
+  if (options.remember) usePreferences.getState().setPreferences({ spotifyWebPlayer: true });
   if (state.status === "ready" && player) return;
+  if (connecting) return connecting;
+  connecting = connectInternal().finally(() => {
+    connecting = null;
+  });
+  return connecting;
+}
+
+/** Espera a que el dispositivo web esté listo (conectando si hace falta). Devuelve su id o null. */
+export async function ensureSpotifyWebDevice(timeoutMs = 8_000): Promise<string | null> {
+  if (state.ready && state.deviceId) return state.deviceId;
+  if (state.status === "error") return null;
+  void connectSpotifyPlayer();
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    // Se relee en cada vuelta: el estado lo cambian los eventos del SDK.
+    const current = getSpotifyWebPlayerState();
+    if (current.ready && current.deviceId) {
+      usePreferences.getState().setPreferences({ spotifyWebPlayer: true });
+      return current.deviceId;
+    }
+    if (current.status === "error") return null;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+  return null;
+}
+
+async function connectInternal(): Promise<void> {
   setSpotifyWebPlayerState({ status: "loading", message: null });
   try {
     const Player = await loadSdk();
@@ -210,6 +246,10 @@ export async function connectSpotifyPlayer(): Promise<void> {
     instance.addListener("authentication_error", fail("Spotify rechazó la autorización. Vuelve a vincular tu cuenta."));
     instance.addListener("account_error", fail("Spotify requiere una cuenta Premium para reproducir aquí."));
     instance.addListener("playback_error", fail("Spotify no pudo reproducir."));
+    instance.addListener("autoplay_failed", () => {
+      // El navegador exige un gesto antes de sonar: la música quedó lista, falta un toque.
+      setSpotifyWebPlayerState({ message: "El navegador retuvo el audio de Spotify. Toca reproducir para escucharlo aquí." });
+    });
     player = instance;
     if (instance.activateElement) await instance.activateElement();
     const connected = await instance.connect();
@@ -222,6 +262,7 @@ export async function connectSpotifyPlayer(): Promise<void> {
 }
 
 export function disconnectSpotifyPlayer(): void {
+  usePreferences.getState().setPreferences({ spotifyWebPlayer: false });
   player?.disconnect();
   player = null;
   const store = usePlayer.getState();

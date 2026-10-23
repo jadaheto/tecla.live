@@ -4,7 +4,7 @@ import * as React from "react";
 import { registerBackgroundController } from "@/features/media/player-bridge";
 import { startPlaybackArbiter } from "@/features/media/playback-sources";
 import { radioMediaController, setRadioVolume } from "@/features/radio/radio-audio";
-import { spotifyMediaController } from "@/features/music/spotify-web-player-bridge";
+import { connectSpotifyPlayer, spotifyMediaController } from "@/features/music/spotify-web-player-bridge";
 import { usePlayer } from "@/stores/player";
 import { usePreferences } from "@/stores/preferences";
 
@@ -16,6 +16,7 @@ import { usePreferences } from "@/stores/preferences";
 export function PlaybackProvider() {
   const kind = usePlayer((state) => state.current?.kind ?? null);
   const volume = usePreferences((state) => state.volume);
+  const spotifyWebPlayer = usePreferences((state) => state.spotifyWebPlayer);
 
   React.useEffect(() => {
     startPlaybackArbiter();
@@ -24,6 +25,11 @@ export function PlaybackProvider() {
   React.useEffect(() => {
     setRadioVolume(volume);
   }, [volume]);
+
+  // Si el usuario activó «Reproducir en esta pantalla», el dispositivo vuelve solo tras recargar.
+  React.useEffect(() => {
+    if (spotifyWebPlayer) void connectSpotifyPlayer();
+  }, [spotifyWebPlayer]);
 
   React.useEffect(() => {
     if (kind === "radio") return registerBackgroundController(radioMediaController);

@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { claimPlayback } from "@/features/media/playback-sources";
+import { ensureSpotifyWebDevice } from "@/features/music/spotify-web-player-bridge";
+import { usePreferences } from "@/stores/preferences";
 import { cn, formatDuration } from "@/lib/utils";
 import { toast } from "@/stores/toast";
 
@@ -60,20 +62,20 @@ export function SpotifySearch({
   });
 
   const play = useMutation({
-    mutationFn: (track: TrackResult) =>
-      apiFetch("/api/spotify/control", {
+    mutationFn: async (track: TrackResult) => {
+      // «Auto» prefiere esta pantalla: si el reproductor web se activó alguna vez (o ya está
+      // listo), se conecta ahora mismo aprovechando el toque del usuario y se reproduce aquí.
+      let deviceId: string | null = targetDevice !== "auto" ? targetDevice : webDeviceId;
+      const hasActiveDevice = (devices.data?.devices ?? []).some((device) => device.isActive);
+      if (targetDevice === "auto" && !deviceId && (usePreferences.getState().spotifyWebPlayer || !hasActiveDevice)) {
+        deviceId = await ensureSpotifyWebDevice();
+      }
+      return apiFetch("/api/spotify/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "play",
-          uri: track.uri,
-          ...(targetDevice !== "auto"
-            ? { deviceId: targetDevice }
-            : webDeviceId
-              ? { deviceId: webDeviceId }
-              : {}),
-        }),
-      }),
+        body: JSON.stringify({ action: "play", uri: track.uri, ...(deviceId ? { deviceId } : {}) }),
+      });
+    },
     onSuccess: (_, track) => {
       claimPlayback("spotify");
       toast({ title: "Reproduciendo en Spotify", description: `${track.name} · ${track.artists.join(", ")}`, variant: "success" });

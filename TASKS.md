@@ -133,6 +133,7 @@
 - [x] Netflix y Disney+ como accesos externos.
 - [x] Tests unitarios de deep links, M3U y validación; E2E de páginas y navegación.
 - [x] Credenciales Spotify y redirect validados (client_credentials 200, authorize sin error de redirect).
+- [x] Spotify suena en esta pantalla tras recargar: preferencia recordada, reconexión automática y dispositivo asegurado al reproducir; YouTube/radio se pausan al pedir Spotify, también por voz (2026-10-23).
 - [x] Cortinilla por estilo visual + pantalla principal compacta + preset Flat-6 GT3 (2026-10-23). teslasound.io descartado (síntesis propietaria de pago, sin descargas).
 - [x] Estilo «Roadster» (2026-10-23): cabina de caza en rojo monocromo, rejilla en perspectiva, regla de HUD, retícula de radar y personalidad «piloto». Verificado con typecheck, lint, Vitest y capturas.
 - [x] Estilo «El auto fantástico» (2026-10-21): tema KITT (negro, escáner rojo, ámbar, Orbitron/Share Tech Mono), escáner Larson en la cabecera, modulador de voz en el HUD, personalidad y voz de KITT, «Oye KITT». «Oye TECLA» robusto para el Tesla: alternativas, variantes fonéticas, backoff, vigilante y reactivación por toque. Pruebas unitarias nuevas (wake word, persona, saludo, despedida).

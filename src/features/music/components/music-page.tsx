@@ -33,6 +33,9 @@ import { toast } from "@/stores/toast";
 import { formatDuration } from "@/lib/utils";
 import { SpotifySearch } from "@/features/music/components/spotify-search";
 import { SpotifyWebPlayer } from "@/features/music/components/spotify-web-player";
+import { ensureSpotifyWebDevice } from "@/features/music/spotify-web-player-bridge";
+import { claimPlayback } from "@/features/media/playback-sources";
+import { usePreferences } from "@/stores/preferences";
 
 interface MeResponse {
   user: { id: string; email: string } | null;
@@ -130,12 +133,18 @@ export function MusicPage() {
   }, [params, queryClient]);
 
   const control = useMutation({
-    mutationFn: (input: { action: "play" | "pause" | "next" | "previous" | "volume"; volume?: number }) =>
-      apiFetch("/api/spotify/control", {
+    mutationFn: async (input: { action: "play" | "pause" | "next" | "previous" | "volume"; volume?: number }) => {
+      let deviceId: string | null = null;
+      if (input.action === "play") {
+        claimPlayback("spotify");
+        deviceId = webDeviceId ?? (usePreferences.getState().spotifyWebPlayer ? await ensureSpotifyWebDevice() : null);
+      }
+      return apiFetch("/api/spotify/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      }),
+        body: JSON.stringify({ ...input, ...(deviceId ? { deviceId } : {}) }),
+      });
+    },
     onSuccess: () => {
       setControlError(null);
       window.setTimeout(() => {

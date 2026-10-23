@@ -68,7 +68,7 @@ export function SpotifyWebPlayer({
           <Button
             variant="primary"
             size="sm"
-            onClick={() => void connectSpotifyPlayer()}
+            onClick={() => void connectSpotifyPlayer({ remember: true })}
             loading={status === "loading"}
             disabled={!enabled}
           >
