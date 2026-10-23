@@ -41,3 +41,6 @@ npm-debug.log*
 # Paquetes y volcados locales
 *.zip
 tecla-live-production-schema.sql
+
+# Imágenes de referencia de diseño (no se publican)
+roadster/

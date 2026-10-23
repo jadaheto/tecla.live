@@ -72,10 +72,11 @@ export const THEME_BOOTSTRAP_SCRIPT = `
     var raw = localStorage.getItem('tecla-preferences-v1');
     var parsed = raw ? JSON.parse(raw) : null;
     var state = (parsed && parsed.state) || {};
-    var style = state.visualStyle === 'cyberpunk' || state.visualStyle === 'kitt' ? state.visualStyle : 'tecla';
+    var darkStyles = ['cyberpunk', 'kitt', 'roadster'];
+    var style = darkStyles.indexOf(state.visualStyle) >= 0 ? state.visualStyle : 'tecla';
     document.documentElement.dataset.style = style;
     var mode = state.theme || 'auto';
-    var forcedDark = style === 'cyberpunk' || style === 'kitt';
+    var forcedDark = darkStyles.indexOf(style) >= 0;
     var dark = mode === 'dark' || forcedDark;
     if (mode === 'auto' && !forcedDark) {
       var autoEnabled = state.autoThemeEnabled !== false;

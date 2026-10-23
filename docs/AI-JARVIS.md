@@ -66,6 +66,13 @@ Fortalezas: el modelo nunca anuncia acciones sin resultado real, las claves vive
 - **Voces curadas por entorno (2026-10-21):** la lista se define en `ELEVENLABS_VOICES` (`id|Nombre|grupo|género;…`, ver `.env.example`), el endpoint público `/api/ai/voices/public` la expone sin sesión y Ajustes la muestra a cualquier usuario: nadie necesita cuenta de ElevenLabs. Si la variable no existe, se usa una lista de respaldo en código.
 - **Voces curadas** (`src/lib/ai/elevenlabs/curated-voices.ts`): la voz del `.env` (Valeria, español latino, femenina) sigue siendo la predeterminada. En Ajustes se ofrecen además, en grupos: Español latino · Colombia (Alejandro, Alberto, Andrea de Medellín, Valentina de Medellín), Hombres populares (Brian, George, Daniel) y Mujeres populares (Sarah, Alice, Matilda), más cualquier otra voz de la cuenta. Los IDs son públicos; la clave sigue en el servidor y `/api/ai/tts` solo acepta voces curadas o de la cuenta. El modelo `eleven_flash_v2_5` es multilingüe: las voces en inglés hablan español con acento; para Jarvis en español se recomienda Alberto o Alejandro.
 
+## Estilo «Roadster» (2026-10-23)
+
+- Inspirado en la interfaz del Tesla Roadster («inspired by fighter jet cockpits»), a partir de las capturas que aportó el usuario (no se incluyen en el repo: `roadster/` está en `.gitignore`). Rasgos tomados: negro puro, rojo monocromo `#ff2b2b` en texto, líneas y bordes, paneles con tinte rojo y borde fino, rejilla de puntos en perspectiva, rombos como marcadores, mayúsculas espaciadas y lecturas tipo display.
+- CSS `[data-style="roadster"]` en `globals.css`: Montserrat (`--font-roadster`) para la interfaz y Share Tech Mono para lecturas; esquinas casi rectas (6 px) salvo interruptores; imágenes ligeramente desaturadas; rejilla con `perspective()` en `.ambient-shell::before`.
+- `src/components/roadster/roadster-hud.tsx`: regla de cabina bajo la cabecera (marcas de escala y rombo central). `roadster-reticle.tsx`: retícula de radar en canvas para el HUD de voz (anillos, marcas, barrido giratorio y rombo que crece con la voz).
+- Personalidad «piloto» (`effectivePersona`): copiloto de vuelo que trata al usuario de «piloto», confirma como lista de comprobación («Confirmado.», «En curso.», «Negativo: …») y saluda con «Cabina lista, sistemas nominales». Se activa por el estilo; por voz: «modo roadster» o «modo cabina».
+
 ## Grabación de voz en el carro (2026-10-21)
 
 - Cada `MediaRecorder` guarda sus fragmentos en una lista propia (`use-tecla-ai.ts`). Antes una lista compartida mezclaba el final de una grabación con el inicio de la siguiente y Deepgram respondía 400 «corrupt or unsupported data» sobre un WebM sin cabecera.

@@ -94,9 +94,9 @@ export const SetThemeArgs = z
 export const SetVisualStyleArgs = z
   .object({
     style: z
-      .enum(["tecla", "cyberpunk", "kitt"])
+      .enum(["tecla", "cyberpunk", "kitt", "roadster"])
       .describe(
-        "Estilo visual: «tecla» (identidad normal), «cyberpunk» (Cyberpunk 2077, neón amarillo y cian) o «kitt» (El auto fantástico: negro, escáner rojo, ámbar, personalidad y voz de KITT).",
+        "Estilo visual: «tecla» (identidad normal), «cyberpunk» (Cyberpunk 2077, neón amarillo y cian), «kitt» (El auto fantástico: negro, escáner rojo, ámbar, personalidad y voz de KITT) o «roadster» (cabina de caza del Tesla Roadster: rojo monocromo sobre negro, personalidad de copiloto de vuelo).",
       ),
   })
   .strict();

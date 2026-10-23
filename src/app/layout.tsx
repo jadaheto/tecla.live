@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
+import { Montserrat, Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
@@ -25,6 +25,14 @@ const kittMono = Share_Tech_Mono({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-kitt-mono",
+  display: "swap",
+});
+
+// «Roadster»: geométrica tipo cabina para la interfaz; las lecturas usan Share Tech Mono.
+const roadsterFont = Montserrat({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-roadster",
   display: "swap",
 });
 
@@ -71,7 +79,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           suppressHydrationWarning
         />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} ${kittFont.variable} ${kittMono.variable} font-sans antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} ${kittFont.variable} ${kittMono.variable} ${roadsterFont.variable} font-sans antialiased`}>
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

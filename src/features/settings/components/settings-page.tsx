@@ -328,7 +328,7 @@ export function SettingsPage() {
 
             <SettingRow
               title="Estilo visual"
-              description="Cyberpunk 2077: tipografía Rajdhani, neón amarillo y cian, scanlines. El auto fantástico: negro, escáner rojo de KITT, ámbar, tipografía Orbitron; además activa la personalidad y la voz grave de KITT. Ambos fuerzan el tema oscuro."
+              description="Cyberpunk 2077: tipografía Rajdhani, neón amarillo y cian, scanlines. El auto fantástico: negro, escáner rojo de KITT, ámbar, tipografía Orbitron; activa la personalidad y la voz grave de KITT. Roadster: cabina de caza en rojo monocromo sobre negro, rejilla de puntos y retícula de radar; activa la personalidad de copiloto de vuelo. Todos fuerzan el tema oscuro."
             >
               <Segmented<VisualStyle>
                 ariaLabel="Estilo visual"
@@ -338,6 +338,7 @@ export function SettingsPage() {
                   { value: "tecla", label: "TECLA" },
                   { value: "cyberpunk", label: "Cyberpunk 2077" },
                   { value: "kitt", label: "El auto fantástico" },
+                  { value: "roadster", label: "Roadster" },
                 ]}
               />
             </SettingRow>

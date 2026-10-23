@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Moon, Search, Settings2, Sparkles, Sun, SunMoon } from "lucide-react";
 import { TeclaLogo } from "@/components/layout/tecla-logo";
 import { KittScanner } from "@/components/kitt/kitt-scanner";
+import { RoadsterHud } from "@/components/roadster/roadster-hud";
 import { Clock } from "@/components/layout/clock";
 import { WeatherPill } from "@/components/layout/weather-pill";
 import { FullscreenButton } from "@/components/layout/fullscreen-button";
@@ -50,6 +51,7 @@ export function Header() {
   return (
     <header className="app-chrome sticky top-0 z-50 border-b border-border/70 bg-[var(--header)] backdrop-blur-2xl">
       <KittScanner className="absolute inset-x-0 bottom-0" />
+      <RoadsterHud className="absolute inset-x-0 bottom-0" />
       <div className="mx-auto flex h-[76px] w-full max-w-[1840px] items-center gap-4 px-4 md:h-[84px] md:px-7">
         <TeclaLogo />
 

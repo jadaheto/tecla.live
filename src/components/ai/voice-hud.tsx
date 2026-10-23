@@ -5,6 +5,7 @@ import { Keyboard, Mic, Square, X } from "lucide-react";
 import { Waveform } from "@/components/ai/visualizer";
 import { SiriOrb } from "@/components/ai/siri-orb";
 import { KittVoiceBox } from "@/components/kitt/kitt-voice-box";
+import { RoadsterReticle } from "@/components/roadster/roadster-reticle";
 import { effectivePersona } from "@/features/ai/persona";
 import { useAi } from "@/features/ai/store";
 import { useTeclaAI } from "@/features/ai/hooks/use-tecla-ai";
@@ -19,10 +20,16 @@ import { cn } from "@/lib/utils";
 const CLOSE_AFTER_REPLY_MS = 4_000;
 const CLOSE_AFTER_ERROR_MS = 6_000;
 
-function hudLabel(status: string, persona: "jarvis" | "copiloto" | "kitt"): string {
+function hudLabel(status: string, persona: "jarvis" | "copiloto" | "kitt" | "piloto"): string {
   switch (status) {
     case "listening":
-      return persona === "kitt" ? "Le escucho, señor. Escáner activo." : persona === "jarvis" ? "Le escucho, señor." : "Te escucho…";
+      return persona === "piloto"
+        ? "A la escucha, piloto."
+        : persona === "kitt"
+          ? "Le escucho, señor. Escáner activo."
+          : persona === "jarvis"
+            ? "Le escucho, señor."
+            : "Te escucho…";
     case "transcribing":
       return "Entendiendo…";
     case "thinking":
@@ -158,7 +165,13 @@ export function VoiceHud({ open, onClose, onOpenText }: { open: boolean; onClose
             listening && "scale-105",
           )}
         >
-          {visualStyle === "kitt" ? <KittVoiceBox status={status} /> : <SiriOrb status={status} size={92} />}
+          {visualStyle === "kitt" ? (
+            <KittVoiceBox status={status} />
+          ) : visualStyle === "roadster" ? (
+            <RoadsterReticle status={status} size={92} />
+          ) : (
+            <SiriOrb status={status} size={92} />
+          )}
           {listening ? (
             <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-red-500 text-white shadow">
               <Mic className="size-3.5" aria-hidden />

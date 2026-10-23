@@ -92,6 +92,9 @@ describe("startup greeting", () => {
     expect(buildGreeting({ hour: 9, persona: "copiloto", weather: null, pendingTitle: null })).toBe(
       "Buenos días. ¿Qué quieres escuchar?",
     );
+    expect(buildGreeting({ hour: 7, persona: "piloto", weather: null, pendingTitle: "Vuelo nocturno" })).toBe(
+      "Buenos días, piloto. Cabina lista, sistemas nominales. Pendiente: «Vuelo nocturno». Puedo retomarlo. Indique destino o audio, piloto.",
+    );
     expect(buildGreeting({ hour: 15, persona: "kitt", weather: null, pendingTitle: null })).toBe(
       "Buenas tardes, señor. Escáner activo y sistemas en línea. ¿Adónde vamos hoy, señor? ¿Qué desea escuchar?",
     );
