@@ -66,6 +66,13 @@ Fortalezas: el modelo nunca anuncia acciones sin resultado real, las claves vive
 - **Voces curadas por entorno (2026-10-21):** la lista se define en `ELEVENLABS_VOICES` (`id|Nombre|grupo|género;…`, ver `.env.example`), el endpoint público `/api/ai/voices/public` la expone sin sesión y Ajustes la muestra a cualquier usuario: nadie necesita cuenta de ElevenLabs. Si la variable no existe, se usa una lista de respaldo en código.
 - **Voces curadas** (`src/lib/ai/elevenlabs/curated-voices.ts`): la voz del `.env` (Valeria, español latino, femenina) sigue siendo la predeterminada. En Ajustes se ofrecen además, en grupos: Español latino · Colombia (Alejandro, Alberto, Andrea de Medellín, Valentina de Medellín), Hombres populares (Brian, George, Daniel) y Mujeres populares (Sarah, Alice, Matilda), más cualquier otra voz de la cuenta. Los IDs son públicos; la clave sigue en el servidor y `/api/ai/tts` solo acepta voces curadas o de la cuenta. El modelo `eleven_flash_v2_5` es multilingüe: las voces en inglés hablan español con acento; para Jarvis en español se recomienda Alberto o Alejandro.
 
+## Efectos de clima en Inicio (2026-10-25)
+
+- `src/features/weather/fx-presets.ts` (lógica pura, probada): traduce el código WMO de Open-Meteo, día/noche y viento a un preset (`rain`, `storm`, `snow`, `fog`, `clouds`, `sun`, `stars`, `none`) con densidad, inclinación por viento, velocidad, relámpagos y opacidad.
+- `src/components/weather/weather-fx.tsx`: canvas fijo a pantalla completa (z-index 15, sin eventos de puntero) montado solo en la pantalla principal. Lluvia en trazos inclinados (azul grisáceo sobre claro, blanco azulado sobre oscuro), tormenta con velo y relámpagos cada 3,5–10 s, copos con vaivén, niebla y nubes como manchas suaves que derivan, sol como luz cálida con motas, noche despejada con estrellas que titilan. Se pausa con la pestaña oculta y reduce la densidad si los cuadros se alargan; tope de 900 partículas.
+- Preferencia `weatherEffects` (Ajustes → Apariencia → «Efectos de clima en Inicio», activada por defecto). «Reducir animaciones» también lo apaga. `useWeather` ahora refresca cada 10 minutos.
+- Verificación visual con Playwright simulando la respuesta de `/api/weather` (lluvia, tormenta, nieve, niebla y noche despejada).
+
 ## Spotify en esta pantalla tras recargar (2026-10-23)
 
 - Síntoma: con un video de YouTube sonando, el usuario pide una canción en Música; Spotify marca «sonando» pero no se oye. Causa: el dispositivo «TECLA LIVE» del Web Playback SDK muere al recargar la página o cerrar la pestaña, pero Spotify lo sigue teniendo como activo, así que la orden de reproducir va a un dispositivo fantasma.

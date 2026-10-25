@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Play, type LucideIcon } from "lucide-react";
 import { Greeting } from "@/components/dashboard/greeting";
+import { WeatherFx } from "@/components/weather/weather-fx";
 import { Hero } from "@/components/dashboard/hero";
 import { WeatherCard } from "@/components/dashboard/weather-card";
 import { AiSpotlight } from "@/components/dashboard/ai-spotlight";
@@ -135,6 +136,7 @@ export function Dashboard() {
 
   return (
     <div>
+      <WeatherFx />
       <Greeting />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_370px]">

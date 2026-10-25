@@ -1067,3 +1067,14 @@ body {
     transform: scale(1);
   }
 }
+
+/* ---------- Efecto de clima sobre Inicio ---------- */
+.weather-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+

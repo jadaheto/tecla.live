@@ -17,6 +17,8 @@ export interface PreferencesState {
   autoThemeEnd: string;
   reduceMotion: boolean;
   ambientBackground: boolean;
+  /** Lluvia, nieve, niebla, nubes, sol o estrellas sobre Inicio según el clima real. */
+  weatherEffects: boolean;
   voiceEnabled: boolean;
   /** Al abrir TECLA AI, empieza a escuchar de inmediato (manos libres). */
   /** Nombre con el que el usuario llama al asistente. */
@@ -52,6 +54,7 @@ export const DEFAULT_PREFERENCES = {
   autoThemeEnd: "06:30",
   reduceMotion: false,
   ambientBackground: true,
+  weatherEffects: true,
   voiceEnabled: true,
   aiName: "TECLA",
   aiAutoListen: true,
@@ -104,6 +107,7 @@ export const usePreferences = create<PreferencesState>()(
         autoThemeEnd: state.autoThemeEnd,
         reduceMotion: state.reduceMotion,
         ambientBackground: state.ambientBackground,
+        weatherEffects: state.weatherEffects,
         voiceEnabled: state.voiceEnabled,
         aiName: state.aiName,
         aiAutoListen: state.aiAutoListen,

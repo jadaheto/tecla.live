@@ -345,6 +345,16 @@ export function SettingsPage() {
               />
             </SettingRow>
             <SettingRow
+              title="Efectos de clima en Inicio"
+              description="Lluvia, tormenta con relámpagos, nieve, niebla, nubes, sol o estrellas sobre la pantalla principal, según el clima real de tu ubicación. Se apaga solo con «Reducir animaciones»."
+            >
+              <Switch
+                checked={preferences.weatherEffects}
+                onCheckedChange={(checked) => setPreferences({ weatherEffects: checked })}
+                aria-label="Efectos de clima en Inicio"
+              />
+            </SettingRow>
+            <SettingRow
               title="Reducir animaciones"
               description="Recomendado si notas movimiento pesado en el vehículo. También respeta la preferencia del sistema."
             >

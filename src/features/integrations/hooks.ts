@@ -17,6 +17,7 @@ export function useWeather() {
         `/api/weather?lat=${lat}&lon=${lon}&location=${encodeURIComponent(location)}`,
       ),
     staleTime: 10 * 60_000,
+    refetchInterval: 10 * 60_000,
     retry: 1,
   });
 }
