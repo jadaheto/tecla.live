@@ -257,6 +257,7 @@ export async function listTeslaVehicles(userId: string): Promise<TeslaVehicleRef
     .filter((vehicle) => vehicle.id);
 }
 
+const DoorFlag = z.number().nullable().optional();
 const VehicleDataSchema = z.looseObject({
   response: z.looseObject({
     id_s: z.string().optional(),
@@ -269,13 +270,30 @@ const VehicleDataSchema = z.looseObject({
         usable_battery_level: z.number().nullable().optional(),
         battery_range: z.number().nullable().optional(),
         est_battery_range: z.number().nullable().optional(),
+        ideal_battery_range: z.number().nullable().optional(),
         charging_state: z.string().nullable().optional(),
         charge_limit_soc: z.number().nullable().optional(),
+        charge_limit_soc_max: z.number().nullable().optional(),
         time_to_full_charge: z.number().nullable().optional(),
-        charger_power: z.number().nullable().optional(),
-        charge_rate: z.number().nullable().optional(),
-        charge_port_door_open: z.boolean().nullable().optional(),
         minutes_to_full_charge: z.number().nullable().optional(),
+        charger_power: z.number().nullable().optional(),
+        charger_voltage: z.number().nullable().optional(),
+        charger_actual_current: z.number().nullable().optional(),
+        charge_amps: z.number().nullable().optional(),
+        charge_current_request_max: z.number().nullable().optional(),
+        charge_rate: z.number().nullable().optional(),
+        charge_energy_added: z.number().nullable().optional(),
+        charge_miles_added_rated: z.number().nullable().optional(),
+        charge_port_door_open: z.boolean().nullable().optional(),
+        charge_port_latch: z.string().nullable().optional(),
+        conn_charge_cable: z.string().nullable().optional(),
+        fast_charger_present: z.boolean().nullable().optional(),
+        fast_charger_type: z.string().nullable().optional(),
+        scheduled_charging_mode: z.string().nullable().optional(),
+        scheduled_charging_start_time: z.number().nullable().optional(),
+        scheduled_departure_time: z.number().nullable().optional(),
+        battery_heater_on: z.boolean().nullable().optional(),
+        preconditioning_enabled: z.boolean().nullable().optional(),
       })
       .optional(),
     climate_state: z
@@ -284,15 +302,31 @@ const VehicleDataSchema = z.looseObject({
         outside_temp: z.number().nullable().optional(),
         is_climate_on: z.boolean().nullable().optional(),
         is_preconditioning: z.boolean().nullable().optional(),
+        is_auto_conditioning_on: z.boolean().nullable().optional(),
+        driver_temp_setting: z.number().nullable().optional(),
+        passenger_temp_setting: z.number().nullable().optional(),
+        fan_status: z.number().nullable().optional(),
+        seat_heater_left: z.number().nullable().optional(),
+        seat_heater_right: z.number().nullable().optional(),
+        seat_heater_rear_left: z.number().nullable().optional(),
+        seat_heater_rear_center: z.number().nullable().optional(),
+        seat_heater_rear_right: z.number().nullable().optional(),
+        steering_wheel_heater: z.boolean().nullable().optional(),
+        is_front_defroster_on: z.boolean().nullable().optional(),
+        is_rear_defroster_on: z.boolean().nullable().optional(),
+        cabin_overheat_protection: z.string().nullable().optional(),
+        climate_keeper_mode: z.string().nullable().optional(),
       })
       .optional(),
     drive_state: z
       .looseObject({
         speed: z.number().nullable().optional(),
+        power: z.number().nullable().optional(),
         shift_state: z.string().nullable().optional(),
         latitude: z.number().nullable().optional(),
         longitude: z.number().nullable().optional(),
         heading: z.number().nullable().optional(),
+        gps_as_of: z.number().nullable().optional(),
       })
       .optional(),
     vehicle_state: z
@@ -300,13 +334,71 @@ const VehicleDataSchema = z.looseObject({
         locked: z.boolean().nullable().optional(),
         odometer: z.number().nullable().optional(),
         sentry_mode: z.boolean().nullable().optional(),
+        sentry_mode_available: z.boolean().nullable().optional(),
         car_version: z.string().nullable().optional(),
         vehicle_name: z.string().nullable().optional(),
         is_user_present: z.boolean().nullable().optional(),
+        valet_mode: z.boolean().nullable().optional(),
+        df: DoorFlag,
+        dr: DoorFlag,
+        pf: DoorFlag,
+        pr: DoorFlag,
+        ft: DoorFlag,
+        rt: DoorFlag,
+        fd_window: DoorFlag,
+        fp_window: DoorFlag,
+        rd_window: DoorFlag,
+        rp_window: DoorFlag,
+        tpms_pressure_fl: z.number().nullable().optional(),
+        tpms_pressure_fr: z.number().nullable().optional(),
+        tpms_pressure_rl: z.number().nullable().optional(),
+        tpms_pressure_rr: z.number().nullable().optional(),
+        tpms_soft_warning_fl: z.boolean().nullable().optional(),
+        tpms_soft_warning_fr: z.boolean().nullable().optional(),
+        tpms_soft_warning_rl: z.boolean().nullable().optional(),
+        tpms_soft_warning_rr: z.boolean().nullable().optional(),
+        dashcam_state: z.string().nullable().optional(),
+        center_display_state: z.number().nullable().optional(),
+        remote_start: z.boolean().nullable().optional(),
+        software_update: z
+          .looseObject({
+            status: z.string().nullable().optional(),
+            version: z.string().nullable().optional(),
+            download_perc: z.number().nullable().optional(),
+            install_perc: z.number().nullable().optional(),
+            expected_duration_sec: z.number().nullable().optional(),
+          })
+          .nullable()
+          .optional(),
+      })
+      .optional(),
+    vehicle_config: z
+      .looseObject({
+        car_type: z.string().nullable().optional(),
+        trim_badging: z.string().nullable().optional(),
+        exterior_color: z.string().nullable().optional(),
+        wheel_type: z.string().nullable().optional(),
+        roof_color: z.string().nullable().optional(),
+        charge_port_type: z.string().nullable().optional(),
+        interior_trim_type: z.string().nullable().optional(),
+        eu_vehicle: z.boolean().nullable().optional(),
+        rhd: z.boolean().nullable().optional(),
+        plg: z.boolean().nullable().optional(),
+      })
+      .optional(),
+    gui_settings: z
+      .looseObject({
+        gui_distance_units: z.string().nullable().optional(),
+        gui_temperature_units: z.string().nullable().optional(),
+        gui_charge_rate_units: z.string().nullable().optional(),
+        gui_24_hour_time: z.boolean().nullable().optional(),
+        gui_range_display: z.string().nullable().optional(),
       })
       .optional(),
   }),
 });
+
+export type TeslaVehicleRaw = z.infer<typeof VehicleDataSchema>["response"];
 
 export type TeslaChargingState = "charging" | "complete" | "stopped" | "disconnected" | "no_power" | "unknown";
 
@@ -434,40 +526,405 @@ export function asleepSnapshot(vehicle: TeslaVehicleRef, observedAt = new Date()
 }
 
 interface CacheEntry {
-  snapshot: TeslaSnapshot;
+  vehicle: TeslaVehicleRef;
+  raw: TeslaVehicleRaw | null;
   at: number;
 }
 
 const globalCache = globalThis as unknown as { __teclaTeslaCache?: Map<string, CacheEntry> };
 const snapshotCache: Map<string, CacheEntry> = globalCache.__teclaTeslaCache ?? (globalCache.__teclaTeslaCache = new Map());
 
+const ALL_ENDPOINTS = "charge_state;climate_state;drive_state;vehicle_state;vehicle_config;gui_settings";
+
 /**
- * Lectura del vehículo principal del usuario. Reutiliza la caché del servidor
- * durante 2 minutos salvo `force`. Si el auto duerme, lo dice sin despertarlo
- * (despertarlo gasta batería y es una decisión del usuario).
+ * Lectura cruda del vehículo principal del usuario (todos los endpoints que
+ * permiten los permisos de lectura), con caché de 2 minutos salvo `force`.
+ * `raw` es null cuando el auto duerme: no se despierta solo.
  */
-export async function getTeslaSnapshot(userId: string, options: { force?: boolean } = {}): Promise<TeslaSnapshot> {
+async function fetchVehicleRaw(userId: string, force: boolean): Promise<{ entry: CacheEntry; cached: boolean }> {
   const cached = snapshotCache.get(userId);
-  if (!options.force && cached && Date.now() - cached.at < TESLA_SNAPSHOT_TTL_MS) {
-    return { ...cached.snapshot, cached: true };
-  }
+  if (!force && cached && Date.now() - cached.at < TESLA_SNAPSHOT_TTL_MS) return { entry: cached, cached: true };
   const vehicles = await listTeslaVehicles(userId);
   const vehicle = vehicles[0];
   if (!vehicle) throw new TeslaError("TESLA_NO_VEHICLE", "Tu cuenta de Tesla no tiene vehículos asociados.", 404);
   if (vehicle.state && vehicle.state !== "online") {
-    const snapshot = asleepSnapshot(vehicle);
-    snapshotCache.set(userId, { snapshot, at: Date.now() });
-    return snapshot;
+    const entry = { vehicle, raw: null, at: Date.now() };
+    snapshotCache.set(userId, entry);
+    return { entry, cached: false };
   }
   const { status, data } = await teslaFetch(
     userId,
-    `/api/1/vehicles/${encodeURIComponent(vehicle.id)}/vehicle_data?endpoints=${encodeURIComponent("charge_state;climate_state;drive_state;vehicle_state")}`,
+    `/api/1/vehicles/${encodeURIComponent(vehicle.id)}/vehicle_data?endpoints=${encodeURIComponent(ALL_ENDPOINTS)}`,
     {},
     VehicleDataSchema,
   );
-  const snapshot = status === 408 || !data ? asleepSnapshot(vehicle) : normalizeVehicleData(data.response, vehicle);
-  snapshotCache.set(userId, { snapshot, at: Date.now() });
-  return snapshot;
+  const entry = { vehicle, raw: status === 408 || !data ? null : data.response, at: Date.now() };
+  snapshotCache.set(userId, entry);
+  return { entry, cached: false };
+}
+
+/** Resumen del vehículo (tarjeta, arranque, Pantalla ambiente, TECLA AI). */
+export async function getTeslaSnapshot(userId: string, options: { force?: boolean } = {}): Promise<TeslaSnapshot> {
+  const { entry, cached } = await fetchVehicleRaw(userId, options.force === true);
+  const snapshot = entry.raw ? normalizeVehicleData(entry.raw, entry.vehicle, new Date(entry.at)) : asleepSnapshot(entry.vehicle, new Date(entry.at));
+  return { ...snapshot, cached };
+}
+
+/* ---------- Detalle completo para la pantalla «Mi Tesla» ---------- */
+export interface TeslaDetail {
+  summary: TeslaSnapshot;
+  identity: {
+    vin: string | null;
+    model: string | null;
+    trim: string | null;
+    exteriorColor: string | null;
+    wheels: string | null;
+    roof: string | null;
+    chargePortType: string | null;
+    interior: string | null;
+    euVehicle: boolean | null;
+    rightHandDrive: boolean | null;
+  };
+  charge: {
+    usablePercent: number | null;
+    estRangeKm: number | null;
+    idealRangeKm: number | null;
+    limitMaxPercent: number | null;
+    voltage: number | null;
+    currentA: number | null;
+    requestedAmps: number | null;
+    maxAmps: number | null;
+    rateKmh: number | null;
+    energyAddedKwh: number | null;
+    rangeAddedKm: number | null;
+    portOpen: boolean | null;
+    portLatch: string | null;
+    cable: string | null;
+    fastCharger: boolean | null;
+    fastChargerType: string | null;
+    scheduledMode: string | null;
+    scheduledStartMinutes: number | null;
+    scheduledDepartureMinutes: number | null;
+    batteryHeater: boolean | null;
+    preconditioning: boolean | null;
+  };
+  climate: {
+    driverSetC: number | null;
+    passengerSetC: number | null;
+    fan: number | null;
+    auto: boolean | null;
+    seatHeaters: { frontLeft: number | null; frontRight: number | null; rearLeft: number | null; rearCenter: number | null; rearRight: number | null };
+    steeringHeater: boolean | null;
+    frontDefrost: boolean | null;
+    rearDefrost: boolean | null;
+    cabinOverheatProtection: string | null;
+    keeperMode: string | null;
+  };
+  body: {
+    doors: { frontLeft: boolean | null; frontRight: boolean | null; rearLeft: boolean | null; rearRight: boolean | null };
+    trunks: { front: boolean | null; rear: boolean | null };
+    windows: { frontLeft: boolean | null; frontRight: boolean | null; rearLeft: boolean | null; rearRight: boolean | null };
+    valetMode: boolean | null;
+    sentryAvailable: boolean | null;
+    dashcam: string | null;
+    remoteStart: boolean | null;
+  };
+  tyres: {
+    frontLeftBar: number | null;
+    frontRightBar: number | null;
+    rearLeftBar: number | null;
+    rearRightBar: number | null;
+    warnings: { frontLeft: boolean; frontRight: boolean; rearLeft: boolean; rearRight: boolean };
+  };
+  drive: {
+    heading: number | null;
+    powerKw: number | null;
+    gpsAt: string | null;
+  };
+  software: {
+    version: string | null;
+    updateStatus: string | null;
+    updateVersion: string | null;
+    downloadPercent: number | null;
+    installPercent: number | null;
+    expectedMinutes: number | null;
+  };
+  units: {
+    distance: string | null;
+    temperature: string | null;
+    chargeRate: string | null;
+    time24h: boolean | null;
+    range: string | null;
+  };
+}
+
+const MODEL_NAMES: Record<string, string> = {
+  models: "Model S",
+  models2: "Model S",
+  model3: "Model 3",
+  modelx: "Model X",
+  modely: "Model Y",
+  lychee: "Model S",
+  tamarind: "Model X",
+  cybertruck: "Cybertruck",
+};
+
+export function teslaModelName(carType: string | null | undefined): string | null {
+  if (!carType) return null;
+  return MODEL_NAMES[carType.toLowerCase()] ?? carType;
+}
+
+function flag(value: number | null | undefined): boolean | null {
+  return typeof value === "number" ? value !== 0 : null;
+}
+
+export function normalizeVehicleDetail(raw: TeslaVehicleRaw, vehicle: TeslaVehicleRef, observedAt = new Date()): TeslaDetail {
+  const charge = raw.charge_state ?? {};
+  const climate = raw.climate_state ?? {};
+  const drive = raw.drive_state ?? {};
+  const state = raw.vehicle_state ?? {};
+  const config = raw.vehicle_config ?? {};
+  const gui = raw.gui_settings ?? {};
+  const km = (miles: number | null | undefined) => (typeof miles === "number" ? Math.round(miles * MILES_TO_KM) : null);
+  const update = state.software_update ?? null;
+  return {
+    summary: normalizeVehicleData(raw, vehicle, observedAt),
+    identity: {
+      vin: raw.vin ?? vehicle.vin,
+      model: teslaModelName(config.car_type),
+      trim: config.trim_badging ?? null,
+      exteriorColor: config.exterior_color ?? null,
+      wheels: config.wheel_type ?? null,
+      roof: config.roof_color ?? null,
+      chargePortType: config.charge_port_type ?? null,
+      interior: config.interior_trim_type ?? null,
+      euVehicle: config.eu_vehicle ?? null,
+      rightHandDrive: config.rhd ?? null,
+    },
+    charge: {
+      usablePercent: charge.usable_battery_level ?? null,
+      estRangeKm: km(charge.est_battery_range),
+      idealRangeKm: km(charge.ideal_battery_range),
+      limitMaxPercent: charge.charge_limit_soc_max ?? null,
+      voltage: charge.charger_voltage ?? null,
+      currentA: charge.charger_actual_current ?? null,
+      requestedAmps: charge.charge_amps ?? null,
+      maxAmps: charge.charge_current_request_max ?? null,
+      rateKmh: km(charge.charge_rate),
+      energyAddedKwh: charge.charge_energy_added ?? null,
+      rangeAddedKm: km(charge.charge_miles_added_rated),
+      portOpen: charge.charge_port_door_open ?? null,
+      portLatch: charge.charge_port_latch ?? null,
+      cable: charge.conn_charge_cable ?? null,
+      fastCharger: charge.fast_charger_present ?? null,
+      fastChargerType: charge.fast_charger_type ?? null,
+      scheduledMode: charge.scheduled_charging_mode ?? null,
+      scheduledStartMinutes: charge.scheduled_charging_start_time ?? null,
+      scheduledDepartureMinutes: charge.scheduled_departure_time ?? null,
+      batteryHeater: charge.battery_heater_on ?? null,
+      preconditioning: charge.preconditioning_enabled ?? null,
+    },
+    climate: {
+      driverSetC: climate.driver_temp_setting ?? null,
+      passengerSetC: climate.passenger_temp_setting ?? null,
+      fan: climate.fan_status ?? null,
+      auto: climate.is_auto_conditioning_on ?? null,
+      seatHeaters: {
+        frontLeft: climate.seat_heater_left ?? null,
+        frontRight: climate.seat_heater_right ?? null,
+        rearLeft: climate.seat_heater_rear_left ?? null,
+        rearCenter: climate.seat_heater_rear_center ?? null,
+        rearRight: climate.seat_heater_rear_right ?? null,
+      },
+      steeringHeater: climate.steering_wheel_heater ?? null,
+      frontDefrost: climate.is_front_defroster_on ?? null,
+      rearDefrost: climate.is_rear_defroster_on ?? null,
+      cabinOverheatProtection: climate.cabin_overheat_protection ?? null,
+      keeperMode: climate.climate_keeper_mode ?? null,
+    },
+    body: {
+      doors: { frontLeft: flag(state.df), frontRight: flag(state.pf), rearLeft: flag(state.dr), rearRight: flag(state.pr) },
+      trunks: { front: flag(state.ft), rear: flag(state.rt) },
+      windows: { frontLeft: flag(state.fd_window), frontRight: flag(state.fp_window), rearLeft: flag(state.rd_window), rearRight: flag(state.rp_window) },
+      valetMode: state.valet_mode ?? null,
+      sentryAvailable: state.sentry_mode_available ?? null,
+      dashcam: state.dashcam_state ?? null,
+      remoteStart: state.remote_start ?? null,
+    },
+    tyres: {
+      frontLeftBar: state.tpms_pressure_fl ?? null,
+      frontRightBar: state.tpms_pressure_fr ?? null,
+      rearLeftBar: state.tpms_pressure_rl ?? null,
+      rearRightBar: state.tpms_pressure_rr ?? null,
+      warnings: {
+        frontLeft: state.tpms_soft_warning_fl ?? false,
+        frontRight: state.tpms_soft_warning_fr ?? false,
+        rearLeft: state.tpms_soft_warning_rl ?? false,
+        rearRight: state.tpms_soft_warning_rr ?? false,
+      },
+    },
+    drive: {
+      heading: drive.heading ?? null,
+      powerKw: drive.power ?? null,
+      gpsAt: typeof drive.gps_as_of === "number" ? new Date(drive.gps_as_of * 1000).toISOString() : null,
+    },
+    software: {
+      version: state.car_version ?? null,
+      updateStatus: update?.status || null,
+      updateVersion: update?.version || null,
+      downloadPercent: update?.download_perc ?? null,
+      installPercent: update?.install_perc ?? null,
+      expectedMinutes: typeof update?.expected_duration_sec === "number" ? Math.round(update.expected_duration_sec / 60) : null,
+    },
+    units: {
+      distance: gui.gui_distance_units ?? null,
+      temperature: gui.gui_temperature_units ?? null,
+      chargeRate: gui.gui_charge_rate_units ?? null,
+      time24h: gui.gui_24_hour_time ?? null,
+      range: gui.gui_range_display ?? null,
+    },
+  };
+}
+
+/** Detalle completo; si el auto duerme devuelve solo el resumen dormido (`detail` null). */
+export async function getTeslaDetail(userId: string, options: { force?: boolean } = {}): Promise<{ summary: TeslaSnapshot; detail: TeslaDetail | null }> {
+  const { entry, cached } = await fetchVehicleRaw(userId, options.force === true);
+  if (!entry.raw) return { summary: { ...asleepSnapshot(entry.vehicle, new Date(entry.at)), cached }, detail: null };
+  const detail = normalizeVehicleDetail(entry.raw, entry.vehicle, new Date(entry.at));
+  return { summary: { ...detail.summary, cached }, detail };
+}
+
+/* ---------- Supercargadores cercanos e historial de carga ---------- */
+export interface TeslaChargingSite {
+  name: string;
+  type: string;
+  distanceKm: number | null;
+  availableStalls: number | null;
+  totalStalls: number | null;
+  closed: boolean;
+  location: { latitude: number; longitude: number } | null;
+}
+
+const NearbySchema = z.looseObject({
+  response: z.looseObject({
+    superchargers: z
+      .array(
+        z.looseObject({
+          name: z.string().nullable().optional(),
+          type: z.string().nullable().optional(),
+          distance_miles: z.number().nullable().optional(),
+          available_stalls: z.number().nullable().optional(),
+          total_stalls: z.number().nullable().optional(),
+          site_closed: z.boolean().nullable().optional(),
+          location: z.looseObject({ lat: z.number().optional(), long: z.number().optional() }).nullable().optional(),
+        }),
+      )
+      .optional(),
+    destination_charging: z
+      .array(
+        z.looseObject({
+          name: z.string().nullable().optional(),
+          type: z.string().nullable().optional(),
+          distance_miles: z.number().nullable().optional(),
+          location: z.looseObject({ lat: z.number().optional(), long: z.number().optional() }).nullable().optional(),
+        }),
+      )
+      .optional(),
+  }),
+});
+
+const sitesCache = new Map<string, { sites: { superchargers: TeslaChargingSite[]; destinations: TeslaChargingSite[] }; at: number }>();
+const SITES_TTL_MS = 10 * 60_000;
+
+/** Cargadores cercanos a la posición del auto (requiere auto despierto). */
+export async function getTeslaNearbyChargers(userId: string): Promise<{ superchargers: TeslaChargingSite[]; destinations: TeslaChargingSite[]; asleep: boolean }> {
+  const cached = sitesCache.get(userId);
+  if (cached && Date.now() - cached.at < SITES_TTL_MS) return { ...cached.sites, asleep: false };
+  const { entry } = await fetchVehicleRaw(userId, false);
+  if (!entry.raw) return { superchargers: [], destinations: [], asleep: true };
+  const { status, data } = await teslaFetch(userId, `/api/1/vehicles/${encodeURIComponent(entry.vehicle.id)}/nearby_charging_sites?count=8&radius=60&detail=true`, {}, NearbySchema);
+  if (status === 408 || !data) return { superchargers: [], destinations: [], asleep: true };
+  const toSite = (site: { name?: string | null; type?: string | null; distance_miles?: number | null; available_stalls?: number | null; total_stalls?: number | null; site_closed?: boolean | null; location?: { lat?: number; long?: number } | null }): TeslaChargingSite => ({
+    name: site.name ?? "Cargador",
+    type: site.type ?? "charger",
+    distanceKm: typeof site.distance_miles === "number" ? Math.round(site.distance_miles * MILES_TO_KM * 10) / 10 : null,
+    availableStalls: site.available_stalls ?? null,
+    totalStalls: site.total_stalls ?? null,
+    closed: site.site_closed ?? false,
+    location: typeof site.location?.lat === "number" && typeof site.location?.long === "number" ? { latitude: site.location.lat, longitude: site.location.long } : null,
+  });
+  const sites = {
+    superchargers: (data.response.superchargers ?? []).map(toSite),
+    destinations: (data.response.destination_charging ?? []).map(toSite),
+  };
+  sitesCache.set(userId, { sites, at: Date.now() });
+  return { ...sites, asleep: false };
+}
+
+export interface TeslaChargingSession {
+  id: string;
+  site: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  energyKwh: number | null;
+  totalDue: number | null;
+  currency: string | null;
+  fees: Array<{ type: string; usage: number | null; unit: string | null; total: number | null }>;
+}
+
+const HistorySchema = z.looseObject({
+  data: z
+    .array(
+      z.looseObject({
+        sessionId: z.union([z.string(), z.number()]).optional(),
+        siteLocationName: z.string().nullable().optional(),
+        chargeStartDateTime: z.string().nullable().optional(),
+        chargeStopDateTime: z.string().nullable().optional(),
+        fees: z
+          .array(
+            z.looseObject({
+              feeType: z.string().nullable().optional(),
+              usageBase: z.number().nullable().optional(),
+              uom: z.string().nullable().optional(),
+              totalDue: z.number().nullable().optional(),
+              currencyCode: z.string().nullable().optional(),
+            }),
+          )
+          .nullable()
+          .optional(),
+      }),
+    )
+    .optional(),
+  totalResults: z.number().optional(),
+});
+
+const historyCache = new Map<string, { sessions: TeslaChargingSession[]; at: number }>();
+const HISTORY_TTL_MS = 30 * 60_000;
+
+/** Historial de carga facturado por Tesla (Supercargadores) para el VIN del vehículo. */
+export async function getTeslaChargingHistory(userId: string): Promise<TeslaChargingSession[]> {
+  const cached = historyCache.get(userId);
+  if (cached && Date.now() - cached.at < HISTORY_TTL_MS) return cached.sessions;
+  const { entry } = await fetchVehicleRaw(userId, false);
+  const vin = entry.vehicle.vin;
+  if (!vin) throw new TeslaError("TESLA_NO_VIN", "Tesla no devolvió el VIN del vehículo.", 404);
+  const { data } = await teslaFetch(userId, `/api/1/dx/charging/history?vin=${encodeURIComponent(vin)}&pageSize=12&sortBy=chargeStartDateTime&sortOrder=DESC`, {}, HistorySchema);
+  const sessions: TeslaChargingSession[] = (data?.data ?? []).map((session, index) => {
+    const fees = (session.fees ?? []).map((fee) => ({ type: fee.feeType ?? "FEE", usage: fee.usageBase ?? null, unit: fee.uom ?? null, total: fee.totalDue ?? null }));
+    const charging = fees.find((fee) => fee.type.toUpperCase() === "CHARGING");
+    return {
+      id: String(session.sessionId ?? index),
+      site: session.siteLocationName ?? null,
+      startedAt: session.chargeStartDateTime ?? null,
+      endedAt: session.chargeStopDateTime ?? null,
+      energyKwh: charging?.usage ?? null,
+      totalDue: fees.reduce<number | null>((sum, fee) => (fee.total === null ? sum : (sum ?? 0) + fee.total), null),
+      currency: session.fees?.find((fee) => fee.currencyCode)?.currencyCode ?? null,
+      fees,
+    };
+  });
+  historyCache.set(userId, { sessions, at: Date.now() });
+  return sessions;
 }
 
 /** Pide al vehículo que despierte. Tesla responde enseguida; el auto tarda unos segundos. */
@@ -477,6 +934,7 @@ export async function wakeTeslaVehicle(userId: string): Promise<{ state: string 
   if (!vehicle) throw new TeslaError("TESLA_NO_VEHICLE", "Tu cuenta de Tesla no tiene vehículos asociados.", 404);
   const { data } = await teslaFetch(userId, `/api/1/vehicles/${encodeURIComponent(vehicle.id)}/wake_up`, { method: "POST" }, z.looseObject({ response: z.looseObject({ state: z.string().nullable().optional() }).optional() }));
   snapshotCache.delete(userId);
+  sitesCache.delete(userId);
   return { state: data?.response?.state ?? null };
 }
 

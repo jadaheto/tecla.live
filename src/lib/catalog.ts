@@ -10,6 +10,7 @@ import {
   TvMinimalPlay,
 } from "lucide-react";
 import { TeclaDriveIcon } from "@/components/icons/tecla-drive-icon";
+import { TeslaCarIcon } from "@/components/icons/tesla-car-icon";
 import {
   ApplePodcastsBrandIcon,
   DisneyPlusBrandIcon,
@@ -68,6 +69,17 @@ export const APPS: AppDefinition[] = [
     gradient: "from-[#5eead4] via-[#0f766e] to-[#0b1026]",
     accent: "#5eead4",
     aiPrompt: "abre TECLA Drive",
+    category: "experience",
+  },
+  {
+    id: "tesla",
+    name: "Mi Tesla",
+    description: "Batería, carga y estado del auto",
+    href: "/tesla",
+    icon: TeslaCarIcon,
+    gradient: "from-[#e8e8ea] via-[#9aa3ad] to-[#1b1f26]",
+    accent: "#e82127",
+    aiPrompt: "abre Mi Tesla",
     category: "experience",
   },
   {

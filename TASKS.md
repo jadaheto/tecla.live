@@ -227,3 +227,9 @@
 - [x] Estilo «discovery» en tipos, tema forzado oscuro, fuentes Michroma y Exo 2, CSS (paneles, fondo, HUD de puente), cortinilla, arranque, clima, orbe, Pantalla ambiente, Ajustes, herramienta `set_visual_style`, control remoto y persona «computadora» (prompt, saludo, despedida, HUD, «computadora» como palabra de activación). Evidencia: identity/weather/boot tests, capturas Discovery (arranque, Inicio, cortinilla, ambiente con carga, Ajustes, TECLA AI).
 - [x] Auto holográfico 3D (`holo-car.tsx`) en la tarjeta «Mi Tesla» y en la Pantalla ambiente, con color del estilo, verde al cargar y rojo con batería baja.
 - [ ] Decisión del usuario (2026-10-27): la fase 2 de Tesla (comandos al vehículo) no se implementará por riesgo.
+
+## FASE 12 — PANTALLA «MI TESLA» (2026-10-27)
+
+- [x] `/tesla` junto a Drive (cabecera, acceso rápido «Mi Tesla», `open_app`, control remoto): resumen con holograma, batería y carga, clima, carrocería y seguridad, llantas, ubicación y marcha, vehículo y software, cargadores cercanos e historial de carga. Evidencia: `tests/unit/tesla.test.ts` (detalle), captura con API simulada.
+- [x] Rutas `/api/tesla/detail`, `/api/tesla/chargers`, `/api/tesla/charging-history` con sesión, caché (2/10/30 min) y límites.
+- [ ] Probar con el auto real: `nearby_charging_sites` e historial dependen de la región y de que Tesla devuelva datos para el VIN.

@@ -66,6 +66,22 @@ Requiere además `TOKEN_ENCRYPTION_KEY` y `DATABASE_URL`: los tokens se guardan 
 - La tarjeta y la Pantalla ambiente consultan `/api/tesla/vehicle` cada 2 minutos con la pestaña visible; el servidor reutiliza la caché, así que el costo real es como máximo una lectura cada 2 minutos por usuario.
 - Un auto `asleep`/`offline` o un `408` se muestran como «durmiendo» sin cifras inventadas.
 
+## Pantalla «Mi Tesla» (`/tesla`, 2026-10-27)
+
+Pantalla dedicada, junto a Drive en la navegación y en los accesos rápidos («Mi Tesla»), con todo lo que los permisos de lectura permiten:
+
+- **Resumen** con holograma: batería, autonomía, estado de carga, bloqueo, cable, clima, Centinela y presencia a bordo; botones «Actualizar» (salta la caché, máximo 6 por minuto) y «Despertar» si el auto duerme.
+- **Batería y carga**: nivel y utilizable, autonomía nominal y estimada, límite y máximo, potencia con voltaje y amperaje, tiempo restante y velocidad de carga, energía y km añadidos, puerto y seguro, cable y carga rápida, amperaje solicitado, programación, calentador de batería y preacondicionamiento.
+- **Clima**: interior y exterior, estado, ajuste de conductor y pasajero, ventilador, asientos, volante, desempañadores, protección de cabina y modo «keeper».
+- **Carrocería y seguridad**: bloqueo, puertas, maleteros, ventanas, Centinela, valet, cámara, presencia y arranque remoto.
+- **Llantas**: presión TPMS de las cuatro (bar) con avisos.
+- **Ubicación y marcha**: marcha, velocidad, rumbo, potencia, odómetro, coordenadas con enlace a Google Maps y hora del fix.
+- **Vehículo y software**: modelo (según `car_type`), acabado, color, ruedas, interior, puerto, VIN (últimos 6), versión, actualización pendiente con progreso, unidades del auto y mercado.
+- **Cargadores cercanos** (`/api/tesla/chargers`, `nearby_charging_sites`, caché 10 min, requiere auto despierto): Supercargadores con plazas libres y cargadores de destino, distancia en km y enlace al mapa.
+- **Historial de carga** (`/api/tesla/charging-history`, `dx/charging/history`, caché 30 min): últimas sesiones facturadas por Tesla con sitio, fecha, kWh y total. Las cargas en casa no aparecen (Tesla solo factura Supercargadores).
+
+Servidor: `getTeslaDetail` reutiliza la misma lectura cruda (`vehicle_data` con `charge_state;climate_state;drive_state;vehicle_state;vehicle_config;gui_settings`) que la tarjeta, así que abrir la pantalla no añade consultas. `normalizeVehicleDetail` convierte millas a km y expone puertas/ventanas como booleanos. TECLA AI abre la pantalla con «abre mi Tesla» (`open_app` → `tesla`) y el control remoto también.
+
 ## Modo carga automático y avisos por voz (2026-10-27)
 
 - **Tesla en vivo** (`src/components/tesla/tesla-provider.tsx`): con la cuenta vinculada, la app mantiene la lectura del vehículo cada 2 minutos (misma caché del servidor) y la publica en `useTeslaLive` (`src/features/tesla/store.ts`) con `parked` (P o sin marcha y velocidad 0 → estacionado; D/R/N o velocidad > 0 → en marcha; dormido → desconocido).

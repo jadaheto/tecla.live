@@ -16,6 +16,7 @@ export interface AmbientAutoInput {
 
 /** Rutas donde la pantalla ambiente nunca se activa sola. */
 const BLOCKED_PREFIXES = ["/drive", "/watch", "/remote", "/iptv", "/twitch"];
+// (/tesla sí permite la pantalla ambiente: es una pantalla de lectura.)
 
 export function shouldAutoAmbient(input: AmbientAutoInput): boolean {
   if (input.idleMinutes <= 0) return false;

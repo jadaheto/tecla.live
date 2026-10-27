@@ -9,7 +9,7 @@ export const REMOTE_CODE = /^[A-HJ-NP-Z2-9]{6}$/;
 export const REMOTE_TOKEN = /^[a-f0-9]{48}$/;
 
 /** Pantallas internas que el celular puede abrir (sin enlaces externos). */
-export const REMOTE_SCREENS = ["home", "youtube", "music", "radio", "podcasts", "navigate", "drive", "settings"] as const;
+export const REMOTE_SCREENS = ["home", "youtube", "music", "radio", "podcasts", "navigate", "drive", "tesla", "settings"] as const;
 export type RemoteScreen = (typeof REMOTE_SCREENS)[number];
 
 export const RemoteCommandSchema = z.discriminatedUnion("type", [

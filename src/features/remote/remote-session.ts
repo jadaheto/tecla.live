@@ -37,6 +37,7 @@ export const REMOTE_SCREEN_HREF: Record<RemoteScreen, string> = {
   podcasts: "/podcasts",
   navigate: "/navigate",
   drive: "/drive",
+  tesla: "/tesla",
   settings: "/settings",
 };
 

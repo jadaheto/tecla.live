@@ -89,3 +89,39 @@ describe("Tesla Fleet API", () => {
     expect(chargingLabel(snapshot)).toBe("Durmiendo");
   });
 });
+
+describe("Tesla detail", () => {
+  it("normalizes config, doors, tyres, software and units for the Mi Tesla page", async () => {
+    const { normalizeVehicleDetail, teslaModelName } = await import("@/lib/integrations/tesla");
+    const detail = normalizeVehicleDetail(
+      {
+        vin: "5YJ3E1EA7KF000000",
+        display_name: "Rayo",
+        state: "online",
+        charge_state: { battery_level: 64, usable_battery_level: 63, battery_range: 186.4, charging_state: "Charging", charger_voltage: 240, charger_actual_current: 32, charge_energy_added: 12.5, charge_miles_added_rated: 50, charge_port_latch: "Engaged", scheduled_charging_start_time: 23 * 60 + 30 },
+        climate_state: { inside_temp: 31, driver_temp_setting: 21, passenger_temp_setting: 22, fan_status: 3, seat_heater_left: 2 },
+        drive_state: { heading: 92, power: -5, gps_as_of: 1_761_600_000 },
+        vehicle_state: { locked: false, df: 1, pf: 0, dr: 0, pr: 0, ft: 0, rt: 1, fd_window: 0, fp_window: 1, rd_window: 0, rp_window: 0, tpms_pressure_fl: 2.9, tpms_pressure_fr: 2.4, tpms_soft_warning_fr: true, car_version: "2026.32.1 abc123", software_update: { status: "available", version: "2026.36.2", download_perc: 40, expected_duration_sec: 1500 } },
+        vehicle_config: { car_type: "model3", trim_badging: "74d", exterior_color: "DeepBlue", wheel_type: "Pinwheel18", rhd: false, eu_vehicle: false },
+        gui_settings: { gui_distance_units: "km/hr", gui_temperature_units: "C", gui_24_hour_time: true },
+      },
+      vehicle,
+    );
+    expect(detail.identity).toMatchObject({ model: "Model 3", trim: "74d", exteriorColor: "DeepBlue", wheels: "Pinwheel18", euVehicle: false });
+    expect(detail.charge).toMatchObject({ usablePercent: 63, voltage: 240, currentA: 32, energyAddedKwh: 12.5, rangeAddedKm: 80, portLatch: "Engaged", scheduledStartMinutes: 1_410 });
+    expect(detail.climate).toMatchObject({ driverSetC: 21, passengerSetC: 22, fan: 3 });
+    expect(detail.climate.seatHeaters.frontLeft).toBe(2);
+    expect(detail.body.doors).toEqual({ frontLeft: true, frontRight: false, rearLeft: false, rearRight: false });
+    expect(detail.body.trunks).toEqual({ front: false, rear: true });
+    expect(detail.body.windows.frontRight).toBe(true);
+    expect(detail.tyres).toMatchObject({ frontLeftBar: 2.9, frontRightBar: 2.4, rearLeftBar: null });
+    expect(detail.tyres.warnings.frontRight).toBe(true);
+    expect(detail.drive).toMatchObject({ heading: 92, powerKw: -5, gpsAt: "2025-10-27T21:20:00.000Z" });
+    expect(detail.software).toMatchObject({ version: "2026.32.1 abc123", updateStatus: "available", updateVersion: "2026.36.2", downloadPercent: 40, expectedMinutes: 25 });
+    expect(detail.units).toMatchObject({ distance: "km/hr", temperature: "C", time24h: true });
+    expect(detail.summary.batteryPercent).toBe(64);
+    expect(teslaModelName("modely")).toBe("Model Y");
+    expect(teslaModelName("tamarind")).toBe("Model X");
+    expect(teslaModelName(null)).toBeNull();
+  });
+});

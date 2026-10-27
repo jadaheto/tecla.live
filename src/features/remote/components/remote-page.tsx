@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Compass, Gauge, Home, Mic, Music2, Orbit, Pause, Play, Podcast, Radio, Send, SkipForward, TvMinimalPlay, Volume1, Volume2 } from "lucide-react";
+import { Car, Compass, Gauge, Home, Mic, Music2, Orbit, Pause, Play, Podcast, Radio, Send, SkipForward, TvMinimalPlay, Volume1, Volume2 } from "lucide-react";
 import { apiFetch } from "@/lib/http";
 import type { RemoteCommand, RemotePublicRoom, RemoteScreen } from "@/lib/remote/schema";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const SCREENS: Array<{ id: RemoteScreen; label: string; icon: typeof Home }> = [
   { id: "podcasts", label: "Podcasts", icon: Podcast },
   { id: "navigate", label: "Navegar", icon: Compass },
   { id: "drive", label: "Drive", icon: Gauge },
+  { id: "tesla", label: "Mi Tesla", icon: Car },
 ];
 
 const STYLE_ACCENT: Record<string, string> = {

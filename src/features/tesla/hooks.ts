@@ -54,3 +54,43 @@ export function chargingLabel(snapshot: TeslaSnapshot): string {
       return snapshot.asleep ? "Durmiendo" : "Estado desconocido";
   }
 }
+
+import type { TeslaChargingSession, TeslaChargingSite, TeslaDetail } from "@/lib/integrations/tesla";
+
+export interface TeslaDetailResponse {
+  summary: TeslaSnapshot;
+  detail: TeslaDetail | null;
+}
+
+export function useTeslaDetail(enabled: boolean) {
+  return useQuery({
+    queryKey: ["tesla-detail"],
+    queryFn: () => apiFetch<TeslaDetailResponse>("/api/tesla/detail"),
+    enabled,
+    staleTime: 2 * 60_000,
+    refetchInterval: 2 * 60_000,
+    retry: 0,
+  });
+}
+
+export function useTeslaChargers(enabled: boolean) {
+  return useQuery({
+    queryKey: ["tesla-chargers"],
+    queryFn: () => apiFetch<{ superchargers: TeslaChargingSite[]; destinations: TeslaChargingSite[]; asleep: boolean }>("/api/tesla/chargers"),
+    enabled,
+    staleTime: 10 * 60_000,
+    retry: 0,
+  });
+}
+
+export function useTeslaChargingHistory(enabled: boolean) {
+  return useQuery({
+    queryKey: ["tesla-charging-history"],
+    queryFn: () => apiFetch<{ sessions: TeslaChargingSession[] }>("/api/tesla/charging-history"),
+    enabled,
+    staleTime: 30 * 60_000,
+    retry: 0,
+  });
+}
+
+export type { TeslaChargingSession, TeslaChargingSite, TeslaDetail };
