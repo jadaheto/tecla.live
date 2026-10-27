@@ -72,7 +72,7 @@ export const THEME_BOOTSTRAP_SCRIPT = `
     var raw = localStorage.getItem('tecla-preferences-v1');
     var parsed = raw ? JSON.parse(raw) : null;
     var state = (parsed && parsed.state) || {};
-    var darkStyles = ['cyberpunk', 'kitt', 'roadster'];
+    var darkStyles = ['cyberpunk', 'kitt', 'roadster', 'discovery'];
     var style = darkStyles.indexOf(state.visualStyle) >= 0 ? state.visualStyle : 'tecla';
     document.documentElement.dataset.style = style;
     var mode = state.theme || 'auto';

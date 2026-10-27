@@ -57,6 +57,7 @@ describe("Knight Rider style", () => {
     expect(effectivePersona({ aiPersona: "copiloto", visualStyle: "tecla" })).toBe("copiloto");
     expect(effectivePersona({ aiPersona: "jarvis", visualStyle: "cyberpunk" })).toBe("jarvis");
     expect(effectivePersona({ aiPersona: "jarvis", visualStyle: "roadster" })).toBe("piloto");
+    expect(effectivePersona({ aiPersona: "copiloto", visualStyle: "discovery" })).toBe("computadora");
     delete process.env.ELEVENLABS_KITT_VOICE_ID;
     expect(getKittVoiceId()).toBe("UiSSTkQfzyt8mQUKITpS");
     process.env.ELEVENLABS_KITT_VOICE_ID = "abcdefghij1234567890";

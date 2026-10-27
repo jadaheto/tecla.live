@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Mic, Pause, Play, SkipForward } from "lucide-react";
 import { WeatherGlyph } from "@/components/weather/weather-glyph";
+import { HoloCar } from "@/components/holo/holo-car";
 import { ambientDrift, formatAmbientTime, shouldAutoAmbient } from "@/features/ambient/ambient-rules";
 import { openAssistant } from "@/features/ai/open-assistant";
 import { useAi } from "@/features/ai/store";
@@ -108,7 +109,7 @@ function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceM
     if (!canvas || reduceMotion) return;
     const context = canvas.getContext("2d");
     if (!context) return;
-    const palette = weatherFxPalette(style as "tecla" | "cyberpunk" | "kitt" | "roadster", true, false);
+    const palette = weatherFxPalette(style as "tecla" | "cyberpunk" | "kitt" | "roadster" | "discovery", true, false);
     let width = 0;
     let height = 0;
     let frame = 0;
@@ -189,6 +190,9 @@ function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceM
           </div>
         ) : null}
 
+        {tesla && !tesla.asleep && tesla.batteryPercent !== null ? (
+          <HoloCar width={360} height={200} intensity={tesla.charging === "charging" ? 1.6 : 1} className="ambient-screen__holo" label={`Holograma de ${tesla.name ?? "tu Tesla"}`} />
+        ) : null}
         {tesla && !tesla.asleep && tesla.batteryPercent !== null ? (
           tesla.charging === "charging" ? (
             <div className="ambient-screen__charge" aria-label="Carga en curso">

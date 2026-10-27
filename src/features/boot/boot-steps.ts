@@ -130,6 +130,8 @@ export function bootTitles(style: VisualStyle): BootTitles {
       return { eyebrow: "Knight Industries", title: "Activando sistemas", ready: "KITT en línea" };
     case "roadster":
       return { eyebrow: "Pre-flight", title: "Chequeo de cabina", ready: "Listo para despegar" };
+    case "discovery":
+      return { eyebrow: "Computadora de a bordo", title: "Diagnóstico de sistemas", ready: "Todos los sistemas operativos" };
     default:
       return { eyebrow: "TECLA LIVE", title: "Iniciando sistemas", ready: "Todo listo" };
   }

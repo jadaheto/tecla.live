@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
 const CLOSE_AFTER_REPLY_MS = 4_000;
 const CLOSE_AFTER_ERROR_MS = 6_000;
 
-function hudLabel(status: string, persona: "jarvis" | "copiloto" | "kitt" | "piloto"): string {
+function hudLabel(status: string, persona: "jarvis" | "copiloto" | "kitt" | "piloto" | "computadora"): string {
   switch (status) {
     case "listening":
-      return persona === "piloto"
+      return persona === "computadora"
+        ? "Escuchando, capitán."
+        : persona === "piloto"
         ? "A la escucha, piloto."
         : persona === "kitt"
           ? "Le escucho, señor. Escáner activo."

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BatteryCharging, BatteryMedium, Car, Lock, LockOpen, MoonStar, RefreshCw, Thermometer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HoloCar } from "@/components/holo/holo-car";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { chargingLabel, useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
@@ -121,6 +122,14 @@ export function TeslaCard() {
   return (
     <Card className="relative min-h-[188px] overflow-hidden p-5">
       <div className={cn("absolute -right-12 -top-16 size-56 rounded-full blur-2xl", charging ? "bg-gradient-to-br from-emerald-400/25 via-emerald-400/10 to-transparent" : "bg-gradient-to-br from-[#5eead4]/20 via-[#5eead4]/5 to-transparent")} />
+      <HoloCar
+        width={190}
+        height={110}
+        intensity={charging ? 1.6 : 1}
+        color={charging ? "#34d399" : battery <= 20 ? "#f87171" : undefined}
+        className="pointer-events-none absolute -right-3 -top-1 opacity-90"
+        label={`Holograma de ${data.name ?? "tu Tesla"}`}
+      />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="eyebrow flex items-center gap-1.5">
@@ -129,8 +138,8 @@ export function TeslaCard() {
           </p>
           <p className="mt-1 truncate text-[13px] font-medium text-foreground/90">{data.name ?? "Tu Tesla"}</p>
         </div>
-        <span className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5", charging ? "text-emerald-300" : "text-[#5eead4]")}>
-          {charging ? <BatteryCharging className="size-6" aria-hidden /> : <BatteryMedium className="size-6" aria-hidden />}
+        <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/30", charging ? "text-emerald-300" : "text-[#5eead4]")}>
+          {charging ? <BatteryCharging className="size-4" aria-hidden /> : <BatteryMedium className="size-4" aria-hidden />}
         </span>
       </div>
 

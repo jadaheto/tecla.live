@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Montserrat, Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
+import { Exo_2, Michroma, Montserrat, Orbitron, Rajdhani, Share_Tech_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers/app-providers";
 import { AppShell } from "@/components/layout/app-shell";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
@@ -33,6 +33,20 @@ const roadsterFont = Montserrat({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-roadster",
+  display: "swap",
+});
+
+// «Discovery»: Michroma (ancha, tipo Eurostile) para títulos y Exo 2 para la interfaz holográfica.
+const discoFont = Michroma({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-disco",
+  display: "swap",
+});
+const discoUi = Exo_2({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-disco-ui",
   display: "swap",
 });
 
@@ -79,7 +93,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           suppressHydrationWarning
         />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} ${kittFont.variable} ${kittMono.variable} ${roadsterFont.variable} font-sans antialiased`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} ${cyberFont.variable} ${kittFont.variable} ${kittMono.variable} ${roadsterFont.variable} ${discoFont.variable} ${discoUi.variable} font-sans antialiased`}>
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

@@ -17,7 +17,7 @@ export function ThemeSync() {
 
   React.useEffect(() => {
     const apply = () => {
-      const forcedDark = visualStyle === "cyberpunk" || visualStyle === "kitt" || visualStyle === "roadster";
+      const forcedDark = visualStyle === "cyberpunk" || visualStyle === "kitt" || visualStyle === "roadster" || visualStyle === "discovery";
       let dark = theme === "dark" || forcedDark;
       if (theme === "auto" && !forcedDark) {
         if (!autoThemeEnabled) {

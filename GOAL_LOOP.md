@@ -79,6 +79,7 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 20 | Fase 9: arranque tipo nave, orbe reactivo, Pantalla ambiente, telemetría GPS y control remoto por QR | typecheck, lint (0 errores), 111 unitarias, Playwright (arranque ×4 estilos, ambiente, remoto auto↔celular, Drive con GPS simulado), build de producción | Completada local; push a GitHub → Easypanel |
 | 21 | Fase 10: Tesla Fleet API (solo lectura) con dominio registrado sinapsia.co | adaptador, 7 rutas, tarjeta, Ajustes, arranque, ambiente, herramienta de IA; typecheck, lint, 117 unitarias, build | Código completo; prueba real bloqueada hasta configurar `TESLA_*` en Easypanel y subir archivos a Hostinger |
 | 22 | Modo carga automático y avisos por voz del Tesla | `TeslaProvider`, `useTeslaLive`, `chargeModeDecision`/`teslaAlerts`, panel de carga en Pantalla ambiente, `announce()`; typecheck, lint, 123 unitarias, Playwright con API simulada, build | Completada local; push a GitHub → Easypanel |
+| 23 | Estilo «Discovery» y auto holográfico 3D | 5.º estilo completo con persona «computadora»; `HoloCar` en Mi Tesla y Pantalla ambiente; typecheck, lint, 123 unitarias, capturas, build | Completada local; push a GitHub → Easypanel |
 
 ## ÚLTIMA ACCIÓN
 

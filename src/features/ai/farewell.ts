@@ -17,10 +17,15 @@ export function isFarewell(text: string): boolean {
   return FAREWELL_PATTERNS.some((pattern) => pattern.test(clean));
 }
 
-export function farewellReply(text: string, persona: "jarvis" | "copiloto" | "kitt" | "piloto"): string {
+export function farewellReply(text: string, persona: "jarvis" | "copiloto" | "kitt" | "piloto" | "computadora"): string {
   const clean = text.trim().toLowerCase();
   const thanks = /gracias/.test(clean);
   const night = /buenas\s+noches|descans/.test(clean);
+  if (persona === "computadora") {
+    if (night) return "Buenas noches, capitán. Sistemas en reposo.";
+    if (thanks) return "A su servicio, capitán. Computadora en espera.";
+    return "Reconocido, capitán. Computadora en espera.";
+  }
   if (persona === "piloto") {
     if (night) return "Buenas noches, piloto. Cabina en reposo.";
     if (thanks) return "Confirmado, piloto. Quedo a la escucha.";

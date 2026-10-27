@@ -35,6 +35,7 @@ describe("weather effects presets", () => {
     expect(weatherFxPalette("cyberpunk", true, true).flash).toBe("#00f0ff");
     expect(weatherFxPalette("kitt", true, true).rain).toContain("255, 46, 46");
     expect(weatherFxPalette("roadster", true, false).star).toContain("255, 43, 43");
+    expect(weatherFxPalette("discovery", true, true).rain).toContain("95, 211, 255");
     expect(weatherFxPalette("tecla", true, true).rain).not.toBe(weatherFxPalette("tecla", false, true).rain);
   });
 });

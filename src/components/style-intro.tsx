@@ -58,7 +58,7 @@ export function StyleIntro() {
       aria-live="polite"
       onClick={() => setScene(null)}
     >
-      {scene === "kitt" ? <KittScene /> : scene === "roadster" ? <RoadsterScene /> : scene === "cyberpunk" ? <CyberpunkScene /> : <TeclaScene />}
+      {scene === "kitt" ? <KittScene /> : scene === "roadster" ? <RoadsterScene /> : scene === "cyberpunk" ? <CyberpunkScene /> : scene === "discovery" ? <DiscoveryScene /> : <TeclaScene />}
     </div>
   );
 }
@@ -123,6 +123,34 @@ function RoadsterScene() {
       <p className="style-intro__eyebrow">◆ Roadster</p>
       <p className="style-intro__title">Cabina lista</p>
       <p className="style-intro__sub">Sistemas nominales · piloto a bordo</p>
+    </div>
+  );
+}
+
+/** Puente de nave: anillos holográficos que se expanden y un auto en alambre cian. */
+function DiscoveryScene() {
+  return (
+    <div className="style-intro__stage">
+      <svg viewBox="0 0 640 220" className="style-intro__car style-intro__holo" aria-hidden>
+        <g className="style-intro__holo-rings" fill="none" stroke="#5fd3ff" strokeWidth="1">
+          <ellipse cx="320" cy="176" rx="250" ry="26" />
+          <ellipse cx="320" cy="176" rx="190" ry="19" strokeDasharray="6 10" />
+          <ellipse cx="320" cy="176" rx="120" ry="12" />
+        </g>
+        <g fill="none" stroke="#8ec5ff" strokeWidth="1.6" className="style-intro__wire-lines style-intro__holo-car">
+          <path d="M40 150 L90 142 L140 106 L240 84 L360 80 L460 90 L550 112 L610 140 L600 168 L50 168 Z" />
+          <path d="M140 106 L190 110 L240 84" />
+          <path d="M240 84 L260 110 L360 108 L360 80" />
+          <path d="M360 108 L460 112 L460 90" />
+          <path d="M90 142 L600 140" />
+          <circle cx="160" cy="166" r="26" />
+          <circle cx="500" cy="166" r="26" />
+        </g>
+        <rect className="style-intro__holo-scan" x="20" y="60" width="600" height="2" fill="#dff6ff" />
+      </svg>
+      <p className="style-intro__eyebrow">◈ Computadora de a bordo</p>
+      <p className="style-intro__title">Puente activo</p>
+      <p className="style-intro__sub">Sistemas operativos · bienvenido, capitán</p>
     </div>
   );
 }

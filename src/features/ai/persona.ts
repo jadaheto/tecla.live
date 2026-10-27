@@ -6,12 +6,14 @@ import type { AiPersona, VisualStyle } from "@/types";
  * asistente habla como el ordenador de a bordo de la serie (sereno, preciso,
  * algo orgulloso de sus sistemas y con humor seco).
  */
-export type EffectivePersona = AiPersona | "kitt" | "piloto";
+export type EffectivePersona = AiPersona | "kitt" | "piloto" | "computadora";
 
 /** «El auto fantástico» → KITT; «Roadster» (cabina de caza) → copiloto de vuelo que trata al usuario de «piloto». */
 export function effectivePersona(input: { aiPersona: AiPersona; visualStyle: VisualStyle }): EffectivePersona {
   if (input.visualStyle === "kitt") return "kitt";
   if (input.visualStyle === "roadster") return "piloto";
+  // «Discovery» → computadora de la nave: trata al usuario de «capitán».
+  if (input.visualStyle === "discovery") return "computadora";
   return input.aiPersona;
 }
 

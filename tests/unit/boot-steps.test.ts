@@ -57,6 +57,7 @@ describe("secuencia de arranque", () => {
     expect(bootTitles("roadster").title).toBe("Chequeo de cabina");
     expect(bootTitles("cyberpunk").eyebrow).toBe("Night City OS");
     expect(bootTitles("tecla").title).toBe("Iniciando sistemas");
+    expect(bootTitles("discovery").ready).toBe("Todos los sistemas operativos");
     expect(bootDuration(7, false).totalMs).toBeGreaterThan(bootDuration(7, true).totalMs);
     expect(bootDuration(7, true).totalMs).toBeLessThan(1_600);
   });

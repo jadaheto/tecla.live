@@ -1627,3 +1627,313 @@ body {
   font-family: var(--font-kitt-mono), "Share Tech Mono", monospace;
   color: #ff2b2b;
 }
+
+/* ---------- Estilo visual «Discovery» (puente de nave estelar, siempre sobre tema oscuro) ---------- */
+/* Referencias: interfaces holográficas de Star Trek: Discovery: negro azulado profundo, paneles
+   translúcidos azul cian con bordes finos y esquinas marcadas, anillos y arcos de datos,
+   tipografía ancha geométrica (Michroma) para títulos y Exo 2 para la interfaz, ámbar para avisos. */
+[data-style="discovery"] {
+  --background: #030711;
+  --background-deep: #02050c;
+  --foreground: #dff3ff;
+  --muted: rgb(142 197 255 / 0.66);
+  --surface: rgb(95 211 255 / 0.07);
+  --surface-strong: #071529;
+  --border: rgb(95 211 255 / 0.3);
+  --accent: #5fd3ff;
+  --accent-foreground: #02101c;
+  --violet: #8ec5ff;
+  --aqua: #dff6ff;
+  --glass: rgb(4 12 26 / 0.78);
+  --glass-strong: rgb(5 14 30 / 0.92);
+  --header: rgb(3 8 18 / 0.9);
+  --shadow-color: 95 211 255;
+  --ring: rgb(95 211 255 / 0.8);
+  --holo: #5fd3ff;
+  --disco-amber: #ffb547;
+  --orb-a: #5fd3ff;
+  --orb-b: #8ec5ff;
+  --orb-c: #ffffff;
+  --font-sans: var(--font-disco-ui), "Exo 2", "Segoe UI", system-ui, sans-serif;
+  --font-disco-ui-stack: var(--font-disco-ui), "Exo 2", "Segoe UI", system-ui, sans-serif;
+  --font-disco-stack: var(--font-disco), "Michroma", "Eurostile", system-ui, sans-serif;
+}
+
+[data-style="discovery"] body {
+  font-family: var(--font-disco-ui-stack);
+  color: var(--foreground);
+  letter-spacing: 0.01em;
+}
+
+[data-style="discovery"] .font-sans {
+  font-family: var(--font-disco-ui-stack);
+}
+
+[data-style="discovery"] h1,
+[data-style="discovery"] h2,
+[data-style="discovery"] h3,
+[data-style="discovery"] .text-display,
+[data-style="discovery"] .eyebrow {
+  font-family: var(--font-disco-stack);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+[data-style="discovery"] h1,
+[data-style="discovery"] .text-display {
+  letter-spacing: 0.04em;
+  line-height: 1.12;
+  color: #eaf8ff;
+  text-shadow: 0 0 16px rgb(95 211 255 / 0.45);
+}
+
+[data-style="discovery"] .eyebrow {
+  letter-spacing: 0.3em;
+  font-size: 0.62rem;
+  color: var(--accent);
+}
+
+[data-style="discovery"] .eyebrow::before {
+  content: "◈ ";
+  font-size: 0.75em;
+}
+
+[data-style="discovery"] button,
+[data-style="discovery"] a[class*="rounded-"] {
+  letter-spacing: 0.06em;
+}
+
+/* Fondo del puente: arcos concéntricos arriba a la derecha y una rejilla fina. */
+[data-style="discovery"] .ambient-shell {
+  background:
+    radial-gradient(70rem 40rem at 85% -10%, rgb(95 211 255 / 0.16), transparent 60%),
+    radial-gradient(40rem 30rem at 10% 110%, rgb(142 197 255 / 0.1), transparent 60%),
+    #030711;
+  overflow: hidden;
+}
+
+[data-style="discovery"] .ambient-shell::before {
+  content: "";
+  position: absolute;
+  right: -14vw;
+  top: -36vw;
+  width: 70vw;
+  height: 70vw;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, rgb(95 211 255 / 0.22) 0 1px, transparent 1px 44px);
+  mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+[data-style="discovery"] .ambient-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgb(95 211 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(95 211 255 / 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* Paneles holográficos: borde fino, esquinas marcadas con un trazo cian. */
+[data-style="discovery"] .glass,
+[data-style="discovery"] .glass-strong {
+  position: relative;
+  border-color: rgb(95 211 255 / 0.32);
+  box-shadow:
+    inset 0 0 0 1px rgb(95 211 255 / 0.06),
+    inset 0 1px 0 rgb(223 246 255 / 0.12),
+    0 0 30px -14px rgb(95 211 255 / 0.8);
+}
+
+[data-style="discovery"] .glass::before,
+[data-style="discovery"] .glass-strong::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  border-top-left-radius: 4px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+[data-style="discovery"] [class*="rounded-"]:not([role="switch"]):not([role="switch"] *):not(canvas):not(img):not(.rounded-full) {
+  border-radius: 12px;
+}
+
+[data-style="discovery"] .card-sheen::after {
+  background: linear-gradient(140deg, rgb(95 211 255 / 0.16), transparent 45%);
+}
+
+[data-style="discovery"] img,
+[data-style="discovery"] video {
+  filter: saturate(0.8) contrast(1.05);
+}
+
+[data-style="discovery"] ::selection {
+  background: rgb(95 211 255 / 0.4);
+  color: #02101c;
+}
+
+/* Línea de puente bajo la cabecera: segmentos con pulso. */
+.disco-hud {
+  position: relative;
+  display: flex;
+  height: 4px;
+  gap: 6px;
+  padding: 0 14px;
+  pointer-events: none;
+}
+
+.disco-hud__segment {
+  flex: 1;
+  height: 2px;
+  margin-top: 2px;
+  background: rgb(95 211 255 / 0.35);
+  animation: disco-segment 2.6s ease-in-out infinite;
+}
+
+.disco-hud__segment:nth-child(3n) {
+  background: rgb(255 181 71 / 0.5);
+}
+
+@keyframes disco-segment {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.disco-hud__pulse {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 18%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #dff6ff, transparent);
+  animation: disco-pulse 4s linear infinite;
+}
+
+@keyframes disco-pulse {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(560%);
+  }
+}
+
+/* Cortinilla, arranque y pantalla ambiente en el lenguaje del puente. */
+.style-intro[data-scene="discovery"] {
+  color: #dff3ff;
+  font-family: var(--font-disco), "Michroma", system-ui, sans-serif;
+  background:
+    radial-gradient(60rem 30rem at 50% 110%, rgb(95 211 255 / 0.16), transparent 60%),
+    #02050c;
+}
+
+.style-intro[data-scene="discovery"] .style-intro__title {
+  color: #5fd3ff;
+  text-shadow: 0 0 20px rgb(95 211 255 / 0.6);
+}
+
+.style-intro__holo-rings ellipse {
+  opacity: 0;
+  animation: disco-ring 1.4s ease-out forwards;
+}
+
+.style-intro__holo-rings ellipse:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.style-intro__holo-rings ellipse:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes disco-ring {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    transform-origin: 320px 176px;
+  }
+  to {
+    opacity: 0.7;
+    transform: scale(1);
+    transform-origin: 320px 176px;
+  }
+}
+
+.style-intro__holo-car path,
+.style-intro__holo-car circle {
+  filter: drop-shadow(0 0 6px rgb(95 211 255 / 0.8));
+}
+
+.style-intro__holo-scan {
+  animation: disco-scan 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px #dff6ff);
+}
+
+@keyframes disco-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(120px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.2;
+  }
+}
+
+.boot-seq[data-style="discovery"] {
+  --boot-accent: #5fd3ff;
+  --boot-ok: #8ec5ff;
+  --boot-warn: #ffb547;
+  font-family: var(--font-disco-ui), "Exo 2", system-ui, sans-serif;
+  color: #dff3ff;
+  background: #02050c;
+}
+
+.boot-seq[data-style="discovery"] .boot-seq__title {
+  font-family: var(--font-disco), "Michroma", system-ui, sans-serif;
+  text-shadow: 0 0 18px rgb(95 211 255 / 0.55);
+}
+
+.boot-seq[data-style="discovery"] .boot-seq__grid {
+  background-image: repeating-radial-gradient(circle at 85% 0%, rgb(95 211 255 / 0.14) 0 1px, transparent 1px 48px);
+  mask-image: none;
+}
+
+.ambient-screen[data-style="discovery"] {
+  --ambient-accent: #5fd3ff;
+  font-family: var(--font-disco-ui), "Exo 2", system-ui, sans-serif;
+  color: #dff3ff;
+  background:
+    radial-gradient(60rem 30rem at 50% 115%, rgb(95 211 255 / 0.14), transparent 60%),
+    #02050c;
+}
+
+.ambient-screen[data-style="discovery"] .ambient-screen__clock {
+  font-family: var(--font-disco), "Michroma", system-ui, sans-serif;
+  color: #dff3ff;
+  text-shadow: 0 0 36px rgb(95 211 255 / 0.5);
+}
+
+.ambient-screen__holo {
+  margin-top: 8px;
+  max-width: 92vw;
+  height: auto;
+}

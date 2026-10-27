@@ -221,3 +221,9 @@
 - [x] Avisos por voz (`teslaVoiceAlerts`, umbral configurable): batería baja, carga iniciada, carga completa, auto sin bloquear; `announce()` solo con síntesis de voz.
 - [ ] Probar en el carro: modo carga en un Supercargador y avisos reales (el audio exige un toque previo en la pantalla).
 - [ ] Fase 2 (comandos firmados: clima, maletero, límite de carga) requiere el proxy `tesla-http-proxy` y el permiso `vehicle_cmds`.
+
+## FASE 11 — ESTILO DISCOVERY Y AUTO HOLOGRÁFICO (2026-10-27)
+
+- [x] Estilo «discovery» en tipos, tema forzado oscuro, fuentes Michroma y Exo 2, CSS (paneles, fondo, HUD de puente), cortinilla, arranque, clima, orbe, Pantalla ambiente, Ajustes, herramienta `set_visual_style`, control remoto y persona «computadora» (prompt, saludo, despedida, HUD, «computadora» como palabra de activación). Evidencia: identity/weather/boot tests, capturas Discovery (arranque, Inicio, cortinilla, ambiente con carga, Ajustes, TECLA AI).
+- [x] Auto holográfico 3D (`holo-car.tsx`) en la tarjeta «Mi Tesla» y en la Pantalla ambiente, con color del estilo, verde al cargar y rojo con batería baja.
+- [ ] Decisión del usuario (2026-10-27): la fase 2 de Tesla (comandos al vehículo) no se implementará por riesgo.

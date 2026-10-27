@@ -58,6 +58,8 @@ export interface WakeWordOptions {
 function nameVariants(options: WakeWordOptions): string[] {
   const names = [...BASE_NAMES];
   if (options.style === "kitt") names.push(...KITT_NAMES);
+  // «Discovery»: como en la serie, «computadora» también despierta al asistente.
+  if (options.style === "discovery") names.push("computadora", "computador", "ordenador");
   const custom = normalizeSpeech(options.assistantName ?? "");
   if (custom && custom !== "tecla" && custom.length >= 3) names.push(custom);
   return names;

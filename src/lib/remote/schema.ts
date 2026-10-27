@@ -20,7 +20,7 @@ export const RemoteCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("open"), screen: z.enum(REMOTE_SCREENS) }).strict(),
   z.object({ type: z.literal("ambient"), on: z.boolean() }).strict(),
   z.object({ type: z.literal("ask"), text: z.string().trim().min(1).max(240) }).strict(),
-  z.object({ type: z.literal("style"), style: z.enum(["tecla", "cyberpunk", "kitt", "roadster"]) }).strict(),
+  z.object({ type: z.literal("style"), style: z.enum(["tecla", "cyberpunk", "kitt", "roadster", "discovery"]) }).strict(),
 ]);
 export type RemoteCommand = z.infer<typeof RemoteCommandSchema>;
 
@@ -32,7 +32,7 @@ export const RemoteStateSchema = z
     kind: z.string().trim().max(20).nullable(),
     isPlaying: z.boolean(),
     volume: z.number().int().min(0).max(100),
-    style: z.enum(["tecla", "cyberpunk", "kitt", "roadster"]),
+    style: z.enum(["tecla", "cyberpunk", "kitt", "roadster", "discovery"]),
     ambient: z.boolean(),
   })
   .strict();

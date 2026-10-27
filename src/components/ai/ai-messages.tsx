@@ -15,6 +15,7 @@ import {
 import { SiriOrb } from "@/components/ai/siri-orb";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { usePreferences } from "@/stores/preferences";
+import { effectivePersona } from "@/features/ai/persona";
 import type { AiChatMessage, AiVisualState } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -43,8 +44,20 @@ export function AiMessageList({
 }) {
   const integrations = useIntegrations();
   const configured = integrations.data?.integrations.deepseek ?? false;
-  const persona = usePreferences((state) => state.aiPersona);
-  const jarvis = persona === "jarvis";
+  const aiPersona = usePreferences((state) => state.aiPersona);
+  const visualStyle = usePreferences((state) => state.visualStyle);
+  const persona = effectivePersona({ aiPersona, visualStyle });
+  const jarvis = persona !== "copiloto";
+  const emptyState =
+    persona === "computadora"
+      ? { eyebrow: "Computadora en línea", title: "Aguardo instrucciones, capitán.", body: "Sensores, comunicaciones, registro y propulsión a su disposición. Ejecuto y reporto; usted decide qué se reproduce y qué se guarda." }
+      : persona === "kitt"
+        ? { eyebrow: "Escáner activo", title: "¿Adónde vamos hoy, señor?", body: "Música, video, rutas, clima o el estilo de la pantalla. Ejecuto y reporto; usted decide qué se reproduce y qué se guarda." }
+        : persona === "piloto"
+          ? { eyebrow: "Cabina lista", title: "Indique destino o audio, piloto.", body: "Música, video, rutas, clima o el estilo de la pantalla. Confirmo cada orden con su resultado real." }
+          : jarvis
+            ? { eyebrow: "Sistemas en línea", title: "A sus órdenes, señor.", body: "Música, video, rutas, clima o el estilo de la pantalla. Ejecuto y reporto; usted decide qué se reproduce y qué se guarda." }
+            : { eyebrow: "Tu copiloto", title: "¿Qué quieres disfrutar hoy?", body: "Pide un video, música, una ruta o el clima. Tú decides qué se reproduce y qué se guarda." };
   const endRef = React.useRef<HTMLDivElement>(null);
   const lastAssistantId = [...messages].reverse().find((message) => message.role === "assistant")?.id;
 
@@ -63,15 +76,9 @@ export function AiMessageList({
         <div className="flex min-h-full flex-col justify-center py-6">
           <div className="flex flex-col items-center text-center">
             <SiriOrb status={status} size={112} className="mb-5" />
-            <p className="eyebrow mb-2">{jarvis ? "Sistemas en línea" : "Tu copiloto"}</p>
-            <h2 className="text-display text-2xl text-balance">
-              {jarvis ? "A sus órdenes, señor." : "¿Qué quieres disfrutar hoy?"}
-            </h2>
-            <p className="mt-2 max-w-[300px] text-sm leading-relaxed text-muted">
-              {jarvis
-                ? "Música, video, rutas, clima o el estilo de la pantalla. Ejecuto y reporto; usted decide qué se reproduce y qué se guarda."
-                : "Pide un video, música, una ruta o el clima. Tú decides qué se reproduce y qué se guarda."}
-            </p>
+            <p className="eyebrow mb-2">{emptyState.eyebrow}</p>
+            <h2 className="text-display text-2xl text-balance">{emptyState.title}</h2>
+            <p className="mt-2 max-w-[300px] text-sm leading-relaxed text-muted">{emptyState.body}</p>
           </div>
 
           <div className="mt-6 grid gap-2">

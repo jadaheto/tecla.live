@@ -338,6 +338,7 @@ export function SettingsPage() {
                   { value: "cyberpunk", label: "Cyberpunk 2077" },
                   { value: "kitt", label: "El auto fantástico" },
                   { value: "roadster", label: "Roadster" },
+                  { value: "discovery", label: "Discovery" },
                 ]}
               />
             </SettingRow>

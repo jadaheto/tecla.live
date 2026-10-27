@@ -22,6 +22,7 @@ const STYLE_ACCENT: Record<string, string> = {
   cyberpunk: "#fcee0a",
   kitt: "#ff2a2a",
   roadster: "#ff2b2b",
+  discovery: "#5fd3ff",
 };
 
 /**

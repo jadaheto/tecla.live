@@ -67,7 +67,7 @@ function waitForPlayback(videoId: string, timeoutMs: number): Promise<"playing" 
   });
 }
 
-const STYLE_LABELS = { tecla: "TECLA", cyberpunk: "Cyberpunk 2077", kitt: "El auto fantástico", roadster: "Roadster" } as const;
+const STYLE_LABELS = { tecla: "TECLA", cyberpunk: "Cyberpunk 2077", kitt: "El auto fantástico", roadster: "Roadster", discovery: "Discovery" } as const;
 
 function result(errorCode: string, message: string): ExecutionOutcome {
   return {

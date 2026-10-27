@@ -118,6 +118,18 @@ export function weatherFxPalette(style: VisualStyle, dark: boolean, isDay: boole
         mote: "rgba(255, 90, 90, 0.85)",
         star: "rgba(255, 43, 43, 0.95)",
       };
+    case "discovery":
+      // Hologramas azul cian del puente; relámpagos blancos azulados.
+      return {
+        rain: "rgba(95, 211, 255, 0.78)",
+        veil: "rgba(2, 10, 24, 0.3)",
+        flash: "#dff6ff",
+        snow: "rgba(190, 236, 255, 0.9)",
+        fogTone: "95, 211, 255",
+        sunTone: "142, 197, 255",
+        mote: "rgba(190, 236, 255, 0.85)",
+        star: "rgba(142, 197, 255, 0.95)",
+      };
     default:
       return {
         rain: dark ? "rgba(215, 228, 255, 0.75)" : "rgba(58, 78, 118, 0.62)",
