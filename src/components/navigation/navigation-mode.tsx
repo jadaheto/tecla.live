@@ -118,20 +118,27 @@ export function NavigationMode({
   /** Guía por fix: la llama el callback del GPS (sistema externo), con el estado más reciente. */
   const guideRef = React.useRef<(next: Fix) => void>(() => undefined);
 
-  // 1) Mapa.
+  const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(null);
   React.useEffect(() => {
+    setPortalTarget(document.body);
+  }, []);
+
+  // 1) Mapa (cuando el contenedor del portal ya existe).
+  React.useEffect(() => {
+    if (!portalTarget) return;
     let disposed = false;
     void loadGoogleMaps(apiKey)
       .then(async (maps) => {
-        if (disposed || !hostRef.current) return;
         // Con `loading=async` las clases solo existen tras importar sus bibliotecas.
         const [mapsLibrary, markerLibrary] = await Promise.all([
           maps.importLibrary("maps") as Promise<google.maps.MapsLibrary>,
           maps.importLibrary("marker") as Promise<google.maps.MarkerLibrary>,
         ]);
-        if (disposed || !hostRef.current) return;
-        const center = origin ?? { lat: 4.65, lng: -74.08 };
-        const map = new mapsLibrary.Map(hostRef.current, {
+        if (disposed) return;
+        const host = hostRef.current;
+        if (!host) throw new Error("Contenedor del mapa no disponible");
+        const center = origin ?? lastPointRef.current ?? { lat: 4.65, lng: -74.08 };
+        const map = new mapsLibrary.Map(host, {
           mapId,
           center,
           zoom: 17,
@@ -156,8 +163,9 @@ export function NavigationMode({
           void requestRouteRef.current(lastPointRef.current);
         }
       })
-      .catch(() => {
-        setError("No pudimos cargar el mapa de Google. Revisa la clave y que Maps JavaScript API esté habilitada.");
+      .catch((caught: unknown) => {
+        const detail = caught instanceof Error ? caught.message : String(caught);
+        setError(`No pudimos cargar el mapa de Google (${detail}). Revisa la clave y que Maps JavaScript API esté habilitada.`);
         setStatus("error");
       });
     return () => {
@@ -169,7 +177,7 @@ export function NavigationMode({
     };
     // El mapa se crea una vez por sesión de navegación.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey, mapId]);
+  }, [apiKey, mapId, portalTarget]);
 
   // 2) GPS del navegador.
   React.useEffect(() => {
@@ -304,10 +312,6 @@ export function NavigationMode({
   const CurrentIcon = ICONS[maneuverIcon(current?.maneuver)];
   const NextIcon = next ? ICONS[maneuverIcon(next.maneuver)] : null;
 
-  const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(null);
-  React.useEffect(() => {
-    setPortalTarget(document.body);
-  }, []);
   if (!portalTarget) return null;
   return createPortal(
     <div className="nav-mode" role="dialog" aria-label="Navegación">
