@@ -10,6 +10,8 @@ export interface AmbientAutoInput {
   videoOnScreen: boolean;
   assistantOpen: boolean;
   overlayOpen: boolean;
+  /** Estado real del Tesla: `false` en marcha (nunca se activa sola), `null` si no se sabe. */
+  parked?: boolean | null;
 }
 
 /** Rutas donde la pantalla ambiente nunca se activa sola. */
@@ -20,6 +22,7 @@ export function shouldAutoAmbient(input: AmbientAutoInput): boolean {
   if (input.idleMs < input.idleMinutes * 60_000) return false;
   if (BLOCKED_PREFIXES.some((prefix) => input.pathname.startsWith(prefix))) return false;
   if (input.videoOnScreen || input.assistantOpen || input.overlayOpen) return false;
+  if (input.parked === false) return false;
   return true;
 }
 

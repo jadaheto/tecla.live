@@ -334,6 +334,8 @@ export interface TeslaSnapshot {
   location: { latitude: number; longitude: number } | null;
   softwareVersion: string | null;
   sentryMode: boolean | null;
+  /** Hay alguien dentro del auto (según Tesla). */
+  userPresent: boolean | null;
   observedAt: string;
   /** La lectura viene de la caché del servidor (no se consultó a Tesla). */
   cached: boolean;
@@ -395,6 +397,7 @@ export function normalizeVehicleData(raw: z.infer<typeof VehicleDataSchema>["res
     location: typeof drive.latitude === "number" && typeof drive.longitude === "number" ? { latitude: drive.latitude, longitude: drive.longitude } : null,
     softwareVersion: vehicle.car_version ?? null,
     sentryMode: vehicle.sentry_mode ?? null,
+    userPresent: vehicle.is_user_present ?? null,
     observedAt: observedAt.toISOString(),
     cached: false,
   };
@@ -424,6 +427,7 @@ export function asleepSnapshot(vehicle: TeslaVehicleRef, observedAt = new Date()
     location: null,
     softwareVersion: null,
     sentryMode: null,
+    userPresent: null,
     observedAt: observedAt.toISOString(),
     cached: false,
   };

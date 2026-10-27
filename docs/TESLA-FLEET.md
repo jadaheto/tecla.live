@@ -66,6 +66,14 @@ Requiere además `TOKEN_ENCRYPTION_KEY` y `DATABASE_URL`: los tokens se guardan 
 - La tarjeta y la Pantalla ambiente consultan `/api/tesla/vehicle` cada 2 minutos con la pestaña visible; el servidor reutiliza la caché, así que el costo real es como máximo una lectura cada 2 minutos por usuario.
 - Un auto `asleep`/`offline` o un `408` se muestran como «durmiendo» sin cifras inventadas.
 
+## Modo carga automático y avisos por voz (2026-10-27)
+
+- **Tesla en vivo** (`src/components/tesla/tesla-provider.tsx`): con la cuenta vinculada, la app mantiene la lectura del vehículo cada 2 minutos (misma caché del servidor) y la publica en `useTeslaLive` (`src/features/tesla/store.ts`) con `parked` (P o sin marcha y velocidad 0 → estacionado; D/R/N o velocidad > 0 → en marcha; dormido → desconocido).
+- **Modo carga** (`teslaChargeMode`, activo por defecto): al detectar «cargando» abre la Pantalla ambiente con un panel de carga (porcentaje actual → límite, barra con marca del límite, kW y tiempo restante) y la cierra al terminar la carga, al desconectar o si el auto arranca. Nunca tapa un video, IPTV, Drive ni a TECLA AI. Si el usuario la cierra con un toque, no se reabre hasta la siguiente carga (`chargeDismissed`). Lógica pura en `src/features/tesla/alerts.ts` (`chargeModeDecision`).
+- **Estacionado real**: la Pantalla ambiente por inactividad nunca se activa si el Tesla reporta que está en marcha.
+- **Avisos por voz** (`teslaVoiceAlerts`, umbral `teslaLowBatteryPercent` 10/20/30): batería baja (una vez por sesión, al abrir la app, si no está cargando), carga iniciada (con kW y tiempo), carga completa (con autonomía) y auto sin bloquear (una vez, estacionado y sin nadie dentro). Se construyen localmente en la voz de la persona activa (`teslaAlerts`) y se pronuncian con `announce()` (`src/features/ai/announce.ts`): solo síntesis de voz, sin DeepSeek; el texto también aparece como notificación. El navegador puede bloquear el audio hasta el primer toque; el texto queda igual.
+- Verificación: `tests/unit/tesla-alerts.test.ts` (estacionado, decisiones del modo carga, avisos y transiciones) y prueba con la API simulada en Playwright: la pantalla ambiente se abre sola al cargar con el panel «Cargando · 11 kW · 64 % → 90 % · 1 h 15 min», se cierra con un toque sin reabrirse, y con 15 % sin cargar aparece el aviso de batería baja y el de auto sin bloquear.
+
 ## Costos y límites
 
 La Fleet API cobra por uso con una franja gratuita mensual (ver precios en el portal de Tesla). TECLA limita las lecturas con caché y sondeo solo con la app abierta. Despertar el vehículo consume batería del auto y está limitado a 3 veces cada 5 minutos.

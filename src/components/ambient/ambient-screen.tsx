@@ -8,7 +8,8 @@ import { ambientDrift, formatAmbientTime, shouldAutoAmbient } from "@/features/a
 import { openAssistant } from "@/features/ai/open-assistant";
 import { useAi } from "@/features/ai/store";
 import { useWeather } from "@/features/integrations/hooks";
-import { chargingLabel, useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
+import { chargingLabel } from "@/features/tesla/hooks";
+import { useTeslaLive } from "@/features/tesla/store";
 import { getMediaController, getPageController } from "@/features/media/player-bridge";
 import { weatherFxPalette } from "@/features/weather/fx-presets";
 import { usePlayer } from "@/stores/player";
@@ -54,6 +55,7 @@ export function AmbientScreen() {
           videoOnScreen,
           assistantOpen: ai.panelOpen || ai.voiceOpen,
           overlayOpen: ui.searchOpen || ui.shortcutsOpen || ui.remoteOpen,
+          parked: useTeslaLive.getState().parked,
         })
       ) {
         setOpen(true);
@@ -89,8 +91,7 @@ export function AmbientScreen() {
 
 function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceMotion: boolean; onClose: () => void }) {
   const weather = useWeather();
-  const teslaStatus = useTeslaStatus();
-  const tesla = useTeslaVehicle(teslaStatus.data?.connected ?? false);
+  const tesla = useTeslaLive((state) => state.snapshot);
   const current = usePlayer((state) => state.current);
   const isPlaying = usePlayer((state) => state.isPlaying);
   const [now, setNow] = React.useState(() => new Date());
@@ -188,11 +189,30 @@ function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceM
           </div>
         ) : null}
 
-        {tesla.data && !tesla.data.asleep && tesla.data.batteryPercent !== null ? (
-          <p className="ambient-screen__tesla">
-            <span className="ambient-screen__tesla-battery" style={{ ["--level" as string]: `${tesla.data.batteryPercent}%` }} aria-hidden />
-            {tesla.data.batteryPercent}%{tesla.data.rangeKm !== null ? ` · ${tesla.data.rangeKm} km` : ""} · {chargingLabel(tesla.data)}
-          </p>
+        {tesla && !tesla.asleep && tesla.batteryPercent !== null ? (
+          tesla.charging === "charging" ? (
+            <div className="ambient-screen__charge" aria-label="Carga en curso">
+              <p className="ambient-screen__charge-kind">Cargando{tesla.chargerPowerKw ? ` · ${tesla.chargerPowerKw} kW` : ""}</p>
+              <p className="ambient-screen__charge-level">
+                {tesla.batteryPercent}%<span className="ambient-screen__charge-limit"> → {tesla.chargeLimitPercent ?? 100}%</span>
+              </p>
+              <div className="ambient-screen__charge-bar" aria-hidden>
+                <span style={{ width: `${Math.max(2, Math.min(100, tesla.batteryPercent))}%` }} />
+                {tesla.chargeLimitPercent !== null ? <i style={{ left: `${tesla.chargeLimitPercent}%` }} /> : null}
+              </div>
+              <p className="ambient-screen__charge-eta">
+                {tesla.minutesToFull !== null && tesla.minutesToFull > 0
+                  ? `${tesla.minutesToFull >= 60 ? `${Math.floor(tesla.minutesToFull / 60)} h ${tesla.minutesToFull % 60} min` : `${tesla.minutesToFull} min`} restantes`
+                  : "Calculando tiempo…"}
+                {tesla.rangeKm !== null ? ` · ${tesla.rangeKm} km` : ""}
+              </p>
+            </div>
+          ) : (
+            <p className="ambient-screen__tesla">
+              <span className="ambient-screen__tesla-battery" style={{ ["--level" as string]: `${tesla.batteryPercent}%` }} aria-hidden />
+              {tesla.batteryPercent}%{tesla.rangeKm !== null ? ` · ${tesla.rangeKm} km` : ""} · {chargingLabel(tesla)}
+            </p>
+          )
         ) : null}
 
         {current ? (

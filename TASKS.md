@@ -216,5 +216,8 @@
 - [x] Rutas `/api/tesla/{login,callback,status,vehicle,wake,disconnect,partner}` con sesión obligatoria y límites de tasa.
 - [x] UI: tarjeta «Mi Tesla» en Inicio, sección «Mi Tesla» en Ajustes, paso Tesla en el arranque, línea de batería en Pantalla ambiente, herramienta `get_vehicle_status` para TECLA AI.
 - [x] Archivos para el dominio registrado (Hostinger): llave pública en `.well-known/appspecific`, `tesla/callback.php` y `.htaccess` (ver `docs/TESLA-FLEET.md`).
-- [ ] Bloqueado hasta configurar producción: variables `TESLA_*` en Easypanel, archivos subidos a sinapsia.co, registro de socio, vinculación de la cuenta y lectura real del vehículo.
+- [x] Producción configurada por el usuario (2026-10-27): archivos en sinapsia.co, registro de socio HTTP 200, cuenta vinculada y tarjeta «Mi Tesla» funcionando en tecla.live.
+- [x] Modo carga automático (`teslaChargeMode`): Pantalla ambiente con panel de carga al detectar «cargando»; cierre al terminar o arrancar; no se reabre si el usuario la cierra. Estacionado real bloquea la pantalla ambiente por inactividad. Evidencia: `tests/unit/tesla-alerts.test.ts`, Playwright con API simulada.
+- [x] Avisos por voz (`teslaVoiceAlerts`, umbral configurable): batería baja, carga iniciada, carga completa, auto sin bloquear; `announce()` solo con síntesis de voz.
+- [ ] Probar en el carro: modo carga en un Supercargador y avisos reales (el audio exige un toque previo en la pantalla).
 - [ ] Fase 2 (comandos firmados: clima, maletero, límite de carga) requiere el proxy `tesla-http-proxy` y el permiso `vehicle_cmds`.

@@ -5,7 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Car, ExternalLink, RefreshCw, Unplug } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SettingRow, StatusDot } from "@/features/settings/components/settings-ui";
+import { Switch } from "@/components/ui/switch";
+import { Segmented, SettingRow, StatusDot } from "@/features/settings/components/settings-ui";
+import { usePreferences } from "@/stores/preferences";
 import { chargingLabel, useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { toast } from "@/stores/toast";
@@ -61,6 +63,10 @@ export function TeslaSection() {
 
   const configured = status.data?.configured ?? false;
   const authenticated = status.data?.authenticated ?? false;
+  const chargeMode = usePreferences((state) => state.teslaChargeMode);
+  const voiceAlerts = usePreferences((state) => state.teslaVoiceAlerts);
+  const lowBattery = usePreferences((state) => state.teslaLowBatteryPercent);
+  const setPreferences = usePreferences((state) => state.setPreferences);
 
   return (
     <>
@@ -124,6 +130,31 @@ export function TeslaSection() {
         </SettingRow>
       ) : null}
 
+      <SettingRow
+        title="Modo carga automático"
+        description="Cuando el auto empieza a cargar, la Pantalla ambiente entra sola con el progreso, la potencia y el tiempo restante, y se cierra al terminar o al arrancar. Nunca tapa un video ni a TECLA AI; un toque la cierra."
+      >
+        <Switch checked={chargeMode} onCheckedChange={(checked) => setPreferences({ teslaChargeMode: checked })} aria-label="Modo carga automático" />
+      </SettingRow>
+      <SettingRow
+        title="Avisos por voz del vehículo"
+        description="TECLA avisa con una frase (sin consultar a la IA): batería baja al abrir la app, carga iniciada, carga completa y auto sin bloquear cuando nadie está dentro. Cada aviso de una sola vez no se repite en la sesión."
+        className="flex-col items-start"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <Switch checked={voiceAlerts} onCheckedChange={(checked) => setPreferences({ teslaVoiceAlerts: checked })} aria-label="Avisos por voz del vehículo" />
+          <Segmented<"10" | "20" | "30">
+            ariaLabel="Umbral de batería baja"
+            value={String(lowBattery) as "10" | "20" | "30"}
+            onChange={(value) => setPreferences({ teslaLowBatteryPercent: Number(value) })}
+            options={[
+              { value: "10", label: "Batería baja 10 %" },
+              { value: "20", label: "20 %" },
+              { value: "30", label: "30 %" },
+            ]}
+          />
+        </div>
+      </SettingRow>
       <SettingRow
         title="Registro del dominio ante Tesla"
         description={`Una sola vez, después de subir la llave pública a https://${status.data?.domain ?? "sinapsia.co"}/.well-known/appspecific/com.tesla.3p.public-key.pem. Tesla exige este paso antes de aceptar lecturas del vehículo.${partnerResult ? ` Resultado: ${partnerResult}` : ""}`}

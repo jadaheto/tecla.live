@@ -25,6 +25,12 @@ export interface PreferencesState {
   ambientIdleMinutes: number;
   /** Control remoto desde el celular (código QR). */
   remoteControl: boolean;
+  /** Pantalla ambiente automática mientras el Tesla carga. */
+  teslaChargeMode: boolean;
+  /** Avisos por voz del vehículo (batería baja, carga iniciada o completa, auto sin bloquear). */
+  teslaVoiceAlerts: boolean;
+  /** Umbral de batería baja (%). */
+  teslaLowBatteryPercent: number;
   voiceEnabled: boolean;
   /** Al abrir TECLA AI, empieza a escuchar de inmediato (manos libres). */
   /** Nombre con el que el usuario llama al asistente. */
@@ -64,6 +70,9 @@ export const DEFAULT_PREFERENCES = {
   bootSequence: true,
   ambientIdleMinutes: 10,
   remoteControl: false,
+  teslaChargeMode: true,
+  teslaVoiceAlerts: true,
+  teslaLowBatteryPercent: 20,
   voiceEnabled: true,
   aiName: "TECLA",
   aiAutoListen: true,
@@ -120,6 +129,9 @@ export const usePreferences = create<PreferencesState>()(
         bootSequence: state.bootSequence,
         ambientIdleMinutes: state.ambientIdleMinutes,
         remoteControl: state.remoteControl,
+        teslaChargeMode: state.teslaChargeMode,
+        teslaVoiceAlerts: state.teslaVoiceAlerts,
+        teslaLowBatteryPercent: state.teslaLowBatteryPercent,
         voiceEnabled: state.voiceEnabled,
         aiName: state.aiName,
         aiAutoListen: state.aiAutoListen,

@@ -12,10 +12,10 @@ import { useAiMemory } from "@/stores/ai-memory";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { getMediaController } from "@/features/media/player-bridge";
 import { effectivePersona } from "@/features/ai/persona";
-import { getKittVoiceId } from "@/features/ai/kitt-voice";
 import { claimPlayback } from "@/features/media/playback-sources";
 import { getSpotifyWebPlayerState } from "@/features/music/spotify-web-player-bridge";
 import { clearVoiceLevel, setVoiceLevel } from "@/features/ai/voice-level";
+import { voicePayload } from "@/features/ai/voice-payload";
 import { splitSentences, streamAiChat } from "@/features/ai/stream-client";
 import { farewellReply, isFarewell } from "@/features/ai/farewell";
 import type {
@@ -933,12 +933,3 @@ export { screenLabel };
  * Voz para ElevenLabs: la elegida en Ajustes; si no hay, con el estilo
  * «El auto fantástico» se usa la voz grave recomendada por el servidor.
  */
-function voicePayload(): { voiceId?: string } {
-  const prefs = usePreferences.getState();
-  if (prefs.aiVoiceId) return { voiceId: prefs.aiVoiceId };
-  if (prefs.visualStyle === "kitt") {
-    const kitt = getKittVoiceId();
-    if (kitt) return { voiceId: kitt };
-  }
-  return {};
-}

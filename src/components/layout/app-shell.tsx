@@ -14,6 +14,7 @@ import { StyleIntro } from "@/components/style-intro";
 import { BootSequence } from "@/components/boot-sequence";
 import { AmbientScreen } from "@/components/ambient/ambient-screen";
 import { RemoteProvider } from "@/components/remote/remote-provider";
+import { TeslaProvider } from "@/components/tesla/tesla-provider";
 import { RemoteDialog } from "@/components/remote/remote-dialog";
 import { usePreferences } from "@/stores/preferences";
 import { cn } from "@/lib/utils";
@@ -75,6 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AiDock />
       <WakeWordListener />
       <RemoteProvider />
+      <TeslaProvider />
       <RemoteDialog />
       <AmbientScreen />
       <BootSequence />
