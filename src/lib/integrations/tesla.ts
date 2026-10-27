@@ -22,6 +22,8 @@ export const TESLA_DEFAULT_SCOPES = ["openid", "offline_access", "vehicle_device
 
 /** Minutos que se reutiliza una lectura antes de volver a consultar (cada consulta cuesta). */
 export const TESLA_SNAPSHOT_TTL_MS = 2 * 60_000;
+/** Con el auto dormido se consulta mucho menos: cada lectura cuesta igual aunque solo diga «durmiendo». */
+export const TESLA_ASLEEP_TTL_MS = 10 * 60_000;
 
 export class TeslaError extends Error {
   readonly code: string;
@@ -245,9 +247,15 @@ export interface TeslaVehicleRef {
   state: string | null;
 }
 
-export async function listTeslaVehicles(userId: string): Promise<TeslaVehicleRef[]> {
+const vehiclesCache = new Map<string, { vehicles: TeslaVehicleRef[]; at: number }>();
+/** La lista de vehículos casi no cambia: se reutiliza 1 hora para no pagar una consulta extra por lectura. */
+const VEHICLES_TTL_MS = 60 * 60_000;
+
+export async function listTeslaVehicles(userId: string, options: { force?: boolean } = {}): Promise<TeslaVehicleRef[]> {
+  const cached = vehiclesCache.get(userId);
+  if (!options.force && cached && Date.now() - cached.at < VEHICLES_TTL_MS) return cached.vehicles;
   const { data } = await teslaFetch(userId, "/api/1/vehicles", {}, VehiclesSchema);
-  return (data?.response ?? [])
+  const vehicles = (data?.response ?? [])
     .map((vehicle) => ({
       id: vehicle.id_s ?? (vehicle.id !== undefined ? String(vehicle.id) : ""),
       vin: vehicle.vin ?? null,
@@ -255,6 +263,8 @@ export async function listTeslaVehicles(userId: string): Promise<TeslaVehicleRef
       state: vehicle.state ?? null,
     }))
     .filter((vehicle) => vehicle.id);
+  vehiclesCache.set(userId, { vehicles, at: Date.now() });
+  return vehicles;
 }
 
 const DoorFlag = z.number().nullable().optional();
@@ -543,22 +553,23 @@ const ALL_ENDPOINTS = "charge_state;climate_state;drive_state;vehicle_state;vehi
  */
 async function fetchVehicleRaw(userId: string, force: boolean): Promise<{ entry: CacheEntry; cached: boolean }> {
   const cached = snapshotCache.get(userId);
-  if (!force && cached && Date.now() - cached.at < TESLA_SNAPSHOT_TTL_MS) return { entry: cached, cached: true };
+  // Despierto: 2 min. Dormido: 10 min, para no pagar lecturas que solo devuelven «durmiendo».
+  const ttl = cached?.raw ? TESLA_SNAPSHOT_TTL_MS : TESLA_ASLEEP_TTL_MS;
+  if (!force && cached && Date.now() - cached.at < ttl) return { entry: cached, cached: true };
   const vehicles = await listTeslaVehicles(userId);
   const vehicle = vehicles[0];
   if (!vehicle) throw new TeslaError("TESLA_NO_VEHICLE", "Tu cuenta de Tesla no tiene vehículos asociados.", 404);
-  if (vehicle.state && vehicle.state !== "online") {
-    const entry = { vehicle, raw: null, at: Date.now() };
-    snapshotCache.set(userId, entry);
-    return { entry, cached: false };
-  }
   const { status, data } = await teslaFetch(
     userId,
     `/api/1/vehicles/${encodeURIComponent(vehicle.id)}/vehicle_data?endpoints=${encodeURIComponent(ALL_ENDPOINTS)}`,
     {},
     VehicleDataSchema,
   );
-  const entry = { vehicle, raw: status === 408 || !data ? null : data.response, at: Date.now() };
+  const entry = {
+    vehicle: status === 408 || !data ? { ...vehicle, state: "asleep" } : { ...vehicle, state: data.response.state ?? "online" },
+    raw: status === 408 || !data ? null : data.response,
+    at: Date.now(),
+  };
   snapshotCache.set(userId, entry);
   return { entry, cached: false };
 }
@@ -935,6 +946,7 @@ export async function wakeTeslaVehicle(userId: string): Promise<{ state: string 
   const { data } = await teslaFetch(userId, `/api/1/vehicles/${encodeURIComponent(vehicle.id)}/wake_up`, { method: "POST" }, z.looseObject({ response: z.looseObject({ state: z.string().nullable().optional() }).optional() }));
   snapshotCache.delete(userId);
   sitesCache.delete(userId);
+  vehiclesCache.delete(userId);
   return { state: data?.response?.state ?? null };
 }
 

@@ -92,7 +92,19 @@ Servidor: `getTeslaDetail` reutiliza la misma lectura cruda (`vehicle_data` con 
 
 ## Costos y límites
 
-La Fleet API cobra por uso con una franja gratuita mensual (ver precios en el portal de Tesla). TECLA limita las lecturas con caché y sondeo solo con la app abierta. Despertar el vehículo consume batería del auto y está limitado a 3 veces cada 5 minutos.
+La Fleet API cobra por uso con un crédito gratuito mensual (ver la tabla vigente en el portal de Tesla). Lo que TECLA consume, con la app abierta en la pantalla del auto:
+
+| Situación | Consultas a Tesla |
+| --- | --- |
+| Auto despierto, cualquier pantalla (Inicio, Mi Tesla, Pantalla ambiente, arranque) | 1 lectura de `vehicle_data` cada 2 min (todas comparten la caché del servidor) |
+| Auto dormido | 1 consulta cada 10 min (solo confirma que duerme; no lo despierta) |
+| Lista de vehículos | 1 cada hora |
+| Pantalla Mi Tesla abierta | + cargadores cercanos cada 10 min (solo despierto) y historial cada 30 min |
+| «Actualizar» | 1 lectura por toque, máximo 6 por minuto |
+| «Despertar» | 1 wake-up por toque, máximo 3 cada 5 min (es la operación más cara y gasta batería) |
+| TECLA AI «¿cuánta batería tengo?» | usa la caché; solo consulta si pasaron más de 2 min |
+
+Con la pestaña oculta el sondeo se pausa. Dos horas diarias de uso con el auto despierto son unas 60 lecturas al día (≈1.800 al mes), muy por debajo del crédito gratuito con los precios publicados por Tesla en 2025. Despertar el vehículo consume batería del auto y es la única acción que conviene no automatizar.
 
 ## Fase 2 (pendiente)
 
