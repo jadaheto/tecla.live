@@ -34,11 +34,13 @@ export function StyleIntro() {
         show = false;
       }
     } else if (previous !== visualStyle) {
-      show = true;
+      // La rehidratación de preferencias también pasa de «tecla» al estilo guardado: si esta
+      // sesión ya mostró la escena de ese estilo, no se repite en cada carga de página.
       try {
+        show = sessionStorage.getItem(SESSION_KEY) !== visualStyle;
         sessionStorage.setItem(SESSION_KEY, visualStyle);
       } catch {
-        // Sin almacenamiento de sesión.
+        show = true;
       }
     }
     if (!show) return;

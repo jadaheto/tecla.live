@@ -1,4 +1,5 @@
 import { describeWeather } from "@/lib/weather-codes";
+import type { VisualStyle } from "@/types";
 
 /**
  * Traduce el clima real (código WMO de Open-Meteo, día/noche y viento) al
@@ -57,4 +58,76 @@ export function weatherFxPreset(input: { code: number; isDay: boolean; windSpeed
 export function particleCount(preset: WeatherFxPreset, width: number, height: number, scale = 1): number {
   const megapixels = (width * height) / 1_000_000;
   return Math.min(900, Math.round(preset.density * megapixels * scale));
+}
+
+/** Colores del efecto según el estilo visual activo (y el tema en el estilo TECLA). */
+export interface WeatherFxPalette {
+  /** Trazo de la lluvia. */
+  rain: string;
+  /** Velo que oscurece la pantalla en tormenta. */
+  veil: string;
+  /** Color del relámpago. */
+  flash: string;
+  /** Copos de nieve. */
+  snow: string;
+  /** Tono RGB («r, g, b») de la niebla y las nubes. */
+  fogTone: string;
+  /** Resplandor del sol (RGB «r, g, b»). */
+  sunTone: string;
+  /** Motas de luz con sol. */
+  mote: string;
+  /** Estrellas. */
+  star: string;
+}
+
+export function weatherFxPalette(style: VisualStyle, dark: boolean, isDay: boolean): WeatherFxPalette {
+  switch (style) {
+    case "cyberpunk":
+      // Lluvia ácida de Night City: amarillo neón con relámpagos cian.
+      return {
+        rain: "rgba(252, 238, 10, 0.82)",
+        veil: "rgba(8, 6, 20, 0.3)",
+        flash: "#00f0ff",
+        snow: "rgba(252, 238, 10, 0.9)",
+        fogTone: "0, 240, 255",
+        sunTone: "252, 238, 10",
+        mote: "rgba(0, 240, 255, 0.85)",
+        star: "rgba(252, 238, 10, 0.95)",
+      };
+    case "kitt":
+      // Rojo escáner con ámbar del tablero.
+      return {
+        rain: "rgba(255, 46, 46, 0.8)",
+        veil: "rgba(20, 0, 0, 0.3)",
+        flash: "#ffb000",
+        snow: "rgba(255, 176, 0, 0.9)",
+        fogTone: "255, 40, 40",
+        sunTone: "255, 176, 0",
+        mote: "rgba(255, 176, 0, 0.85)",
+        star: "rgba(255, 60, 60, 0.95)",
+      };
+    case "roadster":
+      // Rojo monocromo de cabina.
+      return {
+        rain: "rgba(255, 43, 43, 0.75)",
+        veil: "rgba(10, 0, 0, 0.28)",
+        flash: "#ff6b6b",
+        snow: "rgba(255, 43, 43, 0.85)",
+        fogTone: "255, 43, 43",
+        sunTone: "255, 43, 43",
+        mote: "rgba(255, 90, 90, 0.85)",
+        star: "rgba(255, 43, 43, 0.95)",
+      };
+    default:
+      return {
+        rain: dark ? "rgba(215, 228, 255, 0.75)" : "rgba(58, 78, 118, 0.62)",
+        veil: dark ? "rgba(10, 14, 28, 0.22)" : "rgba(40, 50, 80, 0.14)",
+        flash: "#f4f6ff",
+        snow: dark ? "rgba(255, 255, 255, 0.9)" : "rgba(110, 140, 185, 0.85)",
+        fogTone: isDay ? "255, 255, 255" : "190, 200, 220",
+        sunTone: "255, 214, 140",
+        mote: "rgba(255, 236, 200, 0.8)",
+        star: "rgba(255, 255, 255, 0.9)",
+      };
+  }
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useWeather } from "@/features/integrations/hooks";
-import { particleCount, weatherFxPreset, type WeatherFxPreset } from "@/features/weather/fx-presets";
+import { particleCount, weatherFxPalette, weatherFxPreset, type WeatherFxPreset } from "@/features/weather/fx-presets";
 import { usePreferences } from "@/stores/preferences";
 
 interface Particle {
@@ -31,6 +31,7 @@ interface Blob {
 export function WeatherFx() {
   const enabled = usePreferences((state) => state.weatherEffects);
   const reduceMotion = usePreferences((state) => state.reduceMotion);
+  const visualStyle = usePreferences((state) => state.visualStyle);
   const weather = useWeather();
   const code = weather.data?.code;
   const isDay = weather.data?.isDay ?? true;
@@ -103,18 +104,18 @@ export function WeatherFx() {
       context.clearRect(0, 0, width, height);
       context.globalAlpha = preset.opacity;
       const speedScale = height / 1080;
+      // Colores del estilo visual activo (lluvia ácida en Cyberpunk, rojo en KITT y Roadster…).
+      const palette = weatherFxPalette(visualStyle, document.documentElement.classList.contains("dark"), isDay);
 
       if (preset.kind === "rain" || preset.kind === "storm") {
         const angle = (preset.angle * Math.PI) / 180;
         const dx = Math.sin(angle);
         const dy = Math.cos(angle);
-        // Sobre fondo claro la lluvia se dibuja en azul grisáceo; sobre oscuro, en blanco azulado.
-        const dark = document.documentElement.classList.contains("dark");
         if (preset.kind === "storm") {
-          context.fillStyle = dark ? "rgba(10, 14, 28, 0.22)" : "rgba(40, 50, 80, 0.14)";
+          context.fillStyle = palette.veil;
           context.fillRect(0, 0, width, height);
         }
-        context.strokeStyle = dark ? "rgba(215, 228, 255, 0.75)" : "rgba(58, 78, 118, 0.62)";
+        context.strokeStyle = palette.rain;
         context.lineWidth = 1.4;
         context.lineCap = "round";
         context.beginPath();
@@ -139,14 +140,13 @@ export function WeatherFx() {
           }
           if (flashLevel > 0.01) {
             context.globalAlpha = flashLevel * 0.5;
-            context.fillStyle = "#f4f6ff";
+            context.fillStyle = palette.flash;
             context.fillRect(0, 0, width, height);
             flashLevel *= Math.pow(0.02, dt * 2.2);
           }
         }
       } else if (preset.kind === "snow") {
-        const dark = document.documentElement.classList.contains("dark");
-        context.fillStyle = dark ? "rgba(255, 255, 255, 0.9)" : "rgba(110, 140, 185, 0.85)";
+        context.fillStyle = palette.snow;
         for (const flake of particles) {
           flake.phase += dt * 1.6;
           const r = 1.2 + flake.z * 2.4;
@@ -165,9 +165,8 @@ export function WeatherFx() {
       } else if (preset.kind === "fog" || preset.kind === "clouds") {
         for (const blob of blobs) {
           const gradient = context.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.r);
-          const tone = isDay ? "255, 255, 255" : "190, 200, 220";
-          gradient.addColorStop(0, `rgba(${tone}, ${blob.a})`);
-          gradient.addColorStop(1, `rgba(${tone}, 0)`);
+          gradient.addColorStop(0, `rgba(${palette.fogTone}, ${blob.a})`);
+          gradient.addColorStop(1, `rgba(${palette.fogTone}, 0)`);
           context.fillStyle = gradient;
           context.fillRect(blob.x - blob.r, blob.y - blob.r, blob.r * 2, blob.r * 2);
           blob.x += blob.v * dt;
@@ -176,11 +175,11 @@ export function WeatherFx() {
       } else if (preset.kind === "sun") {
         // Luz cálida desde la esquina superior derecha con motas flotando.
         const glow = context.createRadialGradient(width, 0, 0, width, 0, Math.max(width, height) * 0.7);
-        glow.addColorStop(0, "rgba(255, 214, 140, 0.35)");
-        glow.addColorStop(1, "rgba(255, 214, 140, 0)");
+        glow.addColorStop(0, `rgba(${palette.sunTone}, 0.35)`);
+        glow.addColorStop(1, `rgba(${palette.sunTone}, 0)`);
         context.fillStyle = glow;
         context.fillRect(0, 0, width, height);
-        context.fillStyle = "rgba(255, 236, 200, 0.8)";
+        context.fillStyle = palette.mote;
         for (const mote of particles) {
           mote.phase += dt * 0.8;
           context.beginPath();
@@ -194,7 +193,7 @@ export function WeatherFx() {
           }
         }
       } else if (preset.kind === "stars") {
-        context.fillStyle = "rgba(255, 255, 255, 0.9)";
+        context.fillStyle = palette.star;
         for (const star of particles) {
           star.phase += dt * (0.6 + star.z);
           const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(star.phase));
@@ -227,7 +226,7 @@ export function WeatherFx() {
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [enabled, reduceMotion, preset, isDay]);
+  }, [enabled, reduceMotion, preset, isDay, visualStyle]);
 
   if (!enabled || reduceMotion || !preset || preset.kind === "none") return null;
   return <canvas ref={canvasRef} className="weather-fx" data-kind={preset.kind} aria-hidden />;

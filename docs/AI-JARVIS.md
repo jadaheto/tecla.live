@@ -66,6 +66,11 @@ Fortalezas: el modelo nunca anuncia acciones sin resultado real, las claves vive
 - **Voces curadas por entorno (2026-10-21):** la lista se define en `ELEVENLABS_VOICES` (`id|Nombre|grupo|género;…`, ver `.env.example`), el endpoint público `/api/ai/voices/public` la expone sin sesión y Ajustes la muestra a cualquier usuario: nadie necesita cuenta de ElevenLabs. Si la variable no existe, se usa una lista de respaldo en código.
 - **Voces curadas** (`src/lib/ai/elevenlabs/curated-voices.ts`): la voz del `.env` (Valeria, español latino, femenina) sigue siendo la predeterminada. En Ajustes se ofrecen además, en grupos: Español latino · Colombia (Alejandro, Alberto, Andrea de Medellín, Valentina de Medellín), Hombres populares (Brian, George, Daniel) y Mujeres populares (Sarah, Alice, Matilda), más cualquier otra voz de la cuenta. Los IDs son públicos; la clave sigue en el servidor y `/api/ai/tts` solo acepta voces curadas o de la cuenta. El modelo `eleven_flash_v2_5` es multilingüe: las voces en inglés hablan español con acento; para Jarvis en español se recomienda Alberto o Alejandro.
 
+## Clima con los colores del estilo (2026-10-27)
+
+- `weatherFxPalette(style, dark, isDay)` en `fx-presets.ts`: Cyberpunk → lluvia ácida amarilla `#fcee0a` con relámpagos cian y niebla cian; El auto fantástico → lluvia roja escáner, nieve y relámpagos ámbar; Roadster → rojo monocromo; TECLA → según el tema (azul grisáceo sobre claro, blanco azulado sobre oscuro). Afecta lluvia, velo de tormenta, relámpago, nieve, niebla/nubes, sol y estrellas.
+- Corrección en `StyleIntro`: la rehidratación de preferencias hacía pasar de «tecla» al estilo guardado en cada carga y mostraba la cortinilla siempre; ahora consulta `sessionStorage` también en ese caso (una vez por sesión).
+
 ## Efectos de clima en Inicio (2026-10-25)
 
 - `src/features/weather/fx-presets.ts` (lógica pura, probada): traduce el código WMO de Open-Meteo, día/noche y viento a un preset (`rain`, `storm`, `snow`, `fog`, `clouds`, `sun`, `stars`, `none`) con densidad, inclinación por viento, velocidad, relámpagos y opacidad.

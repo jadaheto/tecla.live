@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { particleCount, weatherFxPreset } from "@/features/weather/fx-presets";
+import { particleCount, weatherFxPalette, weatherFxPreset } from "@/features/weather/fx-presets";
 
 describe("weather effects presets", () => {
   it("maps Open-Meteo codes to the effect kinds", () => {
@@ -28,5 +28,13 @@ describe("weather effects presets", () => {
     expect(particleCount(storm, 1920, 1080, 1)).toBeLessThanOrEqual(900);
     expect(particleCount(storm, 1920, 1080, 0.5)).toBeLessThan(particleCount(storm, 1920, 1080, 1));
     expect(particleCount(weatherFxPreset({ code: 999, isDay: true }), 1920, 1080)).toBe(0);
+  });
+
+  it("colours the rain after the visual style", () => {
+    expect(weatherFxPalette("cyberpunk", true, true).rain).toContain("252, 238, 10");
+    expect(weatherFxPalette("cyberpunk", true, true).flash).toBe("#00f0ff");
+    expect(weatherFxPalette("kitt", true, true).rain).toContain("255, 46, 46");
+    expect(weatherFxPalette("roadster", true, false).star).toContain("255, 43, 43");
+    expect(weatherFxPalette("tecla", true, true).rain).not.toBe(weatherFxPalette("tecla", false, true).rain);
   });
 });
