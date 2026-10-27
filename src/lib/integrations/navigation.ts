@@ -66,6 +66,7 @@ export function buildNavigateToPlaceHref(
   provider: "waze" | "maps",
   place: GeoCoordinates & { label: string },
   from?: GeoCoordinates | null,
+  options: { start?: boolean } = {},
 ): string {
   if (!validCoordinates(place)) throw new Error("INVALID_COORDINATES");
   const params = new URLSearchParams({
@@ -75,6 +76,8 @@ export function buildNavigateToPlaceHref(
     label: place.label.trim().slice(0, 120),
   });
   if (from && validCoordinates(from)) params.set("from", `${from.latitude.toFixed(5)},${from.longitude.toFixed(5)}`);
+  // `nav=1`: Navegar arranca el modo navegación de inmediato si está configurado.
+  if (options.start) params.set("nav", "1");
   return `/navigate?${params.toString()}`;
 }
 

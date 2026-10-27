@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export function useMapsEmbedKey() {
   return useQuery({
     queryKey: ["maps-embed-key"],
-    queryFn: () => apiFetch<{ configured: boolean; key: string | null }>("/api/maps/embed-key"),
+    queryFn: () => apiFetch<{ configured: boolean; key: string | null; mapId: string | null; navigation: boolean }>("/api/maps/embed-key"),
     staleTime: 60 * 60_000,
     retry: 0,
   });

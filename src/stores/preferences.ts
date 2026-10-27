@@ -31,6 +31,8 @@ export interface PreferencesState {
   teslaVoiceAlerts: boolean;
   /** Umbral de batería baja (%). */
   teslaLowBatteryPercent: number;
+  /** Modo navegación: leer las maniobras con la voz de TECLA. */
+  navVoice: boolean;
   voiceEnabled: boolean;
   /** Al abrir TECLA AI, empieza a escuchar de inmediato (manos libres). */
   /** Nombre con el que el usuario llama al asistente. */
@@ -73,6 +75,7 @@ export const DEFAULT_PREFERENCES = {
   teslaChargeMode: true,
   teslaVoiceAlerts: true,
   teslaLowBatteryPercent: 20,
+  navVoice: true,
   voiceEnabled: true,
   aiName: "TECLA",
   aiAutoListen: true,
@@ -132,6 +135,7 @@ export const usePreferences = create<PreferencesState>()(
         teslaChargeMode: state.teslaChargeMode,
         teslaVoiceAlerts: state.teslaVoiceAlerts,
         teslaLowBatteryPercent: state.teslaLowBatteryPercent,
+        navVoice: state.navVoice,
         voiceEnabled: state.voiceEnabled,
         aiName: state.aiName,
         aiAutoListen: state.aiAutoListen,

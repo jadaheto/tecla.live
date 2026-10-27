@@ -17,7 +17,8 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
-import { GoogleRouteMap } from "@/components/navigation/google-route-map";
+import { GoogleRouteMap, useMapsEmbedKey } from "@/components/navigation/google-route-map";
+import { NavigationMode } from "@/components/navigation/navigation-mode";
 import { usePreferences } from "@/stores/preferences";
 import type { EmbedPlace } from "@/lib/integrations/google-maps-embed";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,15 @@ export function NavigatePage() {
   const embedDestination: EmbedPlace | null = place ? place.place : query || null;
   const embedOrigin: EmbedPlace | null = place?.from ?? browserOrigin ?? (originDenied ? { latitude: weatherLat, longitude: weatherLon } : null);
   const embedOriginLabel = place?.from ? "la posición de tu Tesla" : browserOrigin ? "tu ubicación actual" : originDenied ? "tu ciudad (sin permiso de ubicación)" : "pidiendo tu ubicación…";
+  // Modo navegación (mapa de Google inclinado que sigue al auto): requiere clave + Map ID.
+  const mapsConfig = useMapsEmbedKey();
+  const navigationReady = Boolean(mapsConfig.data?.navigation && mapsConfig.data.key && mapsConfig.data.mapId);
+  // «auto» (llegó con nav=1): arranca en cuanto haya clave y destino; «off» tras salir.
+  const [navState, setNavState] = React.useState<"auto" | "on" | "off">(() => (params.get("nav") === "1" ? "auto" : "off"));
+  const navigating = navState === "on" || (navState === "auto" && navigationReady && Boolean(embedDestination));
+  const setNavigating = (value: boolean) => setNavState(value ? "on" : "off");
+  const navOrigin = place?.from ? { lat: place.from.latitude, lng: place.from.longitude } : browserOrigin ? { lat: browserOrigin.latitude, lng: browserOrigin.longitude } : null;
+  const navDestination = place ? { lat: place.place.latitude, lng: place.place.longitude } : query;
   const [label, setLabel] = React.useState("");
   const [kind, setKind] = React.useState<DestinationKind>("custom");
   const [showForm, setShowForm] = React.useState(false);
@@ -165,6 +175,7 @@ export function NavigatePage() {
             originNote={originNote}
             embedDestination={embedDestination}
             embedOrigin={embedOrigin}
+            onStartNavigation={navigationReady && embedDestination ? () => setNavigating(true) : undefined}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -189,6 +200,7 @@ export function NavigatePage() {
             originNote={originNote}
             embedDestination={embedDestination}
             embedOrigin={embedOrigin}
+            onStartNavigation={navigationReady && embedDestination ? () => setNavigating(true) : undefined}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -201,6 +213,17 @@ export function NavigatePage() {
           />
         </TabsContent>
       </Tabs>
+
+      {navigating && navigationReady && mapsConfig.data?.key && mapsConfig.data.mapId && navDestination ? (
+        <NavigationMode
+          apiKey={mapsConfig.data.key}
+          mapId={mapsConfig.data.mapId}
+          origin={navOrigin}
+          destination={navDestination}
+          destinationLabel={query}
+          onExit={() => setNavigating(false)}
+        />
+      ) : null}
 
       {showForm ? (
         <form
@@ -345,6 +368,7 @@ function NavigationPanel({
   originNote,
   embedDestination,
   embedOrigin,
+  onStartNavigation,
   onSaveClick,
   onQuickSave,
   recent,
@@ -361,6 +385,7 @@ function NavigationPanel({
   originNote?: string | null;
   embedDestination: EmbedPlace | null;
   embedOrigin: EmbedPlace | null;
+  onStartNavigation?: () => void;
   onSaveClick: () => void;
   onQuickSave: (kind: DestinationKind) => void;
   recent: Array<{ query: string; provider: Provider }>;
@@ -396,7 +421,19 @@ function NavigationPanel({
         </form>
 
         {embedDestination ? (
-          <GoogleRouteMap destination={embedDestination} origin={embedOrigin} height={520} className="mt-4" />
+          <>
+            {onStartNavigation ? (
+              <button
+                type="button"
+                onClick={onStartNavigation}
+                className="mt-4 flex min-h-16 w-full items-center justify-center gap-3 rounded-[1.6rem] bg-[#4cc9ff] text-lg font-semibold text-[#03141c] shadow-[0_18px_44px_-18px_rgba(76,201,255,0.9)]"
+              >
+                <Navigation className="size-5" aria-hidden />
+                Iniciar navegación en TECLA
+              </button>
+            ) : null}
+            <GoogleRouteMap destination={embedDestination} origin={embedOrigin} height={520} className="mt-4" />
+          </>
         ) : null}
 
         <div className={cn("relative mt-4 min-h-[330px] overflow-hidden rounded-[2rem] border border-border bg-[#0a090d] p-6 text-white md:min-h-[380px] md:p-8", embedDestination && "min-h-0 md:min-h-0")}>

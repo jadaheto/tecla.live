@@ -250,3 +250,8 @@
 - [x] Maps Embed API (modo directions) en Navegar: origen Tesla → navegador → ciudad, nota de origen, «Seguir mi posición» (GPS, redibujo al moverse > 150 m), estado «no configurado», clave vía `/api/maps/embed-key`. Evidencia: `tests/unit/google-maps-embed.test.ts`, captura con el iframe simulado.
 - [ ] Bloqueado hasta que el usuario cree la clave en Google Cloud (facturación habilitada, restringida a `https://tecla.live/*` y a Maps Embed API) y la ponga en Easypanel como `GOOGLE_MAPS_EMBED_KEY`.
 - [ ] Descartadas por el usuario: enviar el destino al navegador del Tesla (comando firmado) y navegador propio con OSRM.
+
+## FASE 16 — MODO NAVEGACIÓN (2026-10-27)
+
+- [x] `NavigationMode`: mapa vectorial de Google (Map ID) inclinado y orientado al rumbo, seguimiento del auto, tráfico, ruta con Routes API, maniobra actual y siguiente, llegada estimada, recálculo por desvío, voz de TECLA opcional (`navVoice`), wake lock, salida. Botón en Navegar y arranque directo desde Cargadores («Ir» → `nav=1`). Evidencia: `tests/unit/guidance.test.ts` (141 unitarias), build.
+- [ ] Verificar en tecla.live con la clave real y el Map ID: carga del mapa vectorial en el navegador del Tesla, ruta real y avisos por voz en marcha.

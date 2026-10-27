@@ -62,7 +62,7 @@ export function ChargersExplorer({
   /** «Ir»: pasa a Navegar con el destino por coordenadas; el origen es la posición del Tesla o la ubicación actual. */
   function go(provider: "waze" | "maps") {
     if (!selected) return;
-    router.push(buildNavigateToPlaceHref(provider, { latitude: selected.latitude, longitude: selected.longitude, label: selected.name }, originKind === "car" ? origin : null));
+    router.push(buildNavigateToPlaceHref(provider, { latitude: selected.latitude, longitude: selected.longitude, label: selected.name }, originKind === "car" ? origin : null, { start: provider === "waze" }));
   }
 
   React.useEffect(() => {

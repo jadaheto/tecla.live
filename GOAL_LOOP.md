@@ -84,6 +84,7 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 25 | Estaciones de carga con el widget oficial de PlugShare | `/cargadores` + sección en Mi Tesla; typecheck, lint, 127 unitarias, captura, build | Completada local; push → Easypanel; términos del widget pendientes de aceptar por el usuario |
 | 26 | Pestaña «Cargadores»: mapa propio (Leaflet/OSM), estaciones de Open Charge Map y ruta OSRM a la estación elegida | 2 rutas API, explorador reutilizado en Mi Tesla; typecheck, lint, 130 unitarias, capturas, build | Completada local; push → Easypanel; clave OCM pendiente del usuario |
 | 27 | Ruta de Google embebida en Navegar (Maps Embed API) con seguimiento GPS | componente, endpoint de clave, origen resuelto; typecheck, lint, 135 unitarias, captura, build | Completada local; push → Easypanel; clave de Google pendiente del usuario |
+| 28 | Modo navegación estilo Waze dentro de TECLA (Maps JavaScript API + Routes API + Map ID) | guía pura probada, overlay con mapa inclinado, voz, recálculo; typecheck, lint, 141 unitarias, build | Completada local; push → Easypanel; prueba real en el carro pendiente |
 
 ## ÚLTIMA ACCIÓN
 

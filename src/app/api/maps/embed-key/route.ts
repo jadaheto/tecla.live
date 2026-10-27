@@ -10,5 +10,10 @@ export const dynamic = "force-dynamic";
  * y por API configurada en Google Cloud, documentada en docs/NAVIGATION.md.
  */
 export async function GET() {
-  return jsonOk({ configured: Boolean(serverConfig.googleMapsEmbedKey), key: serverConfig.googleMapsEmbedKey || null });
+  return jsonOk({
+    configured: Boolean(serverConfig.googleMapsEmbedKey),
+    key: serverConfig.googleMapsEmbedKey || null,
+    mapId: serverConfig.googleMapsMapId || null,
+    navigation: Boolean(serverConfig.googleMapsEmbedKey && serverConfig.googleMapsMapId),
+  });
 }

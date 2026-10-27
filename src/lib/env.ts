@@ -46,6 +46,8 @@ export const serverConfig = {
   openChargeMapApiKey: trim(process.env.OPENCHARGEMAP_API_KEY),
   // Google Maps Embed API (ruta dentro de Navegar). Clave pública por diseño; restringir por referente.
   googleMapsEmbedKey: trim(process.env.GOOGLE_MAPS_EMBED_KEY),
+  // Map ID vectorial (inclinación y giro) para el modo navegación. Identificador público.
+  googleMapsMapId: trim(process.env.GOOGLE_MAPS_MAP_ID),
   limits: {
     maxInputTokens: intFromEnv("AI_MAX_INPUT_TOKENS", 6000, 500, 128_000),
     maxOutputTokens: intFromEnv("AI_MAX_OUTPUT_TOKENS", 700, 100, 8192),
