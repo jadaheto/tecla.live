@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Search, Settings2, Sparkles, Sun, SunMoon } from "lucide-react";
+import { Moon, Orbit, QrCode, Search, Settings2, Sparkles, Sun, SunMoon } from "lucide-react";
 import { TeclaLogo } from "@/components/layout/tecla-logo";
 import { KittScanner } from "@/components/kitt/kitt-scanner";
 import { RoadsterHud } from "@/components/roadster/roadster-hud";
@@ -29,6 +29,8 @@ const NAV_LINKS = [
 export function Header() {
   const pathname = usePathname();
   const setSearchOpen = useUi((state) => state.setSearchOpen);
+  const setAmbientOpen = useUi((state) => state.setAmbientOpen);
+  const setRemoteOpen = useUi((state) => state.setRemoteOpen);
   const theme = usePreferences((state) => state.theme);
   const setPreferences = usePreferences((state) => state.setPreferences);
 
@@ -121,6 +123,34 @@ export function Header() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Cambiar tema</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setAmbientOpen(true)}
+                aria-label="Pantalla ambiente"
+                className="hidden md:inline-flex"
+              >
+                <Orbit className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Pantalla ambiente</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setRemoteOpen(true)}
+                aria-label="Control remoto"
+                className="hidden md:inline-flex"
+              >
+                <QrCode className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Control remoto desde el celular</TooltipContent>
           </Tooltip>
           <div className="hidden sm:block">
             <FullscreenButton />

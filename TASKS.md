@@ -199,3 +199,13 @@
 - [ ] Acceso a Easypanel y DNS de tecla.live — no disponible; despliegue no verificado.
 - [ ] Navegador del Tesla — prueba física pendiente.
 - [ ] Credenciales de Twitch — búsqueda interna no implementada; embed oficial disponible.
+
+## FASE 9 — EXPERIENCIA FUTURISTA (2026-10-27)
+
+- [x] Secuencia de arranque «tipo nave» (`bootSequence`): chequeo de sistemas con estado real, briefing y textos por estilo; toque abre TECLA AI por voz si el saludo está activo. Evidencia: `tests/unit/boot-steps.test.ts`, capturas en los cuatro estilos.
+- [x] Orbe de TECLA AI con contorno y anillo deformados por el nivel real de voz, ondas en los picos y colores Cyberpunk.
+- [x] Pantalla ambiente (`ambientIdleMinutes`, cabecera, voz `set_display_mode: ambient`, control remoto): reloj, clima, carátula, controles, partículas del estilo y desplazamiento antiquemado. Evidencia: `tests/unit/ambient-rules.test.ts`, capturas TECLA y KITT.
+- [x] Telemetría GPS en Drive: rumbo (con respaldo por dirección entre fixes), altitud, viaje, máx/prom, cronómetro 0–100 con mejor marca; pérdidas momentáneas de señal no fatales. Evidencia: `tests/unit/telemetry.test.ts`, GPS simulado en Playwright.
+- [x] Control remoto por QR: salas en memoria con código + token, SSE al auto, página móvil `/remote/[code]`, contrato Zod de órdenes. Evidencia: `tests/unit/remote.test.ts`, prueba E2E auto ↔ celular (volumen, navegación, pantalla ambiente). Ver `docs/REMOTE.md`.
+- [ ] Probar en el Tesla: arranque y briefing por voz, rumbo/altitud reales del GPS, QR escaneado desde un celular real.
+- [ ] Si tecla.live corre con varias réplicas, mover las salas del control remoto a PostgreSQL/Redis.

@@ -26,6 +26,9 @@ export interface DriveStoreState {
   demoMode: boolean;
   /** Volumen reducido para parqueaderos y zonas residenciales. */
   silentMode: boolean;
+  /** Mejor 0–100 km/h medido con GPS (ms). */
+  bestLaunchMs: number | null;
+  setBestLaunch: (ms: number | null) => void;
   setSilentMode: (value: boolean) => void;
   setAutoScene: (value: boolean) => void;
   setPerformanceMode: (value: boolean) => void;
@@ -52,6 +55,8 @@ export const useDriveStore = create<DriveStoreState>()(
       performanceMode: false,
       demoMode: false,
       silentMode: false,
+      bestLaunchMs: null,
+      setBestLaunch: (bestLaunchMs) => set({ bestLaunchMs }),
       setSilentMode: (silentMode) => set({ silentMode }),
       setAutoScene: (autoScene) => set({ autoScene }),
       setPerformanceMode: (performanceMode) => set({ performanceMode }),
@@ -85,6 +90,7 @@ export const useDriveStore = create<DriveStoreState>()(
         performanceMode: state.performanceMode,
         demoMode: state.demoMode,
         silentMode: state.silentMode,
+        bestLaunchMs: state.bestLaunchMs,
       }),
     },
   ),

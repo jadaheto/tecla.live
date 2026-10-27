@@ -76,6 +76,7 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 19 | TECLA DRIVE v3 para el Tesla | arranque de un toque, HUD autoocultable, panel como capa, modo demo aparte, GPS robusto con rumbo, escena automática, estacionado, modo rendimiento, AudioWorklet con paridad probada, `drive_control`; typecheck, lint, 61 unitarias, build Docker y E2E | Completada local; contenedor :3000 reemplazado |
 | 18 | Jarvis + Cyberpunk 2077 + Spotify real | persona configurable en el prompt, estilo visual con tipografía Rajdhani, `search_spotify`/`play_spotify`, Web Playback SDK, Drive junto a Spotify; typecheck, lint, 57 unitarias, build Docker y E2E (sin cuenta) verdes | Completada local; contenedor :3000 reemplazado |
 | 17 | TECLA DRIVE v2 (prototipo HTML del usuario portado a TS) | carretera pseudo-3D, 10 escenas, 26 motores, transmisión, REV/0–100/paseo/GPS, estudio; typecheck, lint, 57 unitarias, build Docker y E2E de Drive verdes | Completada local; pendiente redespliegue |
+| 20 | Fase 9: arranque tipo nave, orbe reactivo, Pantalla ambiente, telemetría GPS y control remoto por QR | typecheck, lint (0 errores), 111 unitarias, Playwright (arranque ×4 estilos, ambiente, remoto auto↔celular, Drive con GPS simulado), build de producción | Completada local; push a GitHub → Easypanel |
 
 ## ÚLTIMA ACCIÓN
 

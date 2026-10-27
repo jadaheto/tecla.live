@@ -12,6 +12,8 @@ export interface DriveFix {
   accuracy: number;
   speed: number | null;
   heading: number | null;
+  /** Altitud sobre el nivel del mar (m) si el dispositivo la reporta. */
+  altitude: number | null;
 }
 
 export type DriveGeoQuality = "good" | "fair" | "poor";
@@ -27,6 +29,12 @@ export interface DriveGeoState {
   turnRateDegPerSec: number;
   /** Segundos desde el último fix válido. */
   staleSeconds: number;
+  /** Rumbo en grados (0 = norte) del último fix con rumbo válido. */
+  heading: number | null;
+  /** Altitud (m) del último fix que la reportó. */
+  altitudeM: number | null;
+  /** Último fix recibido, para la telemetría de viaje. */
+  lastFix: DriveFix | null;
 }
 
 /** Tras este tiempo sin fix se conserva la velocidad; después decae. */
@@ -75,6 +83,17 @@ export function distanceMeters(a: DriveFix, b: DriveFix): number {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/** Rumbo (0–360, 0 = norte) desde `a` hacia `b`; respaldo cuando el dispositivo no reporta heading. */
+export function bearingDegrees(a: Pick<DriveFix, "latitude" | "longitude">, b: Pick<DriveFix, "latitude" | "longitude">): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const lat1 = toRad(a.latitude);
+  const lat2 = toRad(b.latitude);
+  const dLon = toRad(b.longitude - a.longitude);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
 /**
  * Prioriza la velocidad que reporta el dispositivo (m/s) y, si no existe,
  * la calcula con la distancia Haversine entre dos fixes. Devuelve km/h.
@@ -103,6 +122,10 @@ function toFix(position: GeolocationPosition): DriveFix {
       typeof position.coords.heading === "number" && Number.isFinite(position.coords.heading)
         ? position.coords.heading
         : null,
+    altitude:
+      typeof position.coords.altitude === "number" && Number.isFinite(position.coords.altitude)
+        ? position.coords.altitude
+        : null,
   };
 }
 
@@ -114,6 +137,9 @@ const IDLE_STATE: DriveGeoState = {
   quality: null,
   turnRateDegPerSec: 0,
   staleSeconds: 0,
+  heading: null,
+  altitudeM: null,
+  lastFix: null,
 };
 
 function geoErrorMessage(code: number): string {
@@ -216,7 +242,7 @@ export function useDriveGeolocation(onFailure?: (message: string) => void) {
               smoothedRef.current > 0 ? smoothedRef.current * 0.55 + raw * 0.45 : raw;
             smoothedRef.current = smoothed;
           }
-          setState({
+          setState((before) => ({
             status: "active",
             speedKmh: raw !== null ? Math.min(MAX_SPEED, Math.max(0, smoothedRef.current)) : 0,
             accuracyM: fix.accuracy,
@@ -224,11 +250,19 @@ export function useDriveGeolocation(onFailure?: (message: string) => void) {
             quality: qualityFromAccuracy(fix.accuracy),
             turnRateDegPerSec: turnRef.current,
             staleSeconds: 0,
-          });
+            // Sin rumbo del dispositivo, se deduce de la dirección entre fixes (solo en marcha).
+            heading:
+              fix.heading ??
+              (previous && raw !== null && raw > 4 && distanceMeters(previous, fix) > 3 ? bearingDegrees(previous, fix) : before.heading),
+            altitudeM: fix.altitude ?? before.altitudeM,
+            lastFix: fix,
+          }));
         },
         (error) => {
-          // Un timeout con fixes previos no es fatal: la retención de velocidad sigue activa.
+          // Un timeout, o una pérdida momentánea de señal con fixes recientes, no es fatal:
+          // la retención de velocidad sigue activa y el siguiente fix retoma el ritmo.
           if (error.code === 3 && lastFixAtRef.current) return;
+          if (error.code === 2 && lastFixAtRef.current && Date.now() - lastFixAtRef.current < 15_000) return;
           if (staleTimerRef.current !== null) {
             window.clearInterval(staleTimerRef.current);
             staleTimerRef.current = null;

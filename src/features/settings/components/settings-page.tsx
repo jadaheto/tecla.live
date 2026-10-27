@@ -26,6 +26,9 @@ import {
   Trash2,
   Volume2,
   Wifi,
+  Orbit,
+  QrCode,
+  Smartphone,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +45,7 @@ import {
 import { AccountSection } from "@/features/settings/components/account-section";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { usePreferences } from "@/stores/preferences";
+import { useUi } from "@/stores/ui";
 import { useLibrary } from "@/stores/library";
 import { useAi } from "@/features/ai/store";
 import { useAiMemory } from "@/stores/ai-memory";
@@ -77,6 +81,8 @@ interface PlaceResponse {
 export function SettingsPage() {
   const preferences = usePreferences();
   const setPreferences = usePreferences((state) => state.setPreferences);
+  const setAmbientOpen = useUi((state) => state.setAmbientOpen);
+  const setRemoteOpen = useUi((state) => state.setRemoteOpen);
   const integrations = useIntegrations();
   const favorites = useLibrary((state) => state.favorites);
   const history = useLibrary((state) => state.history);
@@ -355,6 +361,16 @@ export function SettingsPage() {
               />
             </SettingRow>
             <SettingRow
+              title="Secuencia de arranque"
+              description="Al abrir TECLA LIVE, una vez por sesión: chequeo de sistemas (clima, TECLA AI, voz, Spotify, YouTube, GPS y audio) en el lenguaje del estilo activo, con el briefing del día. Con «Saludo al iniciar» activo, tocar la pantalla abre TECLA AI para escucharlo."
+            >
+              <Switch
+                checked={preferences.bootSequence}
+                onCheckedChange={(checked) => setPreferences({ bootSequence: checked })}
+                aria-label="Secuencia de arranque"
+              />
+            </SettingRow>
+            <SettingRow
               title="Reducir animaciones"
               description="Recomendado si notas movimiento pesado en el vehículo. También respeta la preferencia del sistema."
             >
@@ -396,6 +412,29 @@ export function SettingsPage() {
                   { value: "kiosk", label: "Kiosco", icon: Accessibility },
                 ]}
               />
+            </SettingRow>
+            <SettingRow
+              title="Pantalla ambiente"
+              description="Reloj grande, clima y carátula sobre fondo oscuro, con partículas del estilo activo; el contenido se desplaza para no marcar la pantalla. Ideal con el auto detenido o cargando. Se activa sola tras estos minutos sin tocar la pantalla (nunca sobre un video ni en Drive), desde la cabecera, o diciéndole a TECLA AI «pon la pantalla ambiente»."
+              className="flex-col items-start"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Segmented<"0" | "5" | "10" | "20">
+                  ariaLabel="Minutos para la pantalla ambiente"
+                  value={String(preferences.ambientIdleMinutes) as "0" | "5" | "10" | "20"}
+                  onChange={(value) => setPreferences({ ambientIdleMinutes: Number(value) })}
+                  options={[
+                    { value: "0", label: "Nunca" },
+                    { value: "5", label: "5 min" },
+                    { value: "10", label: "10 min" },
+                    { value: "20", label: "20 min" },
+                  ]}
+                />
+                <Button variant="glass" size="sm" onClick={() => setAmbientOpen(true)}>
+                  <Orbit className="size-3.5" aria-hidden />
+                  Activar ahora
+                </Button>
+              </div>
             </SettingRow>
             <SettingRow
               title="Modo de pantalla completa"
@@ -760,6 +799,30 @@ export function SettingsPage() {
                 con las coordenadas guardadas.
               </p>
             </div>
+          </SettingsSection>
+
+          <SettingsSection
+            id="control-remoto"
+            icon={Smartphone}
+            title="Control remoto"
+            description="Un pasajero escanea un código QR y controla la música, abre pantallas y le pide cosas a TECLA AI desde su celular, sin instalar nada."
+          >
+            <SettingRow
+              title="Permitir control remoto"
+              description="Mientras está activo, el auto mantiene una sala en el servidor con un código de seis letras. Solo acepta órdenes conocidas (reproducir, pausar, siguiente, volumen, abrir pantallas, pantalla ambiente, estilo y preguntas a TECLA AI). El código caduca tras 3 horas sin uso o al apagar este interruptor."
+            >
+              <Switch
+                checked={preferences.remoteControl}
+                onCheckedChange={(checked) => setPreferences({ remoteControl: checked })}
+                aria-label="Permitir control remoto"
+              />
+            </SettingRow>
+            <SettingRow title="Código QR" description="Muéstralo al pasajero para que lo escanee con la cámara del celular.">
+              <Button variant="glass" size="sm" onClick={() => setRemoteOpen(true)}>
+                <QrCode className="size-3.5" aria-hidden />
+                Ver código QR
+              </Button>
+            </SettingRow>
           </SettingsSection>
 
           <SettingsSection

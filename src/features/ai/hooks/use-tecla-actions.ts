@@ -10,6 +10,7 @@ import { getMediaController } from "@/features/media/player-bridge";
 import { APP_BY_ID, ALLOWED_APP_IDS } from "@/lib/catalog";
 import { buildNavigateHref } from "@/lib/integrations/navigation";
 import { usePreferences } from "@/stores/preferences";
+import { useUi } from "@/stores/ui";
 import { useLibrary } from "@/stores/library";
 import { usePlayer } from "@/stores/player";
 import { useAiMemory } from "@/stores/ai-memory";
@@ -302,6 +303,14 @@ async function executeAction(
 
     case "set_display_mode": {
       const input = TOOL_SCHEMAS.set_display_mode.parse(args);
+      if (input.mode === "ambient") {
+        useUi.getState().setAmbientOpen(true);
+        return {
+          ok: true,
+          content: { ok: true, message: "Pantalla ambiente activada: reloj, clima y carátula. Tocar la pantalla la cierra." },
+          summary: "Pantalla ambiente activada",
+        };
+      }
       if (input.mode === "audio") {
         usePreferences.getState().setPreferences({ watchAudioMode: true });
         return {

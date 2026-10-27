@@ -113,7 +113,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: "set_display_mode",
     execution: "client",
-    description: "Cambia el modo de pantalla: normal, cine, kiosco o audio (modo conducción del reproductor de YouTube: carátula y controles grandes mientras suena el audio).",
+    description: "Cambia el modo de pantalla: normal, cine, kiosco, audio (modo conducción del reproductor de YouTube: carátula y controles grandes mientras suena el audio) o ambient (pantalla ambiente con reloj, clima y carátula; «pon la pantalla ambiente», «modo reposo»).",
     schema: TOOL_SCHEMAS.set_display_mode,
   },
   {

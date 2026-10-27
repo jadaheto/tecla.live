@@ -11,6 +11,10 @@ import { ShortcutsDialog } from "@/components/layout/shortcuts-dialog";
 import { MiniPlayer } from "@/components/media/mini-player";
 import { PlaybackProvider } from "@/components/media/playback-provider";
 import { StyleIntro } from "@/components/style-intro";
+import { BootSequence } from "@/components/boot-sequence";
+import { AmbientScreen } from "@/components/ambient/ambient-screen";
+import { RemoteProvider } from "@/components/remote/remote-provider";
+import { RemoteDialog } from "@/components/remote/remote-dialog";
 import { usePreferences } from "@/stores/preferences";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +24,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const setPreferences = usePreferences((state) => state.setPreferences);
   const isPlayer = pathname.startsWith("/watch/");
   const isImmersive = displayMode === "cinema" || displayMode === "kiosk";
+
+  // El control remoto del celular es una pantalla aparte: sin cabecera, reproductor ni asistente.
+  if (pathname.startsWith("/remote/")) {
+    return <div className="relative min-h-dvh">{children}</div>;
+  }
 
   return (
     <div className="relative flex min-h-dvh flex-col">
@@ -65,6 +74,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <MiniPlayer pathname={pathname} />
       <AiDock />
       <WakeWordListener />
+      <RemoteProvider />
+      <RemoteDialog />
+      <AmbientScreen />
+      <BootSequence />
       <StyleIntro />
     </div>
   );

@@ -1,0 +1,174 @@
+"use client";
+
+import * as React from "react";
+import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { bootDuration, bootTitles, buildBootSteps } from "@/features/boot/boot-steps";
+import { buildGreeting } from "@/features/ai/greeting";
+import { effectivePersona } from "@/features/ai/persona";
+import { openAssistant } from "@/features/ai/open-assistant";
+import { useIntegrations, useWeather } from "@/features/integrations/hooks";
+import { apiFetch } from "@/lib/http";
+import { useLibrary } from "@/stores/library";
+import { usePlayer } from "@/stores/player";
+import { usePreferences } from "@/stores/preferences";
+import { cn } from "@/lib/utils";
+
+const SESSION_KEY = "tecla-boot";
+const INTRO_KEY = "tecla-style-intro";
+
+interface SpotifyStatusLite {
+  configured: boolean;
+  connected: boolean;
+}
+
+/** Espera a que las preferencias guardadas estén cargadas (persist con skipHydration). */
+function usePreferencesHydrated(): boolean {
+  return React.useSyncExternalStore(
+    (onChange) => usePreferences.persist.onFinishHydration(onChange),
+    () => usePreferences.persist.hasHydrated(),
+    () => false,
+  );
+}
+
+/**
+ * Arranque «tipo nave»: una vez por sesión, al abrir la app, un chequeo de
+ * sistemas con el estado real de clima, TECLA AI, voz, Spotify, YouTube,
+ * GPS y audio, en el lenguaje visual del estilo activo. Termina con el
+ * briefing (hora, clima, lo pendiente). Tocar la pantalla lo cierra y, si
+ * el «Saludo al iniciar» está activo, abre TECLA AI para oír el briefing.
+ */
+export function BootSequence() {
+  const pathname = usePathname();
+  const hydrated = usePreferencesHydrated();
+  const enabled = usePreferences((state) => state.bootSequence);
+  const visualStyle = usePreferences((state) => state.visualStyle);
+  const reduceMotion = usePreferences((state) => state.reduceMotion);
+  const aiPersona = usePreferences((state) => state.aiPersona);
+  const speakGreeting = usePreferences((state) => state.speakGreeting);
+  const voiceEnabled = usePreferences((state) => state.voiceEnabled);
+  const micConsent = usePreferences((state) => state.micConsent);
+  const wakeWordEnabled = usePreferences((state) => state.wakeWordEnabled);
+  const [visible, setVisible] = React.useState(false);
+  const [phase, setPhase] = React.useState<"running" | "ready" | "closing">("running");
+  const integrations = useIntegrations();
+  const weather = useWeather();
+  const history = useLibrary((state) => state.history);
+  const nowPlaying = usePlayer((state) => state.current?.title ?? null);
+  const spotifyConfigured = integrations.data?.integrations.spotify ?? false;
+  const spotifyStatus = useQuery({
+    queryKey: ["spotify-status"],
+    queryFn: () => apiFetch<SpotifyStatusLite>("/api/spotify/status"),
+    enabled: visible && spotifyConfigured,
+    staleTime: 30_000,
+    retry: 0,
+  });
+
+  // Decide una sola vez por sesión, en cuanto se conocen las preferencias.
+  React.useEffect(() => {
+    if (!hydrated || pathname.startsWith("/remote/")) return;
+    const prefs = usePreferences.getState();
+    if (!prefs.bootSequence) return;
+    try {
+      if (sessionStorage.getItem(SESSION_KEY) === "1") return;
+      sessionStorage.setItem(SESSION_KEY, "1");
+      // La cortinilla de estilo no se repite: el arranque ya va en el lenguaje del estilo.
+      sessionStorage.setItem(INTRO_KEY, prefs.visualStyle);
+    } catch {
+      return;
+    }
+    setVisible(true);
+  }, [hydrated, pathname]);
+
+  const persona = effectivePersona({ aiPersona, visualStyle });
+  const voiceBriefing =
+    speakGreeting && voiceEnabled && micConsent && (integrations.data?.integrations.elevenlabs ?? false) && (integrations.data?.integrations.deepseek ?? false);
+
+  const steps = React.useMemo(
+    () =>
+      buildBootSteps({
+        integrations: integrations.data ? integrations.data.integrations : null,
+        weather: weather.data ? { temperature: weather.data.temperature, label: weather.data.label, location: weather.data.location } : null,
+        spotifyLinked: !spotifyConfigured ? false : spotifyStatus.data ? spotifyStatus.data.connected : null,
+        secureContext: typeof window !== "undefined" ? window.isSecureContext : true,
+        geolocation: typeof navigator !== "undefined" && "geolocation" in navigator,
+        nowPlaying,
+        wakeWord: wakeWordEnabled,
+      }),
+    [integrations.data, weather.data, spotifyConfigured, spotifyStatus.data, nowPlaying, wakeWordEnabled],
+  );
+
+  const briefing = React.useMemo(() => {
+    const pending = history.find(
+      (entry) => entry.kind === "youtube" && entry.positionSeconds > 30 && entry.durationSeconds > 0 && entry.positionSeconds < entry.durationSeconds * 0.92,
+    );
+    return buildGreeting({
+      hour: new Date().getHours(),
+      persona,
+      weather: weather.data ? { temperature: weather.data.temperature, label: weather.data.label, location: weather.data.location } : null,
+      pendingTitle: pending?.title ?? nowPlaying,
+    });
+  }, [history, persona, weather.data, nowPlaying]);
+
+  const timing = bootDuration(steps.length, reduceMotion);
+
+  const close = React.useCallback((withVoice: boolean) => {
+    setPhase("closing");
+    window.setTimeout(() => setVisible(false), 380);
+    if (withVoice) openAssistant({ mode: "voice" });
+  }, []);
+
+  React.useEffect(() => {
+    if (!visible) return;
+    const readyTimer = window.setTimeout(() => setPhase("ready"), 500 + steps.length * timing.stepMs);
+    const closeTimer = window.setTimeout(() => close(false), timing.totalMs);
+    return () => {
+      window.clearTimeout(readyTimer);
+      window.clearTimeout(closeTimer);
+    };
+    // La duración queda fijada al mostrarse; los pasos que lleguen después se pintan igual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  if (!visible || !enabled) return null;
+  const titles = bootTitles(visualStyle);
+  const okCount = steps.filter((step) => step.state === "ok").length;
+
+  return (
+    <div
+      className={cn("boot-seq", phase === "closing" && "boot-seq--closing")}
+      data-style={visualStyle}
+      role="status"
+      aria-live="polite"
+      onClick={() => close(voiceBriefing)}
+    >
+      <div className="boot-seq__grid" aria-hidden />
+      <div className="boot-seq__stage">
+        <p className="boot-seq__eyebrow">{titles.eyebrow}</p>
+        <h2 className="boot-seq__title">{phase === "running" ? titles.title : titles.ready}</h2>
+        <ol className="boot-seq__list">
+          {steps.map((step, index) => (
+            <li
+              key={step.id}
+              className="boot-seq__step"
+              data-state={step.state}
+              style={{ animationDelay: `${500 + index * timing.stepMs}ms` }}
+            >
+              <span className="boot-seq__dot" aria-hidden />
+              <span className="boot-seq__label">{step.label}</span>
+              <span className="boot-seq__detail">{step.detail}</span>
+              <span className="boot-seq__state">{step.state === "ok" ? "OK" : step.state === "warn" ? "ATN" : "OFF"}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="boot-seq__bar" aria-hidden>
+          <span style={{ animationDuration: `${500 + steps.length * timing.stepMs}ms` }} />
+        </div>
+        <p className={cn("boot-seq__briefing", phase !== "running" && "boot-seq__briefing--show")}>{briefing}</p>
+        <p className="boot-seq__hint">
+          {okCount} de {steps.length} sistemas listos · {voiceBriefing ? "toca para escuchar el briefing" : "toca para continuar"}
+        </p>
+      </div>
+    </div>
+  );
+}

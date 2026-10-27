@@ -49,6 +49,8 @@ import {
   type WeatherGroup,
 } from "./drive-config";
 import { useDriveGeolocation } from "./drive-geolocation";
+import { DriveTelemetry } from "./drive-telemetry";
+import { useDriveTelemetry } from "./use-drive-telemetry";
 import { describeDriveState } from "./engine-model";
 import { useDriveEngine } from "./use-drive-engine";
 
@@ -319,6 +321,7 @@ export function DriveExperience() {
   );
   const geo = useDriveGeolocation(handleGeoFailure);
   const gpsActive = geo.status === "active" || geo.status === "requesting";
+  const telemetry = useDriveTelemetry(geo, gpsActive && !demoMode);
   const stopGeolocation = geo.stop;
   const startGeolocation = geo.start;
 
@@ -754,6 +757,19 @@ export function DriveExperience() {
             ) : null}
           </div>
         </div>
+
+        {geo.status === "active" && !demoMode ? (
+          <DriveTelemetry
+            geo={geo}
+            trip={telemetry.trip}
+            launch={telemetry.launch}
+            bestLaunchMs={telemetry.bestLaunchMs}
+            useKmh={useKmh}
+            accent={scene.accent}
+            onReset={telemetry.reset}
+            className={cn("mb-3", hudClass)}
+          />
+        ) : null}
 
         <div className={cn("flex flex-wrap items-end justify-between gap-3", hudClass)}>
           <div className="min-w-0">

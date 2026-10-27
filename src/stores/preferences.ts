@@ -19,6 +19,12 @@ export interface PreferencesState {
   ambientBackground: boolean;
   /** Lluvia, nieve, niebla, nubes, sol o estrellas sobre Inicio según el clima real. */
   weatherEffects: boolean;
+  /** Secuencia de arranque (chequeo de sistemas) al abrir la app, una vez por sesión. */
+  bootSequence: boolean;
+  /** Minutos sin tocar la pantalla antes de pasar a Pantalla ambiente (0 = nunca). */
+  ambientIdleMinutes: number;
+  /** Control remoto desde el celular (código QR). */
+  remoteControl: boolean;
   voiceEnabled: boolean;
   /** Al abrir TECLA AI, empieza a escuchar de inmediato (manos libres). */
   /** Nombre con el que el usuario llama al asistente. */
@@ -55,6 +61,9 @@ export const DEFAULT_PREFERENCES = {
   reduceMotion: false,
   ambientBackground: true,
   weatherEffects: true,
+  bootSequence: true,
+  ambientIdleMinutes: 10,
+  remoteControl: false,
   voiceEnabled: true,
   aiName: "TECLA",
   aiAutoListen: true,
@@ -108,6 +117,9 @@ export const usePreferences = create<PreferencesState>()(
         reduceMotion: state.reduceMotion,
         ambientBackground: state.ambientBackground,
         weatherEffects: state.weatherEffects,
+        bootSequence: state.bootSequence,
+        ambientIdleMinutes: state.ambientIdleMinutes,
+        remoteControl: state.remoteControl,
         voiceEnabled: state.voiceEnabled,
         aiName: state.aiName,
         aiAutoListen: state.aiAutoListen,

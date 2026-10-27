@@ -60,6 +60,8 @@ Next.js 16.4.2 (App Router) · React 19.3.1 · TypeScript 5.9.3 estricto · Tail
 - [x] Dockerfile multi-stage no root, health check; Dockerfile.migrate; docker-compose con PostgreSQL, migración y app; build e2e de contenedor verificado.
 - [x] 51 pruebas unitarias y 28 pruebas E2E (Playwright) aprobadas; lint sin errores.
 
+- [x] Fase 9 (2026-10-27): secuencia de arranque con chequeo real de sistemas, orbe deformado por la voz, Pantalla ambiente (manual, voz, remoto o por inactividad), telemetría GPS en Drive (rumbo, altitud, viaje, 0–100) y control remoto por QR (salas en memoria, SSE, página móvil). 111 unitarias; verificación Playwright incluida la ida y vuelta auto ↔ celular.
+
 ## ESTADO ACTUAL
 
 Aplicación completa en su alcance verificable. **Build de producción, typecheck, lint (0 errores/6 avisos), 51 unitarias, 28 E2E, PostgreSQL 16, migración, Docker y Compose verificados localmente.** La app está corriendo desde la imagen Docker final en `http://localhost:3000`, con claves reales inyectadas en runtime. **YouTube, DeepSeek, Deepgram y ElevenLabs fueron probados contra sus proveedores reales (2026-10-20).** Spotify validó credenciales y redirect; falta la autorización de la cuenta. Micrófono físico, Tesla y Easypanel siguen pendientes.
@@ -103,6 +105,9 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 - Waze no ofrece una API pública de consumidor para sus avisos de huecos, cámaras o policía. TECLA LIVE no los recibe ni los dibuja; solo prepara la ruta y enlaza el mapa en vivo oficial. Detectado y documentado en `docs/WAZE.md`.
 - `npm audit --omit=dev` reporta 3 avisos altos en la cadena del CLI de Prisma (`deepmerge-ts`). El CLI no está en la imagen runtime final (solo en la imagen de migración, que procesa el schema del repositorio); corregirlo exige un salto mayor a Prisma 7 y se pospone por riesgo de compatibilidad.
 
+- Control remoto: las salas viven en memoria del proceso (como el rate limit). Easypanel corre una sola réplica; con varias habría que usar PostgreSQL/Redis.
+- La emulación de geolocalización de Playwright emite un error `POSITION_UNAVAILABLE` entre cada fix; por eso el hook de GPS ahora tolera ese error si hubo un fix en los últimos 15 s (también ayuda en túneles cortos).
+
 ## SOLUCIONES VERIFICADAS
 
 - Repositorio inspeccionado con `ls`, `git status` y `find`; estaba vacío y se inicializó Git.
@@ -142,4 +147,4 @@ Aplicación completa en su alcance verificable. **Build de producción, typechec
 
 ## ÚLTIMA ACTUALIZACIÓN
 
-**2026-10-20 16:45 America/Bogota** — TECLA DRIVE v3 (arranque de un toque, GPS robusto, escena automática, AudioWorklet, `drive_control`); contenedor :3000 con `tecla-live:drive3`. Antes, **16:40** — Jarvis + Cyberpunk + Spotify real: persona Jarvis en TECLA AI, estilo visual Cyberpunk 2077, búsqueda/reproducción de Spotify con reproductor web oficial, Drive junto a Spotify en accesos rápidos. Antes, **16:05** — TECLA DRIVE v2: prototipo HTML del usuario integrado y mejorado en `/drive` (carretera pseudo-3D, 10 escenas, 26 motores sintetizados, transmisión, modos y estudio). Typecheck, lint, 57 unitarias, build Docker y E2E de Drive verdes. Pendiente redesplegar en tecla.live, migrar a `AudioWorklet`, probar en Tesla, micrófono físico y certificado TLS.
+**2026-10-27 America/Bogota** — Fase 9 «experiencia futurista»: arranque tipo nave (`boot-sequence.tsx`), orbe reactivo (`siri-orb.tsx`), Pantalla ambiente (`ambient-screen.tsx`), telemetría GPS (`telemetry.ts`, `drive-telemetry.tsx`), control remoto por QR (`src/lib/remote`, `/api/remote/*`, `/remote/[code]`, dependencia `qrcode`). Preferencias nuevas: `bootSequence`, `ambientIdleMinutes`, `remoteControl`. Documentación en `docs/REMOTE.md`, `docs/AI-JARVIS.md` y `docs/DRIVE.md`. Antes: **2026-10-20 16:45 America/Bogota** — TECLA DRIVE v3 (arranque de un toque, GPS robusto, escena automática, AudioWorklet, `drive_control`); contenedor :3000 con `tecla-live:drive3`. Antes, **16:40** — Jarvis + Cyberpunk + Spotify real: persona Jarvis en TECLA AI, estilo visual Cyberpunk 2077, búsqueda/reproducción de Spotify con reproductor web oficial, Drive junto a Spotify en accesos rápidos. Antes, **16:05** — TECLA DRIVE v2: prototipo HTML del usuario integrado y mejorado en `/drive` (carretera pseudo-3D, 10 escenas, 26 motores sintetizados, transmisión, modos y estudio). Typecheck, lint, 57 unitarias, build Docker y E2E de Drive verdes. Pendiente redesplegar en tecla.live, migrar a `AudioWorklet`, probar en Tesla, micrófono físico y certificado TLS.

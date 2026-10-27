@@ -263,6 +263,7 @@ describe("TECLA Drive GPS helpers", () => {
       accuracy: 8,
       speed: 10,
       heading: null,
+      altitude: null,
     };
     expect(estimateSpeedKmh(null, fix)).toBe(36);
     expect(estimateSpeedKmh(null, { ...fix, speed: 80 })).toBe(MAX_SPEED);
@@ -276,6 +277,7 @@ describe("TECLA Drive GPS helpers", () => {
       accuracy: 8,
       speed: null,
       heading: null,
+      altitude: null,
     };
     const second = { ...first, latitude: 9.3048, timestamp: 2_000 };
     const speed = estimateSpeedKmh(first, second);

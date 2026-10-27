@@ -104,8 +104,8 @@ export const SetVisualStyleArgs = z
 export const SetDisplayModeArgs = z
   .object({
     mode: z
-      .enum(["normal", "cinema", "kiosk", "audio"])
-      .describe("Modo de pantalla: normal, cine, kiosco o «audio» (modo conducción: carátula y controles sobre el video de YouTube, útil porque el Tesla bloquea el video en marcha)."),
+      .enum(["normal", "cinema", "kiosk", "audio", "ambient"])
+      .describe("Modo de pantalla: normal, cine, kiosco, «audio» (modo conducción: carátula y controles sobre el video de YouTube, útil porque el Tesla bloquea el video en marcha) o «ambient» (pantalla ambiente: reloj, clima y carátula sobre fondo oscuro, para el auto detenido o cargando)."),
   })
   .strict();
 

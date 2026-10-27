@@ -45,6 +45,18 @@ Experiencia de sonido de motor y paisaje integrada en TECLA LIVE, pensada para d
 - Favoritos de motor, unidades (km/h o mph), escena, motor y estudio persistidos localmente (`tecla-drive-v1`).
 - Pantalla completa, silencio, parada segura al ocultar la pestaña y diseño táctil sin hover obligatorio.
 
+## Telemetría GPS (2026-10-27)
+
+Con GPS real activo (no en demo) aparece una franja bajo el velocímetro (`src/features/drive/drive-telemetry.tsx`, lógica pura en `telemetry.ts` y acumulación en `use-drive-telemetry.ts`):
+
+- **Rumbo**: rosa de los vientos que gira con el heading del dispositivo; si el navegador no lo entrega, se deduce de la dirección entre dos fixes en marcha.
+- **Altitud**: metros sobre el mar si el GPS la reporta (el navegador del Tesla puede no hacerlo; entonces muestra «—»).
+- **Viaje**: distancia acumulada (Haversine entre fixes, ignorando saltos > 400 m y precisiones peores que 60 m), tiempo en marcha (> 3 km/h), velocidad máxima y promedio.
+- **0–100**: cronómetro que se arma tras 1 s detenido, arranca al superar 1,5 km/h y termina al llegar a 100 km/h; se aborta si el auto se detiene antes o pasan 40 s. La mejor marca se guarda en este dispositivo (`bestLaunchMs` en `tecla-drive-v1`). Es entretenimiento: respeta las normas de tránsito.
+- «Reiniciar» pone el viaje y el cronómetro en cero; apagar el GPS también.
+
+Las pérdidas momentáneas de señal (error 2 con un fix en los últimos 15 s) ya no detienen el GPS: la retención de velocidad sigue y el siguiente fix retoma el ritmo. Nada de esto sale del navegador. Verificado con GPS simulado en Playwright (rumbo NE 45°, 125 m, 55 km/h máx, cronómetro en marcha).
+
 ## Privacidad y seguridad
 
 - **GPS opcional:** solo se activa al pulsar **Activar GPS**. La ubicación se procesa en el navegador y no se envía ni se guarda. Requiere HTTPS.
