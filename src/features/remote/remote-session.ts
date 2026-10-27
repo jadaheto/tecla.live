@@ -38,6 +38,7 @@ export const REMOTE_SCREEN_HREF: Record<RemoteScreen, string> = {
   navigate: "/navigate",
   drive: "/drive",
   tesla: "/tesla",
+  chargers: "/cargadores",
   settings: "/settings",
 };
 

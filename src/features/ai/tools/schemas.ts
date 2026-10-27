@@ -5,6 +5,7 @@ export const ALLOWED_APP_IDS = [
   "spotify",
   "drive",
   "tesla",
+  "chargers",
   "waze",
   "maps",
   "netflix",

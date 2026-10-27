@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from "react";
 import {
   Compass,
+  PlugZap,
   Music2,
   Podcast,
   Radio,
@@ -81,6 +82,17 @@ export const APPS: AppDefinition[] = [
     accent: "#e82127",
     aiPrompt: "abre Mi Tesla",
     category: "experience",
+  },
+  {
+    id: "chargers",
+    name: "Cargadores",
+    description: "Estaciones de carga cercanas",
+    href: "/cargadores",
+    icon: PlugZap,
+    gradient: "from-[#34d399] via-[#0f9d58] to-[#063b2a]",
+    accent: "#34d399",
+    aiPrompt: "busca cargadores cerca",
+    category: "navigation",
   },
   {
     id: "waze",
@@ -222,6 +234,8 @@ export const QUICK_ACCESS_IDS = [
   "youtube",
   "spotify",
   "drive",
+  "tesla",
+  "chargers",
   "waze",
   "maps",
   "netflix",

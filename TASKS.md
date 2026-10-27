@@ -233,3 +233,9 @@
 - [x] `/tesla` junto a Drive (cabecera, acceso rápido «Mi Tesla», `open_app`, control remoto): resumen con holograma, batería y carga, clima, carrocería y seguridad, llantas, ubicación y marcha, vehículo y software, cargadores cercanos e historial de carga. Evidencia: `tests/unit/tesla.test.ts` (detalle), captura con API simulada.
 - [x] Rutas `/api/tesla/detail`, `/api/tesla/chargers`, `/api/tesla/charging-history` con sesión, caché (2/10/30 min) y límites.
 - [ ] Probar con el auto real: `nearby_charging_sites` e historial dependen de la región y de que Tesla devuelva datos para el VIN.
+
+## FASE 13 — ESTACIONES DE CARGA (PLUGSHARE) (2026-10-27)
+
+- [x] Página `/cargadores` con el widget oficial de PlugShare (centro: Tesla → navegador → ciudad; radio 10/25/50 km), acceso rápido «Cargadores», `open_app` «chargers», control remoto, y mapa dentro de Mi Tesla. Evidencia: `tests/unit/plugshare.test.ts`, captura.
+- [ ] El usuario debe aceptar los Términos de Uso del widget en developer.plugshare.com/embed (propietario del sitio).
+- [ ] Opcional: Open Charge Map como listado propio con clave `OPENCHARGEMAP_API_KEY`.

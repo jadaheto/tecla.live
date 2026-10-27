@@ -81,6 +81,7 @@ Comprobado en esta sesión con el gestor de plugins del harness:
 | 22 | Modo carga automático y avisos por voz del Tesla | `TeslaProvider`, `useTeslaLive`, `chargeModeDecision`/`teslaAlerts`, panel de carga en Pantalla ambiente, `announce()`; typecheck, lint, 123 unitarias, Playwright con API simulada, build | Completada local; push a GitHub → Easypanel |
 | 23 | Estilo «Discovery» y auto holográfico 3D | 5.º estilo completo con persona «computadora»; `HoloCar` en Mi Tesla y Pantalla ambiente; typecheck, lint, 123 unitarias, capturas, build | Completada local; push a GitHub → Easypanel |
 | 24 | Pantalla «Mi Tesla» con todo lo legible de la Fleet API | detalle completo, cargadores cercanos, historial; 3 rutas; typecheck, lint, 124 unitarias, captura, build | Completada local; push a GitHub → Easypanel |
+| 25 | Estaciones de carga con el widget oficial de PlugShare | `/cargadores` + sección en Mi Tesla; typecheck, lint, 127 unitarias, captura, build | Completada local; push → Easypanel; términos del widget pendientes de aceptar por el usuario |
 
 ## ÚLTIMA ACCIÓN
 

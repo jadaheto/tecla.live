@@ -82,6 +82,16 @@ Pantalla dedicada, junto a Drive en la navegación y en los accesos rápidos («
 
 Servidor: `getTeslaDetail` reutiliza la misma lectura cruda (`vehicle_data` con `charge_state;climate_state;drive_state;vehicle_state;vehicle_config;gui_settings`) que la tarjeta, así que abrir la pantalla no añade consultas. `normalizeVehicleDetail` convierte millas a km y expone puertas/ventanas como booleanos. TECLA AI abre la pantalla con «abre mi Tesla» (`open_app` → `tesla`) y el control remoto también.
 
+## Estaciones de carga con PlugShare (2026-10-27)
+
+En Colombia la Fleet API casi no reporta cargadores (dos Supercargadores), así que las estaciones cercanas se muestran con el **widget oficial de PlugShare para sitios web** (developer.plugshare.com/embed). PlugShare no ofrece API para uso personal (solo licencia comercial), y el widget es la vía legítima y gratuita.
+
+- Pantalla **Cargadores** (`/cargadores`, acceso rápido en Inicio, «busca cargadores» en TECLA AI, control remoto): mapa centrado, por prioridad, en la posición real del Tesla (vinculado y despierto), en la ubicación del navegador (botón «Usar mi ubicación») o en la ciudad del clima; radio 10/25/50 km.
+- En **Mi Tesla**, la sección «Estaciones de carga cercanas» muestra el mismo mapa centrado en el auto; la lista de la Fleet API queda como «Cargadores según Tesla».
+- Implementación: `src/features/charging/plugshare.ts` (URL del widget y conversión radio → span), `src/components/charging/plugshare-map.tsx` (iframe con `allow="geolocation"`, enlace a plugshare.com), `src/features/charging/components/chargers-page.tsx`.
+- Privacidad: las coordenadas del centro se envían a PlugShare en la URL del mapa para dibujarlo (se declara en pantalla); TECLA LIVE no guarda la ubicación. El contenido del mapa es de PlugShare y sus usuarios.
+- Condición de uso: el widget se ofrece bajo los Términos de Uso de PlugShare, que se aceptan en developer.plugshare.com/embed al generar el código. Debe aceptarlos el propietario del sitio (el usuario), no el agente.
+
 ## Modo carga automático y avisos por voz (2026-10-27)
 
 - **Tesla en vivo** (`src/components/tesla/tesla-provider.tsx`): con la cuenta vinculada, la app mantiene la lectura del vehículo cada 2 minutos (misma caché del servidor) y la publica en `useTeslaLive` (`src/features/tesla/store.ts`) con `parked` (P o sin marcha y velocidad 0 → estacionado; D/R/N o velocidad > 0 → en marcha; dormido → desconocido).
