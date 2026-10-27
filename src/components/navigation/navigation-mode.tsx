@@ -243,18 +243,26 @@ export function NavigationMode({
     requestRouteRef.current = requestRoute;
   }, [requestRoute]);
 
-  // Dibuja la ruta.
+  // Dibuja la ruta (contorno oscuro + línea cian) y muestra el trayecto completo dos segundos.
+  const outlineRef = React.useRef<google.maps.Polyline | null>(null);
+  const overviewUntilRef = React.useRef(0);
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !route) return;
     routeLineRef.current?.setMap(null);
-    routeLineRef.current = new google.maps.Polyline({
-      path: route.path,
-      strokeColor: "#4cc9ff",
-      strokeOpacity: 0.95,
-      strokeWeight: 8,
-      map,
-    });
+    outlineRef.current?.setMap(null);
+    outlineRef.current = new google.maps.Polyline({ path: route.path, strokeColor: "#062a3f", strokeOpacity: 0.9, strokeWeight: 12, zIndex: 50, map });
+    routeLineRef.current = new google.maps.Polyline({ path: route.path, strokeColor: "#4cc9ff", strokeOpacity: 1, strokeWeight: 7, zIndex: 51, map });
+    if (route.path.length > 1) {
+      const bounds = new google.maps.LatLngBounds();
+      for (const point of route.path) bounds.extend(point);
+      map.moveCamera({ tilt: 0, heading: 0 });
+      map.fitBounds(bounds, { top: 180, bottom: 140, left: 80, right: 80 });
+      overviewUntilRef.current = Date.now() + 2_500;
+    }
+    return () => {
+      outlineRef.current?.setMap(null);
+    };
   }, [route]);
 
   // 4) Guía: con cada fix, posición sobre la ruta, cámara, avisos y desvío.
@@ -262,7 +270,7 @@ export function NavigationMode({
     const map = mapRef.current;
     if (carRef.current) carRef.current.position = next.point;
     if (next.heading !== null) headingRef.current = next.heading;
-    if (map && following) {
+    if (map && following && Date.now() > overviewUntilRef.current) {
       map.moveCamera({ center: next.point, heading: headingRef.current, tilt: 60, zoom: next.speedKmh !== null && next.speedKmh > 70 ? 16 : 17 });
       // El auto va en el tercio inferior: desplaza la cámara hacia adelante.
       map.panBy(0, -Math.round((hostRef.current?.clientHeight ?? 800) * 0.22));
