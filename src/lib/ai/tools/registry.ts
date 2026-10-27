@@ -150,6 +150,13 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     schema: TOOL_SCHEMAS.get_weather,
   },
   {
+    name: "get_vehicle_status",
+    execution: "server",
+    description:
+      "Consulta el estado real del Tesla del usuario vía Fleet API: batería, autonomía, carga, temperatura, bloqueo. Úsala para «¿cuánta batería tengo?», «¿está cargando?», «¿cuánto falta?». Si el auto duerme, dilo; no inventes cifras.",
+    schema: TOOL_SCHEMAS.get_vehicle_status,
+  },
+  {
     name: "get_playback_state",
     execution: "client",
     description:

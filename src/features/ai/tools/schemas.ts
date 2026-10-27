@@ -136,6 +136,12 @@ export const SearchPodcastsArgs = z
   })
   .strict();
 
+export const GetVehicleStatusArgs = z
+  .object({
+    refresh: z.boolean().optional().describe("true para forzar una lectura nueva en lugar de la caché de 2 minutos."),
+  })
+  .strict();
+
 export const GetWeatherArgs = z
   .object({
     location: z
@@ -228,6 +234,7 @@ export const TOOL_SCHEMAS = {
   play_radio: PlayRadioArgs,
   search_podcasts: SearchPodcastsArgs,
   get_weather: GetWeatherArgs,
+  get_vehicle_status: GetVehicleStatusArgs,
   get_playback_state: GetPlaybackStateArgs,
   open_spotify: OpenSpotifyArgs,
   spotify_control: SpotifyControlArgs,

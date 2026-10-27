@@ -9,6 +9,7 @@ import { effectivePersona } from "@/features/ai/persona";
 import { openAssistant } from "@/features/ai/open-assistant";
 import { useIntegrations, useWeather } from "@/features/integrations/hooks";
 import { apiFetch } from "@/lib/http";
+import { useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
 import { useLibrary } from "@/stores/library";
 import { usePlayer } from "@/stores/player";
 import { usePreferences } from "@/stores/preferences";
@@ -56,6 +57,9 @@ export function BootSequence() {
   const history = useLibrary((state) => state.history);
   const nowPlaying = usePlayer((state) => state.current?.title ?? null);
   const spotifyConfigured = integrations.data?.integrations.spotify ?? false;
+  const teslaConfigured = integrations.data?.integrations.tesla ?? false;
+  const teslaStatus = useTeslaStatus();
+  const teslaVehicle = useTeslaVehicle(visible && teslaConfigured && (teslaStatus.data?.connected ?? false));
   const spotifyStatus = useQuery({
     queryKey: ["spotify-status"],
     queryFn: () => apiFetch<SpotifyStatusLite>("/api/spotify/status"),
@@ -94,8 +98,16 @@ export function BootSequence() {
         geolocation: typeof navigator !== "undefined" && "geolocation" in navigator,
         nowPlaying,
         wakeWord: wakeWordEnabled,
+        tesla: !teslaConfigured
+          ? null
+          : {
+              linked: teslaStatus.data ? teslaStatus.data.connected : null,
+              batteryPercent: teslaVehicle.data?.batteryPercent ?? null,
+              charging: teslaVehicle.data?.charging === "charging",
+              asleep: teslaVehicle.data?.asleep ?? false,
+            },
       }),
-    [integrations.data, weather.data, spotifyConfigured, spotifyStatus.data, nowPlaying, wakeWordEnabled],
+    [integrations.data, weather.data, spotifyConfigured, spotifyStatus.data, nowPlaying, wakeWordEnabled, teslaConfigured, teslaStatus.data, teslaVehicle.data],
   );
 
   const briefing = React.useMemo(() => {

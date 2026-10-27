@@ -33,6 +33,15 @@ export const serverConfig = {
   elevenLabsApiKey: trim(process.env.ELEVENLABS_API_KEY),
   elevenLabsVoiceId: trim(process.env.ELEVENLABS_VOICE_ID),
   elevenLabsModelId: trim(process.env.ELEVENLABS_MODEL_ID) || "eleven_flash_v2_5",
+  // Tesla Fleet API: la app se registra con un dominio sin «tesla» ni parecidos (sinapsia.co);
+  // TECLA sigue en tecla.live y ese dominio solo aloja la llave pública y el reenvío del callback.
+  teslaClientId: trim(process.env.TESLA_CLIENT_ID),
+  teslaClientSecret: trim(process.env.TESLA_CLIENT_SECRET),
+  teslaDomain: trim(process.env.TESLA_DOMAIN) || "sinapsia.co",
+  teslaRedirectUri:
+    trim(process.env.TESLA_REDIRECT_URI) || `https://${trim(process.env.TESLA_DOMAIN) || "sinapsia.co"}/tesla/callback.php`,
+  teslaRegion: (trim(process.env.TESLA_REGION).toLowerCase() === "eu" ? "eu" : "na") as "na" | "eu",
+  teslaScopes: trim(process.env.TESLA_SCOPES),
   limits: {
     maxInputTokens: intFromEnv("AI_MAX_INPUT_TOKENS", 6000, 500, 128_000),
     maxOutputTokens: intFromEnv("AI_MAX_OUTPUT_TOKENS", 700, 100, 8192),
@@ -53,6 +62,7 @@ export type IntegrationKey =
   | "deepgram"
   | "elevenlabs"
   | "spotify"
+  | "tesla"
   | "database"
   | "auth";
 
@@ -66,6 +76,9 @@ export const integrationStatus: Record<IntegrationKey, boolean> = {
       serverConfig.spotifyClientSecret &&
       serverConfig.tokenEncryptionKey &&
       serverConfig.databaseUrl,
+  ),
+  tesla: Boolean(
+    serverConfig.teslaClientId && serverConfig.teslaClientSecret && serverConfig.tokenEncryptionKey && serverConfig.databaseUrl,
   ),
   database: Boolean(serverConfig.databaseUrl),
   auth: Boolean(serverConfig.databaseUrl && serverConfig.authSecret),

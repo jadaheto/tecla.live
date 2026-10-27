@@ -8,6 +8,7 @@ import { ambientDrift, formatAmbientTime, shouldAutoAmbient } from "@/features/a
 import { openAssistant } from "@/features/ai/open-assistant";
 import { useAi } from "@/features/ai/store";
 import { useWeather } from "@/features/integrations/hooks";
+import { chargingLabel, useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
 import { getMediaController, getPageController } from "@/features/media/player-bridge";
 import { weatherFxPalette } from "@/features/weather/fx-presets";
 import { usePlayer } from "@/stores/player";
@@ -88,6 +89,8 @@ export function AmbientScreen() {
 
 function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceMotion: boolean; onClose: () => void }) {
   const weather = useWeather();
+  const teslaStatus = useTeslaStatus();
+  const tesla = useTeslaVehicle(teslaStatus.data?.connected ?? false);
   const current = usePlayer((state) => state.current);
   const isPlaying = usePlayer((state) => state.isPlaying);
   const [now, setNow] = React.useState(() => new Date());
@@ -183,6 +186,13 @@ function AmbientStage({ style, reduceMotion, onClose }: { style: string; reduceM
               {weather.data.label} · {weather.data.location.split(",")[0]?.trim()}
             </span>
           </div>
+        ) : null}
+
+        {tesla.data && !tesla.data.asleep && tesla.data.batteryPercent !== null ? (
+          <p className="ambient-screen__tesla">
+            <span className="ambient-screen__tesla-battery" style={{ ["--level" as string]: `${tesla.data.batteryPercent}%` }} aria-hidden />
+            {tesla.data.batteryPercent}%{tesla.data.rangeKm !== null ? ` · ${tesla.data.rangeKm} km` : ""} · {chargingLabel(tesla.data)}
+          </p>
         ) : null}
 
         {current ? (

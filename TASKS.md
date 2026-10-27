@@ -209,3 +209,12 @@
 - [x] Control remoto por QR: salas en memoria con código + token, SSE al auto, página móvil `/remote/[code]`, contrato Zod de órdenes. Evidencia: `tests/unit/remote.test.ts`, prueba E2E auto ↔ celular (volumen, navegación, pantalla ambiente). Ver `docs/REMOTE.md`.
 - [ ] Probar en el Tesla: arranque y briefing por voz, rumbo/altitud reales del GPS, QR escaneado desde un celular real.
 - [ ] Si tecla.live corre con varias réplicas, mover las salas del control remoto a PostgreSQL/Redis.
+
+## FASE 10 — TESLA FLEET API (2026-10-27)
+
+- [x] Adaptador `src/lib/integrations/tesla.ts`: OAuth (authorization code + refresh), tokens cifrados en `ConnectedAccount` (provider «tesla»), lectura de `vehicle_data` normalizada a métrico, caché de 2 min, auto dormido sin despertar, `wake_up` explícito, registro de socio. Evidencia: `tests/unit/tesla.test.ts`.
+- [x] Rutas `/api/tesla/{login,callback,status,vehicle,wake,disconnect,partner}` con sesión obligatoria y límites de tasa.
+- [x] UI: tarjeta «Mi Tesla» en Inicio, sección «Mi Tesla» en Ajustes, paso Tesla en el arranque, línea de batería en Pantalla ambiente, herramienta `get_vehicle_status` para TECLA AI.
+- [x] Archivos para el dominio registrado (Hostinger): llave pública en `.well-known/appspecific`, `tesla/callback.php` y `.htaccess` (ver `docs/TESLA-FLEET.md`).
+- [ ] Bloqueado hasta configurar producción: variables `TESLA_*` en Easypanel, archivos subidos a sinapsia.co, registro de socio, vinculación de la cuenta y lectura real del vehículo.
+- [ ] Fase 2 (comandos firmados: clima, maletero, límite de carga) requiere el proxy `tesla-http-proxy` y el permiso `vehicle_cmds`.

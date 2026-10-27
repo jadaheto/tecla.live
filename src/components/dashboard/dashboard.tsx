@@ -7,6 +7,7 @@ import { Greeting } from "@/components/dashboard/greeting";
 import { WeatherFx } from "@/components/weather/weather-fx";
 import { Hero } from "@/components/dashboard/hero";
 import { WeatherCard } from "@/components/dashboard/weather-card";
+import { TeslaCard } from "@/components/dashboard/tesla-card";
 import { AiSpotlight } from "@/components/dashboard/ai-spotlight";
 import { QuickAccess } from "@/components/dashboard/quick-access";
 import { MediaCard } from "@/components/media/media-card";
@@ -143,6 +144,7 @@ export function Dashboard() {
         <Hero />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           <WeatherCard />
+          <TeslaCard />
           <AiSpotlight />
         </div>
       </div>

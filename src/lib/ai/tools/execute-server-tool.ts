@@ -8,6 +8,7 @@ import { fetchWeather, fetchWeatherForLocation } from "@/lib/integrations/weathe
 import { TOOL_SCHEMAS, type ToolName } from "@/features/ai/tools/schemas";
 import { logger } from "@/lib/logger";
 import { controlSpotify, playSpotifyUri, searchSpotifyTracks, SpotifyError } from "@/lib/integrations/spotify";
+import { getTeslaSnapshot, TeslaError, teslaConfigured } from "@/lib/integrations/tesla";
 
 export interface ServerToolResult {
   ok: boolean;
@@ -165,6 +166,46 @@ export async function executeServerTool(
           if (error instanceof SpotifyError) {
             return failure(error.code, error.message);
           }
+          throw error;
+        }
+      }
+
+      case "get_vehicle_status": {
+        const input = TOOL_SCHEMAS.get_vehicle_status.parse(args);
+        if (!teslaConfigured()) {
+          return failure("TESLA_NOT_CONFIGURED", "La conexión con el Tesla no está configurada en TECLA LIVE. No hay datos del vehículo.");
+        }
+        if (!context.userId) {
+          return failure("AUTH_REQUIRED", "Para leer el estado del Tesla el usuario debe iniciar sesión y vincular su cuenta en Ajustes → Mi Tesla.");
+        }
+        try {
+          const snapshot = await getTeslaSnapshot(context.userId, { force: input.refresh === true });
+          return {
+            ok: true,
+            content: serialize({
+              ok: true,
+              vehicle: {
+                name: snapshot.name,
+                asleep: snapshot.asleep,
+                batteryPercent: snapshot.batteryPercent,
+                rangeKm: snapshot.rangeKm,
+                charging: snapshot.charging,
+                chargeLimitPercent: snapshot.chargeLimitPercent,
+                minutesToFull: snapshot.minutesToFull,
+                chargerPowerKw: snapshot.chargerPowerKw,
+                pluggedIn: snapshot.pluggedIn,
+                insideTempC: snapshot.insideTempC,
+                outsideTempC: snapshot.outsideTempC,
+                climateOn: snapshot.climateOn,
+                locked: snapshot.locked,
+                odometerKm: snapshot.odometerKm,
+                observedAt: snapshot.observedAt,
+                cached: snapshot.cached,
+              },
+            }),
+          };
+        } catch (error) {
+          if (error instanceof TeslaError) return failure(error.code, error.message);
           throw error;
         }
       }

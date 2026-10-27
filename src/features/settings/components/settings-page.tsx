@@ -29,6 +29,7 @@ import {
   Orbit,
   QrCode,
   Smartphone,
+  Car,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ import {
   StatusDot,
 } from "@/features/settings/components/settings-ui";
 import { AccountSection } from "@/features/settings/components/account-section";
+import { TeslaSection } from "@/features/settings/components/tesla-section";
 import { useIntegrations } from "@/features/integrations/hooks";
 import { usePreferences } from "@/stores/preferences";
 import { useUi } from "@/stores/ui";
@@ -802,6 +804,15 @@ export function SettingsPage() {
           </SettingsSection>
 
           <SettingsSection
+            id="mi-tesla"
+            icon={Car}
+            title="Mi Tesla"
+            description="Batería, autonomía y carga reales de tu auto vía Tesla Fleet API. La app está registrada con un dominio propio; TECLA sigue en tecla.live."
+          >
+            <TeslaSection />
+          </SettingsSection>
+
+          <SettingsSection
             id="control-remoto"
             icon={Smartphone}
             title="Control remoto"
@@ -966,6 +977,12 @@ export function SettingsPage() {
                   env: "SPOTIFY_CLIENT_ID + SECRET",
                   active: status?.integrations.spotify,
                   note: "OAuth y controles remotos.",
+                },
+                {
+                  label: "Tesla Fleet API",
+                  env: "TESLA_CLIENT_ID + SECRET",
+                  active: status?.integrations.tesla,
+                  note: "Batería, carga y estado del auto.",
                 },
                 {
                   label: "PostgreSQL",

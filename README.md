@@ -63,6 +63,7 @@ npm run db:seed       # semilla opcional
 - Spotify OAuth con tokens cifrados AES-256-GCM, **búsqueda y reproducción de canciones** por URI, selector de dispositivos y **reproductor web oficial** (Web Playback SDK) para que la música suene en la pantalla sin usar el celular (requiere Premium, permiso `streaming` y DRM en el navegador).
 - **Arranque tipo nave**: chequeo de sistemas real (clima, IA, voz, Spotify, YouTube, GPS, audio) con briefing del día, en el lenguaje de cada estilo visual; **orbe de TECLA AI** que se deforma con la voz real; **Pantalla ambiente** (reloj, clima, carátula, partículas del estilo) para el auto detenido o cargando, manual, por voz o tras minutos sin tocar la pantalla.
 - **Telemetría GPS en TECLA Drive**: rumbo con rosa de los vientos, altitud, distancia y tiempo del viaje, máxima y promedio, cronómetro 0–100 con mejor marca.
+- **Mi Tesla (Fleet API, solo lectura)**: batería, autonomía, estado y tiempo de carga, temperatura y bloqueo en Inicio, en la Pantalla ambiente, en el arranque y por voz («¿cuánta batería tengo?»). La app se registra con un dominio propio porque Tesla rechaza nombres parecidos a «tesla». Ver [docs/TESLA-FLEET.md](docs/TESLA-FLEET.md).
 - **Control remoto por QR**: un pasajero controla música, pantallas, pantalla ambiente, estilo y TECLA AI desde su celular, con órdenes acotadas y sin cuenta. Ver [docs/REMOTE.md](docs/REMOTE.md).
 - Cuentas con sesión JWT HttpOnly, bcrypt, aislamiento por usuario y sincronización de biblioteca/preferencias con PostgreSQL.
 - Docker multi-stage, usuario no root, health checks, migraciones y documentación de Easypanel.
@@ -113,6 +114,6 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - [Manual técnico y convenciones](DEEPSEEK.md) · [Reglas del agente](AGENTS.md)
 - [Despliegue en Easypanel](docs/EASYPANEL.md)
 - [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md) · [Prueba real de integraciones](docs/INTEGRATION-TEST.md)
-- [TECLA DRIVE](docs/DRIVE.md) · [TECLA AI estilo Jarvis](docs/AI-JARVIS.md) · [Video en marcha en el Tesla](docs/TESLA-VIDEO.md) · [Hoja de ruta](docs/ROADMAP.md) · [Control remoto](docs/REMOTE.md)
+- [TECLA DRIVE](docs/DRIVE.md) · [TECLA AI estilo Jarvis](docs/AI-JARVIS.md) · [Video en marcha en el Tesla](docs/TESLA-VIDEO.md) · [Hoja de ruta](docs/ROADMAP.md) · [Control remoto](docs/REMOTE.md) · [Tesla Fleet API](docs/TESLA-FLEET.md)
 
 Hecho para disfrutar el camino. No manipules la pantalla mientras conduces.

@@ -1400,6 +1400,33 @@ body {
   color: rgb(255 255 255 / 0.7);
 }
 
+.ambient-screen__tesla {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.ambient-screen__tesla-battery {
+  position: relative;
+  width: 34px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid currentColor;
+}
+
+.ambient-screen__tesla-battery::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  width: calc(var(--level, 50%) - 4px);
+  border-radius: 2px;
+  background: var(--ambient-accent);
+}
+
 .ambient-screen__media {
   margin-top: 26px;
   display: flex;

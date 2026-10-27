@@ -21,10 +21,13 @@ export interface BootInput {
     elevenlabs: boolean;
     spotify: boolean;
     youtube: boolean;
+    tesla?: boolean;
   } | null;
   weather: { temperature: number; label: string; location: string } | null;
   /** `null` cuando aún no se sabe si la cuenta de Spotify está vinculada. */
   spotifyLinked: boolean | null;
+  /** Vehículo: `null` si no se sabe aún; solo aparece cuando la Fleet API está configurada. */
+  tesla?: { linked: boolean | null; batteryPercent: number | null; charging: boolean; asleep: boolean } | null;
   secureContext: boolean;
   geolocation: boolean;
   nowPlaying: string | null;
@@ -73,6 +76,21 @@ export function buildBootSteps(input: BootInput): BootStep[] {
           ? { id: "spotify", label: "Spotify", detail: "Cuenta sin vincular", state: "warn" }
           : { id: "spotify", label: "Spotify", detail: "Comprobando…", state: "warn" },
   );
+
+  if (ai?.tesla) {
+    const tesla = input.tesla ?? null;
+    steps.push(
+      tesla === null || tesla.linked === null
+        ? { id: "tesla", label: "Tesla", detail: "Comprobando…", state: "warn" }
+        : !tesla.linked
+          ? { id: "tesla", label: "Tesla", detail: "Cuenta sin vincular", state: "warn" }
+          : tesla.asleep
+            ? { id: "tesla", label: "Tesla", detail: "Vehículo durmiendo", state: "ok" }
+            : tesla.batteryPercent !== null
+              ? { id: "tesla", label: "Tesla", detail: `Batería ${tesla.batteryPercent}%${tesla.charging ? " · cargando" : ""}`, state: "ok" }
+              : { id: "tesla", label: "Tesla", detail: "Cuenta vinculada", state: "ok" },
+    );
+  }
 
   steps.push(
     ai?.youtube

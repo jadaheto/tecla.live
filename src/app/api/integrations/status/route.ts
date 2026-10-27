@@ -12,6 +12,7 @@ export async function GET() {
       deepgram: integrationStatus.deepgram,
       elevenlabs: integrationStatus.elevenlabs,
       spotify: integrationStatus.spotify,
+      tesla: integrationStatus.tesla,
       database: integrationStatus.database,
       auth: integrationStatus.auth,
     },

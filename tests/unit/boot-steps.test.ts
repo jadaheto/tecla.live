@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bootDuration, bootTitles, buildBootSteps } from "@/features/boot/boot-steps";
 
-const integrations = { deepseek: true, deepgram: true, elevenlabs: true, spotify: true, youtube: true };
+const integrations = { deepseek: true, deepgram: true, elevenlabs: true, spotify: true, youtube: true, tesla: true };
 
 describe("secuencia de arranque", () => {
   it("reports the real state of every system", () => {
@@ -13,12 +13,14 @@ describe("secuencia de arranque", () => {
       geolocation: true,
       nowPlaying: "Radioactiva",
       wakeWord: true,
+      tesla: { linked: true, batteryPercent: 78, charging: true, asleep: false },
     });
-    expect(steps.map((step) => step.id)).toEqual(["weather", "ai", "voice", "spotify", "youtube", "gps", "audio"]);
+    expect(steps.map((step) => step.id)).toEqual(["weather", "ai", "voice", "spotify", "tesla", "youtube", "gps", "audio"]);
+    expect(steps.find((step) => step.id === "tesla")?.detail).toBe("Batería 78% · cargando");
     expect(steps.every((step) => step.state === "ok")).toBe(true);
     expect(steps[0]?.detail).toBe("27° · Lluvia ligera · Sincelejo");
     expect(steps[2]?.detail).toContain("Oye TECLA");
-    expect(steps[6]?.detail).toBe("Sonando: Radioactiva");
+    expect(steps[7]?.detail).toBe("Sonando: Radioactiva");
   });
 
   it("never pretends a missing integration is online", () => {
@@ -39,6 +41,9 @@ describe("secuencia de arranque", () => {
     expect(byId.youtube?.state).toBe("off");
     expect(byId.gps).toMatchObject({ state: "warn", detail: "Requiere HTTPS" });
     expect(byId.audio?.detail).toBe("En silencio");
+    expect(byId.tesla).toMatchObject({ state: "warn", detail: "Comprobando…" });
+    const hidden = buildBootSteps({ integrations: { ...integrations, tesla: false }, weather: null, spotifyLinked: null, secureContext: true, geolocation: true, nowPlaying: null, wakeWord: false });
+    expect(hidden.some((step) => step.id === "tesla")).toBe(false);
   });
 
   it("marks a configured but unlinked Spotify as a warning", () => {

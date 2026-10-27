@@ -64,6 +64,12 @@ Configura en Easypanel (nunca en el repositorio):
 | `SPOTIFY_CLIENT_ID` | Opcional | App de Spotify Developer |
 | `SPOTIFY_CLIENT_SECRET` | Opcional | App de Spotify Developer |
 | `SPOTIFY_REDIRECT_URI` | Opcional | `https://tecla.live/api/spotify/callback` |
+| `TESLA_CLIENT_ID` | Opcional | App de developer.tesla.com (Fleet API). Ver `docs/TESLA-FLEET.md`. |
+| `TESLA_CLIENT_SECRET` | Opcional | App de developer.tesla.com |
+| `TESLA_DOMAIN` | Opcional | Dominio registrado en Tesla: `sinapsia.co` |
+| `TESLA_REDIRECT_URI` | Opcional | `https://sinapsia.co/tesla/callback.php` (reenvía a tecla.live) |
+| `TESLA_REGION` | Opcional | `na` (América) o `eu` |
+| `TESLA_SCOPES` | Opcional | Permisos extra (`vehicle_cmds`) para la fase 2 |
 | `AI_MAX_INPUT_TOKENS` | Opcional | `6000` |
 | `AI_MAX_OUTPUT_TOKENS` | Opcional | `700` |
 | `AI_MAX_TOOL_STEPS` | Opcional | `4` |

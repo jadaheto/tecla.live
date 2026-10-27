@@ -29,6 +29,7 @@ export interface IntegrationsStatus {
     deepgram: boolean;
     elevenlabs: boolean;
     spotify: boolean;
+    tesla: boolean;
     database: boolean;
     auth: boolean;
   };
