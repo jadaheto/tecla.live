@@ -1,30 +1,42 @@
 "use client";
 
 /**
- * Carga el Maps JavaScript API de Google una sola vez (bootstrap oficial con
- * `importLibrary`). La clave es la misma del Embed API, restringida por
- * referente en Google Cloud.
+ * Carga el Maps JavaScript API de Google una sola vez. Con `loading=async`
+ * la API avisa que está lista llamando al `callback`; solo entonces existe
+ * `google.maps.importLibrary`. La clave es la misma del Embed API,
+ * restringida por referente en Google Cloud.
  */
+type GoogleWindow = Window & { google?: { maps?: typeof google.maps }; __teclaMapsReady?: () => void };
+
 let loading: Promise<typeof google.maps> | null = null;
 
 export function loadGoogleMaps(key: string): Promise<typeof google.maps> {
   if (typeof window === "undefined") return Promise.reject(new Error("GOOGLE_MAPS_SSR"));
-  const existing = (window as unknown as { google?: { maps?: typeof google.maps } }).google;
-  if (existing?.maps?.importLibrary) return Promise.resolve(existing.maps);
+  const win = window as GoogleWindow;
+  if (typeof win.google?.maps?.importLibrary === "function") return Promise.resolve(win.google.maps);
   if (loading) return loading;
   loading = new Promise<typeof google.maps>((resolve, reject) => {
-    const params = new URLSearchParams({ key, v: "weekly", language: "es", region: "CO", loading: "async", libraries: "maps,marker,geometry" });
+    const timeout = window.setTimeout(() => {
+      loading = null;
+      reject(new Error("Google Maps tardó demasiado en cargar"));
+    }, 20_000);
+    win.__teclaMapsReady = () => {
+      window.clearTimeout(timeout);
+      const maps = (window as GoogleWindow).google?.maps;
+      if (maps && typeof maps.importLibrary === "function") resolve(maps);
+      else {
+        loading = null;
+        reject(new Error("Google Maps no expuso importLibrary"));
+      }
+    };
+    const params = new URLSearchParams({ key, v: "weekly", language: "es", region: "CO", loading: "async", libraries: "maps,marker,geometry", callback: "__teclaMapsReady" });
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
     script.async = true;
     script.onerror = () => {
+      window.clearTimeout(timeout);
       loading = null;
-      reject(new Error("GOOGLE_MAPS_LOAD_FAILED"));
-    };
-    script.onload = () => {
-      const loaded = (window as unknown as { google?: { maps?: typeof google.maps } }).google;
-      if (loaded?.maps) resolve(loaded.maps);
-      else reject(new Error("GOOGLE_MAPS_LOAD_FAILED"));
+      reject(new Error("No se pudo descargar el script de Google Maps"));
     };
     document.head.appendChild(script);
   });
