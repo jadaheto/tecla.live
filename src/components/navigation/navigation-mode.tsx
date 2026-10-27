@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowUp,
   ArrowUpLeft,
@@ -113,6 +114,7 @@ export function NavigationMode({
   const wakeLockRef = React.useRef<WakeLockSentinel | null>(null);
   const requestRouteRef = React.useRef<(from: LatLng) => Promise<void>>(async () => undefined);
   const startedRef = React.useRef(false);
+  const mountedAtRef = React.useRef(0);
   /** Guía por fix: la llama el callback del GPS (sistema externo), con el estado más reciente. */
   const guideRef = React.useRef<(next: Fix) => void>(() => undefined);
 
@@ -122,9 +124,14 @@ export function NavigationMode({
     void loadGoogleMaps(apiKey)
       .then(async (maps) => {
         if (disposed || !hostRef.current) return;
-        await maps.importLibrary("marker");
+        // Con `loading=async` las clases solo existen tras importar sus bibliotecas.
+        const [mapsLibrary, markerLibrary] = await Promise.all([
+          maps.importLibrary("maps") as Promise<google.maps.MapsLibrary>,
+          maps.importLibrary("marker") as Promise<google.maps.MarkerLibrary>,
+        ]);
+        if (disposed || !hostRef.current) return;
         const center = origin ?? { lat: 4.65, lng: -74.08 };
-        const map = new maps.Map(hostRef.current, {
+        const map = new mapsLibrary.Map(hostRef.current, {
           mapId,
           center,
           zoom: 17,
@@ -135,12 +142,12 @@ export function NavigationMode({
           clickableIcons: false,
           keyboardShortcuts: false,
         });
-        trafficRef.current = new maps.TrafficLayer();
+        trafficRef.current = new mapsLibrary.TrafficLayer();
         trafficRef.current.setMap(map);
         const arrow = document.createElement("div");
         arrow.className = "nav-car";
         arrow.innerHTML = '<span class="nav-car__arrow"></span><span class="nav-car__halo"></span>';
-        carRef.current = new maps.marker.AdvancedMarkerElement({ map, position: center, content: arrow, zIndex: 1_000 });
+        carRef.current = new markerLibrary.AdvancedMarkerElement({ map, position: center, content: arrow, zIndex: 1_000 });
         map.addListener("dragstart", () => setFollowing(false));
         mapRef.current = map;
         setStatus((current) => (current === "loading" ? "routing" : current));
@@ -171,6 +178,7 @@ export function NavigationMode({
       setStatus("error");
       return;
     }
+    mountedAtRef.current = Date.now();
     const watch = navigator.geolocation.watchPosition(
       (position) => {
         const point = { lat: position.coords.latitude, lng: position.coords.longitude };
@@ -185,8 +193,12 @@ export function NavigationMode({
         setFix(next);
         guideRef.current(next);
       },
-      () => {
-        setError("No pudimos leer el GPS. Permite la ubicación en el navegador.");
+      (failure) => {
+        // Pérdidas momentáneas (código 2 o 3) con fixes previos no son fatales; solo el permiso negado
+        // o la falta total de señal en 20 s detienen la navegación.
+        if (failure.code !== 1 && lastPointRef.current) return;
+        if (failure.code !== 1 && Date.now() - mountedAtRef.current < 20_000) return;
+        setError(failure.code === 1 ? "El navegador bloqueó la ubicación. Permítela para navegar." : "No hay señal GPS. Prueba al aire libre.");
         setStatus("error");
       },
       { enableHighAccuracy: true, maximumAge: 1_000, timeout: 15_000 },
@@ -292,7 +304,12 @@ export function NavigationMode({
   const CurrentIcon = ICONS[maneuverIcon(current?.maneuver)];
   const NextIcon = next ? ICONS[maneuverIcon(next.maneuver)] : null;
 
-  return (
+  const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(null);
+  React.useEffect(() => {
+    setPortalTarget(document.body);
+  }, []);
+  if (!portalTarget) return null;
+  return createPortal(
     <div className="nav-mode" role="dialog" aria-label="Navegación">
       <div ref={hostRef} className="nav-mode__map" />
 
@@ -372,6 +389,7 @@ export function NavigationMode({
 
       {!reduceMotion ? null : <span className="sr-only">Animaciones reducidas</span>}
       <p className="nav-mode__attribution">Mapa, tráfico y rutas: Google. No manipules la pantalla mientras conduces.</p>
-    </div>
+    </div>,
+    portalTarget,
   );
 }

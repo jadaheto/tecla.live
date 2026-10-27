@@ -2020,7 +2020,7 @@ body {
 .nav-mode {
   position: fixed;
   inset: 0;
-  z-index: 118;
+  z-index: 140;
   background: #0b1a2a;
   color: #fff;
 }
