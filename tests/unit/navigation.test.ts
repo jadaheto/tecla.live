@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildGoogleMapsDirectionsUrl,
   buildGoogleMapsRouteUrl,
+  buildNavigateToPlaceHref,
+  parsePlaceParams,
   buildGoogleMapsSearchUrl,
   buildNavigateHref,
   buildWazeRouteUrl,
@@ -46,5 +49,28 @@ describe("navigation deep links", () => {
     expect(buildNavigateHref("maps", "Bogotá")).toBe(
       `/navigate?tab=maps&q=${encodeURIComponent("Bogotá")}`,
     );
+  });
+
+  it("links Cargadores to Navegar by coordinates and reads them back", () => {
+    const href = buildNavigateToPlaceHref("waze", { latitude: 4.7625, longitude: -74.046, label: "Terpel Autopista Norte" }, { latitude: 4.65, longitude: -74.08 });
+    expect(href.startsWith("/navigate?")).toBe(true);
+    const params = new URLSearchParams(href.slice("/navigate?".length));
+    expect(params.get("tab")).toBe("waze");
+    expect(params.get("lat")).toBe("4.76250");
+    expect(params.get("label")).toBe("Terpel Autopista Norte");
+    expect(params.get("from")).toBe("4.65000,-74.08000");
+    const parsed = parsePlaceParams(params);
+    expect(parsed?.place).toEqual({ latitude: 4.7625, longitude: -74.046, label: "Terpel Autopista Norte" });
+    expect(parsed?.from).toEqual({ latitude: 4.65, longitude: -74.08 });
+    expect(parsePlaceParams(new URLSearchParams("tab=waze&q=Cartagena"))).toBeNull();
+    expect(parsePlaceParams(new URLSearchParams("lat=999&lon=0"))).toBeNull();
+  });
+
+  it("builds Google Maps directions with an optional origin", () => {
+    expect(buildGoogleMapsDirectionsUrl({ latitude: 4.7625, longitude: -74.046 })).toBe(
+      "https://www.google.com/maps/dir/?api=1&destination=4.7625%2C-74.046&travelmode=driving",
+    );
+    expect(buildGoogleMapsDirectionsUrl({ latitude: 4.7625, longitude: -74.046 }, { latitude: 4.65, longitude: -74.08 })).toContain("origin=4.65%2C-74.08");
+    expect(() => buildGoogleMapsDirectionsUrl({ latitude: 999, longitude: 0 })).toThrow("INVALID_COORDINATES");
   });
 });

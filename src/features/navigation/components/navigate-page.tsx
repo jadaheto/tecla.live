@@ -24,9 +24,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLibrary } from "@/stores/library";
 import { toast } from "@/stores/toast";
 import {
+  buildGoogleMapsDirectionsUrl,
   buildGoogleMapsRouteUrl,
   buildGoogleMapsSearchUrl,
+  buildWazeRouteUrl,
   buildWazeSearchUrl,
+  parsePlaceParams,
   WAZE_LIVE_MAP_URL,
 } from "@/lib/integrations/navigation";
 import { cn } from "@/lib/utils";
@@ -37,10 +40,14 @@ type DestinationKind = "home" | "work" | "custom";
 export function NavigatePage() {
   const params = useSearchParams();
   const initialTab = params.get("tab") === "maps" ? "maps" : "waze";
-  const initialQuery = params.get("q") ?? "";
+  // Lugar por coordenadas (desde Cargadores): destino listo y origen = ubicación actual o la del Tesla.
+  const initialPlace = React.useMemo(() => parsePlaceParams(params), [params]);
+  const initialQuery = params.get("q") ?? initialPlace?.place.label ?? "";
   const [tab, setTab] = React.useState<Provider>(initialTab);
   const [query, setQuery] = React.useState(initialQuery);
   const [input, setInput] = React.useState(initialQuery);
+  // Mientras el texto buscado siga siendo el del lugar recibido, las rutas van por coordenadas.
+  const place = initialPlace && query === initialPlace.place.label ? initialPlace : null;
   const [label, setLabel] = React.useState("");
   const [kind, setKind] = React.useState<DestinationKind>("custom");
   const [showForm, setShowForm] = React.useState(false);
@@ -92,9 +99,10 @@ export function NavigatePage() {
     });
   }
 
-  const wazeUrl = query ? buildWazeSearchUrl(query) : null;
-  const mapsUrl = query ? buildGoogleMapsRouteUrl(query) : null;
-  const mapsSearchUrl = query ? buildGoogleMapsSearchUrl(query) : null;
+  const wazeUrl = place ? buildWazeRouteUrl(place.place) : query ? buildWazeSearchUrl(query) : null;
+  const mapsUrl = place ? buildGoogleMapsDirectionsUrl(place.place, place.from) : query ? buildGoogleMapsRouteUrl(query) : null;
+  const mapsSearchUrl = place ? buildGoogleMapsDirectionsUrl(place.place, place.from) : query ? buildGoogleMapsSearchUrl(query) : null;
+  const originNote = place ? (place.from ? "Origen: la posición de tu Tesla · destino por coordenadas exactas" : "Origen: tu ubicación actual (la toma la app de navegación) · destino por coordenadas exactas") : null;
 
   return (
     <div>
@@ -131,6 +139,7 @@ export function NavigatePage() {
             onSearch={search}
             primaryUrl={wazeUrl}
             secondaryUrl={mapsSearchUrl}
+            originNote={originNote}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -152,6 +161,7 @@ export function NavigatePage() {
             onSearch={search}
             primaryUrl={mapsUrl}
             secondaryUrl={wazeUrl}
+            originNote={originNote}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -305,6 +315,7 @@ function NavigationPanel({
   onSearch,
   primaryUrl,
   secondaryUrl,
+  originNote,
   onSaveClick,
   onQuickSave,
   recent,
@@ -318,6 +329,7 @@ function NavigationPanel({
   onSearch: (event: React.FormEvent) => void;
   primaryUrl: string | null;
   secondaryUrl: string | null;
+  originNote?: string | null;
   onSaveClick: () => void;
   onQuickSave: (kind: DestinationKind) => void;
   recent: Array<{ query: string; provider: Provider }>;
@@ -373,6 +385,7 @@ function NavigationPanel({
               <h2 className="mt-2 max-w-lg text-display text-3xl md:text-4xl">
                 {query || (isWaze ? "¿A dónde vamos?" : "¿Qué lugar buscas?")}
               </h2>
+              {originNote ? <p className="mt-2 text-[11px] font-medium text-[#5eead4]">{originNote}</p> : null}
               <p className="mt-3 max-w-md text-xs leading-relaxed text-white/55">
                 {query
                   ? isWaze

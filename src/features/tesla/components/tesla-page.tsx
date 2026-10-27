@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { HoloCar } from "@/components/holo/holo-car";
-import { ChargersExplorer } from "@/components/charging/chargers-explorer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,7 +39,6 @@ import {
 import { compassLabel } from "@/features/drive/telemetry";
 import { apiFetch, errorMessage } from "@/lib/http";
 import { cn } from "@/lib/utils";
-import { usePreferences } from "@/stores/preferences";
 
 function dash(value: number | string | null | undefined, suffix = ""): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -112,9 +110,6 @@ export function TeslaPage() {
   const awake = Boolean(summary && !summary.asleep);
   const chargers = useTeslaChargers(connected && awake);
   const history = useTeslaChargingHistory(connected);
-  const weatherLat = usePreferences((state) => state.weatherLat);
-  const weatherLon = usePreferences((state) => state.weatherLon);
-  const weatherLocation = usePreferences((state) => state.weatherLocation);
   const queryClient = useQueryClient();
   const refresh = useMutation({
     mutationFn: () => apiFetch("/api/tesla/detail?refresh=1"),
@@ -236,25 +231,8 @@ export function TeslaPage() {
 
       {detail ? <DetailSections detail={detail} /> : null}
 
-      <Section
-        icon={MapPin}
-        title="Estaciones de carga cercanas"
-        description={summary?.location ? "Estaciones alrededor de la posición real del auto; toca una para ver la ruta." : "Estaciones alrededor de tu ciudad; con el auto despierto se centra en su posición real."}
-        className="mt-4"
-      >
-        <ChargersExplorer
-          origin={summary?.location ?? { latitude: weatherLat, longitude: weatherLon }}
-          originKind={summary?.location ? "car" : "device"}
-          originLabel={summary?.location ? (summary.name ?? "el auto") : (weatherLocation.split(",")[0]?.trim() ?? "tu ciudad")}
-          compact
-        />
-        <p className="mt-3 text-[11px] text-muted">
-          La pestaña <Link href="/cargadores" className="text-accent hover:underline">Cargadores</Link> tiene la misma vista a pantalla completa.
-        </p>
-      </Section>
-
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Section icon={Zap} title="Cargadores según Tesla" description="Lo que reporta la Fleet API alrededor del auto (en Colombia suele ser poco). Requiere el auto despierto.">
+        <Section icon={Zap} title="Cargadores según Tesla" description="Lo que reporta la Fleet API alrededor del auto (en Colombia suele ser poco). Para buscar estaciones y trazar la ruta usa la pestaña Cargadores.">
           {!awake ? (
             <p className="text-sm text-muted">Disponible cuando el auto está despierto.</p>
           ) : chargers.isLoading ? (

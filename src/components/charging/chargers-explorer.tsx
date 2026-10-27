@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { Car, Clock, ExternalLink, LocateFixed, MapPin, Navigation, Plug, Route, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Car, Clock, LocateFixed, Map, MapPin, Navigation, Plug, Route, Zap } from "lucide-react";
 import { PlugShareMap } from "@/components/charging/plugshare-map";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Segmented } from "@/features/settings/components/settings-ui";
 import { useChargingStations, useDrivingRoute, type ChargingStation, type GeoPoint } from "@/features/charging/hooks";
 import { useIntegrations } from "@/features/integrations/hooks";
-import { buildGoogleMapsRouteUrl, buildWazeRouteUrl } from "@/lib/integrations/navigation";
+import { buildNavigateToPlaceHref } from "@/lib/integrations/navigation";
 import { powerTier } from "@/lib/integrations/open-charge-map";
 import { errorMessage } from "@/lib/http";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,13 @@ export function ChargersExplorer({
   const selected = list.find((station) => station.id === selectedId) ?? null;
   const route = useDrivingRoute(selected ? origin : null, selected);
   const listRef = React.useRef<HTMLUListElement>(null);
+  const router = useRouter();
+
+  /** «Ir»: pasa a Navegar con el destino por coordenadas; el origen es la posición del Tesla o la ubicación actual. */
+  function go(provider: "waze" | "maps") {
+    if (!selected) return;
+    router.push(buildNavigateToPlaceHref(provider, { latitude: selected.latitude, longitude: selected.longitude, label: selected.name }, originKind === "car" ? origin : null));
+  }
 
   React.useEffect(() => {
     if (!selectedId || !listRef.current) return;
@@ -157,14 +165,14 @@ export function ChargersExplorer({
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a href={buildWazeRouteUrl({ latitude: selected.latitude, longitude: selected.longitude })} target="_blank" rel="noreferrer" className="flex min-h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-xs font-semibold text-accent-foreground">
+                    <button type="button" onClick={() => go("waze")} className="flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-5 text-xs font-semibold text-accent-foreground">
                       <Navigation className="size-3.5" aria-hidden />
-                      Ir con Waze
-                    </a>
-                    <a href={buildGoogleMapsRouteUrl(`${selected.latitude},${selected.longitude}`)} target="_blank" rel="noreferrer" className="flex min-h-10 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-medium">
+                      Ir
+                    </button>
+                    <button type="button" onClick={() => go("maps")} className="flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-medium" aria-label="Ir con Google Maps">
+                      <Map className="size-3.5" aria-hidden />
                       Google Maps
-                      <ExternalLink className="size-3" aria-hidden />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
