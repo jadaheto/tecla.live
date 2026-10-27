@@ -239,3 +239,8 @@
 - [x] Página `/cargadores` con el widget oficial de PlugShare (centro: Tesla → navegador → ciudad; radio 10/25/50 km), acceso rápido «Cargadores», `open_app` «chargers», control remoto, y mapa dentro de Mi Tesla. Evidencia: `tests/unit/plugshare.test.ts`, captura.
 - [ ] El usuario debe aceptar los Términos de Uso del widget en developer.plugshare.com/embed (propietario del sitio).
 - [ ] Opcional: Open Charge Map como listado propio con clave `OPENCHARGEMAP_API_KEY`.
+
+## FASE 14 — PESTAÑA «CARGADORES» CON MAPA Y RUTA PROPIOS (2026-10-27)
+
+- [x] Pestaña junto a Tesla; lista de Open Charge Map + mapa Leaflet/OSM con marcadores por potencia; al tocar una estación, ruta OSRM dibujada con km y minutos, y botones Waze/Google Maps; PlugShare como vista alternativa; versión compacta en Mi Tesla. Evidencia: `tests/unit/chargers.test.ts`, capturas con estaciones simuladas y ruta real de OSRM.
+- [ ] Bloqueado hasta configurar `OPENCHARGEMAP_API_KEY` en Easypanel (clave gratuita); sin ella la lista dice «no configurado».

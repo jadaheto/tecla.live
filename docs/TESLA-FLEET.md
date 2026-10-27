@@ -82,6 +82,16 @@ Pantalla dedicada, junto a Drive en la navegación y en los accesos rápidos («
 
 Servidor: `getTeslaDetail` reutiliza la misma lectura cruda (`vehicle_data` con `charge_state;climate_state;drive_state;vehicle_state;vehicle_config;gui_settings`) que la tarjeta, así que abrir la pantalla no añade consultas. `normalizeVehicleDetail` convierte millas a km y expone puertas/ventanas como booleanos. TECLA AI abre la pantalla con «abre mi Tesla» (`open_app` → `tesla`) y el control remoto también.
 
+## Pestaña «Cargadores» con mapa propio y ruta (2026-10-27)
+
+Pestaña junto a «Tesla» en la cabecera (`/cargadores`). Lista de estaciones + **mapa propio de TECLA** (Leaflet con mosaicos de OpenStreetMap, invertidos en tema oscuro) y, al tocar una estación, **la ruta dibujada en ese mapa** con distancia y minutos por carretera; botones «Ir con Waze» y «Google Maps» para navegar de verdad. PlugShare queda como vista alternativa en la misma pestaña. La misma vista, compacta, vive en Mi Tesla.
+
+- **Estaciones**: Open Charge Map (`/api/chargers?lat&lon&radius`), datos comunitarios CC BY 4.0, clave gratuita obligatoria `OPENCHARGEMAP_API_KEY` (se crea en openchargemap.org → perfil → «My Apps»). Sin clave la lista dice «no configurado» y la vista PlugShare sigue disponible. Caché 10 min por zona; límite 30 consultas/min por IP. Cada estación muestra potencia máxima (rápida ≥ 50 kW, media ≥ 22), conectores, operador, puntos y «fuera de servicio».
+- **Ruta**: `/api/route?fromLat&fromLon&toLat&toLon` consulta el servidor público de demostración de OSRM (© OpenStreetMap), devuelve geometría simplificada (≤ 400 puntos), km y minutos; caché 10 min. Es un servicio sin garantías: si no responde, el mapa dibuja la línea recta y lo dice. Uso ligero (una ruta por estación tocada), con atribución en pantalla, como pide su política.
+- **Origen**: posición real del Tesla (vinculado y despierto) → ubicación del navegador (botón) → ciudad del clima. Radio 10/25/50 km.
+- Implementación: `src/lib/integrations/open-charge-map.ts`, `src/lib/integrations/routing.ts`, `src/components/charging/chargers-map.tsx` (Leaflet, carga solo en cliente), `chargers-explorer.tsx`, `chargers-page.tsx`. Dependencia nueva: `leaflet`.
+- Privacidad: las coordenadas van a Open Charge Map, a los mosaicos de OpenStreetMap y a OSRM para dibujar mapa y ruta (se declara en pantalla); TECLA no guarda la ubicación.
+
 ## Estaciones de carga con PlugShare (2026-10-27)
 
 En Colombia la Fleet API casi no reporta cargadores (dos Supercargadores), así que las estaciones cercanas se muestran con el **widget oficial de PlugShare para sitios web** (developer.plugshare.com/embed). PlugShare no ofrece API para uso personal (solo licencia comercial), y el widget es la vía legítima y gratuita.

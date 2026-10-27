@@ -30,6 +30,7 @@ export interface IntegrationsStatus {
     elevenlabs: boolean;
     spotify: boolean;
     tesla: boolean;
+    chargers: boolean;
     database: boolean;
     auth: boolean;
   };

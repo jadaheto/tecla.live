@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { HoloCar } from "@/components/holo/holo-car";
-import { PlugShareMap } from "@/components/charging/plugshare-map";
+import { ChargersExplorer } from "@/components/charging/chargers-explorer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -239,12 +239,17 @@ export function TeslaPage() {
       <Section
         icon={MapPin}
         title="Estaciones de carga cercanas"
-        description={summary?.location ? "Mapa de PlugShare centrado en la posición real del auto: redes públicas, cargadores de destino y Supercargadores." : "Mapa de PlugShare centrado en tu ciudad; con el auto despierto se centra en su posición real."}
+        description={summary?.location ? "Estaciones alrededor de la posición real del auto; toca una para ver la ruta." : "Estaciones alrededor de tu ciudad; con el auto despierto se centra en su posición real."}
         className="mt-4"
       >
-        <PlugShareMap center={summary?.location ?? { latitude: weatherLat, longitude: weatherLon }} radiusKm={25} height={560} sourceLabel={summary?.location ? summary.name ?? "el auto" : weatherLocation.split(",")[0]?.trim()} />
+        <ChargersExplorer
+          origin={summary?.location ?? { latitude: weatherLat, longitude: weatherLon }}
+          originKind={summary?.location ? "car" : "device"}
+          originLabel={summary?.location ? (summary.name ?? "el auto") : (weatherLocation.split(",")[0]?.trim() ?? "tu ciudad")}
+          compact
+        />
         <p className="mt-3 text-[11px] text-muted">
-          Para ver más detalle o cambiar el radio, abre <Link href="/cargadores" className="text-accent hover:underline">Cargadores</Link>. Las coordenadas del centro se envían a PlugShare para dibujar el mapa.
+          La pestaña <Link href="/cargadores" className="text-accent hover:underline">Cargadores</Link> tiene la misma vista a pantalla completa.
         </p>
       </Section>
 

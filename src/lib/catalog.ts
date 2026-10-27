@@ -235,7 +235,6 @@ export const QUICK_ACCESS_IDS = [
   "spotify",
   "drive",
   "tesla",
-  "chargers",
   "waze",
   "maps",
   "netflix",

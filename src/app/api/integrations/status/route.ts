@@ -13,6 +13,7 @@ export async function GET() {
       elevenlabs: integrationStatus.elevenlabs,
       spotify: integrationStatus.spotify,
       tesla: integrationStatus.tesla,
+      chargers: integrationStatus.chargers,
       database: integrationStatus.database,
       auth: integrationStatus.auth,
     },

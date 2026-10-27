@@ -42,6 +42,8 @@ export const serverConfig = {
     trim(process.env.TESLA_REDIRECT_URI) || `https://${trim(process.env.TESLA_DOMAIN) || "sinapsia.co"}/tesla/callback.php`,
   teslaRegion: (trim(process.env.TESLA_REGION).toLowerCase() === "eu" ? "eu" : "na") as "na" | "eu",
   teslaScopes: trim(process.env.TESLA_SCOPES),
+  // Open Charge Map: estaciones de carga (clave gratuita, obligatoria para su API).
+  openChargeMapApiKey: trim(process.env.OPENCHARGEMAP_API_KEY),
   limits: {
     maxInputTokens: intFromEnv("AI_MAX_INPUT_TOKENS", 6000, 500, 128_000),
     maxOutputTokens: intFromEnv("AI_MAX_OUTPUT_TOKENS", 700, 100, 8192),
@@ -63,6 +65,7 @@ export type IntegrationKey =
   | "elevenlabs"
   | "spotify"
   | "tesla"
+  | "chargers"
   | "database"
   | "auth";
 
@@ -80,6 +83,7 @@ export const integrationStatus: Record<IntegrationKey, boolean> = {
   tesla: Boolean(
     serverConfig.teslaClientId && serverConfig.teslaClientSecret && serverConfig.tokenEncryptionKey && serverConfig.databaseUrl,
   ),
+  chargers: Boolean(serverConfig.openChargeMapApiKey),
   database: Boolean(serverConfig.databaseUrl),
   auth: Boolean(serverConfig.databaseUrl && serverConfig.authSecret),
 };

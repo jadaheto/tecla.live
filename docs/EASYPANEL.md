@@ -70,6 +70,7 @@ Configura en Easypanel (nunca en el repositorio):
 | `TESLA_REDIRECT_URI` | Opcional | `https://sinapsia.co/tesla/callback.php` (reenvía a tecla.live) |
 | `TESLA_REGION` | Opcional | `na` (América) o `eu` |
 | `TESLA_SCOPES` | Opcional | Permisos extra (`vehicle_cmds`) para la fase 2 |
+| `OPENCHARGEMAP_API_KEY` | Opcional | Clave gratuita de Open Charge Map para la pestaña «Cargadores» (sin ella solo queda la vista PlugShare) |
 | `AI_MAX_INPUT_TOKENS` | Opcional | `6000` |
 | `AI_MAX_OUTPUT_TOKENS` | Opcional | `700` |
 | `AI_MAX_TOOL_STEPS` | Opcional | `4` |

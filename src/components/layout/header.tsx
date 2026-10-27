@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: "/navigate", label: "Navegar" },
   { href: "/drive", label: "Drive" },
   { href: "/tesla", label: "Tesla" },
+  { href: "/cargadores", label: "Cargadores" },
 ] as const;
 
 export function Header() {
