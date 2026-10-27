@@ -31,6 +31,7 @@ export interface IntegrationsStatus {
     spotify: boolean;
     tesla: boolean;
     chargers: boolean;
+    mapsEmbed: boolean;
     database: boolean;
     auth: boolean;
   };

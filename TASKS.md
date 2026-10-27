@@ -244,3 +244,9 @@
 
 - [x] Pestaña junto a Tesla; lista de Open Charge Map + mapa Leaflet/OSM con marcadores por potencia; al tocar una estación, ruta OSRM dibujada con km y minutos, y botones Waze/Google Maps; PlugShare como vista alternativa; versión compacta en Mi Tesla. Evidencia: `tests/unit/chargers.test.ts`, capturas con estaciones simuladas y ruta real de OSRM.
 - [ ] Bloqueado hasta configurar `OPENCHARGEMAP_API_KEY` en Easypanel (clave gratuita); sin ella la lista dice «no configurado».
+
+## FASE 15 — RUTA DE GOOGLE DENTRO DE NAVEGAR (2026-10-27)
+
+- [x] Maps Embed API (modo directions) en Navegar: origen Tesla → navegador → ciudad, nota de origen, «Seguir mi posición» (GPS, redibujo al moverse > 150 m), estado «no configurado», clave vía `/api/maps/embed-key`. Evidencia: `tests/unit/google-maps-embed.test.ts`, captura con el iframe simulado.
+- [ ] Bloqueado hasta que el usuario cree la clave en Google Cloud (facturación habilitada, restringida a `https://tecla.live/*` y a Maps Embed API) y la ponga en Easypanel como `GOOGLE_MAPS_EMBED_KEY`.
+- [ ] Descartadas por el usuario: enviar el destino al navegador del Tesla (comando firmado) y navegador propio con OSRM.

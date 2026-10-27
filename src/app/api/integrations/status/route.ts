@@ -14,6 +14,7 @@ export async function GET() {
       spotify: integrationStatus.spotify,
       tesla: integrationStatus.tesla,
       chargers: integrationStatus.chargers,
+      mapsEmbed: integrationStatus.mapsEmbed,
       database: integrationStatus.database,
       auth: integrationStatus.auth,
     },

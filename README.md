@@ -59,6 +59,7 @@ npm run db:seed       # semilla opcional
 - Reproducción de fondo: la radio y el reproductor web de Spotify siguen sonando al cambiar de pantalla (incluido TECLA Drive) con una barra flotante de control; al elegir otra fuente, la anterior se pausa sola.
 - **TECLA DRIVE** (`/drive`): simulador de sonido de motor y paisaje con carretera pseudo-3D, 10 escenarios animados, 26 motores sintetizados por arquitectura (V8, V10/V12, bóxer, rotativo, EV, sci-fi), transmisión de 7 marchas, REV, arrancada 0–100, paseo automático, estudio de sonido y **modo GPS opcional**. Todo se dibuja y se sintetiza en el navegador, sin samples ni marcas comerciales. Ver [docs/DRIVE.md](docs/DRIVE.md).
 - **Iconos de marca reales** para YouTube, Spotify, Waze, Google Maps, Netflix, Disney+, Podcasts y Twitch (Simple Icons, con atribución), integrados en el diseño TECLA.
+- **Navegar con la ruta dentro de TECLA**: al buscar un destino (o al tocar «Ir» en Cargadores) la ruta de Google aparece embebida con tráfico en vivo, origen en tu Tesla o en tu ubicación y «Seguir mi posición»; Waze y Google Maps siguen a un toque para la guía por voz. Ver [docs/NAVIGATION.md](docs/NAVIGATION.md).
 - **Waze**: preparación de ruta y enlace al mapa en vivo oficial. Los avisos de huecos/cámaras pertenecen a Waze y no se reciben ni simulan dentro de TECLA LIVE.
 - Spotify OAuth con tokens cifrados AES-256-GCM, **búsqueda y reproducción de canciones** por URI, selector de dispositivos y **reproductor web oficial** (Web Playback SDK) para que la música suene en la pantalla sin usar el celular (requiere Premium, permiso `streaming` y DRM en el navegador).
 - **Estilo visual «Discovery»** (puente de nave estelar: hologramas azul cian, tipografía Michroma/Exo 2, computadora de a bordo que te trata de capitán) y **auto holográfico 3D** en la tarjeta Mi Tesla y la Pantalla ambiente.
@@ -117,6 +118,6 @@ Consulta `/settings` o `GET /api/integrations/status` para el estado real de cad
 - [Manual técnico y convenciones](DEEPSEEK.md) · [Reglas del agente](AGENTS.md)
 - [Despliegue en Easypanel](docs/EASYPANEL.md)
 - [Alcance real de Waze](docs/WAZE.md) · [Marcas y atribuciones](docs/ATTRIBUTION.md) · [Prueba real de integraciones](docs/INTEGRATION-TEST.md)
-- [TECLA DRIVE](docs/DRIVE.md) · [TECLA AI estilo Jarvis](docs/AI-JARVIS.md) · [Video en marcha en el Tesla](docs/TESLA-VIDEO.md) · [Hoja de ruta](docs/ROADMAP.md) · [Control remoto](docs/REMOTE.md) · [Tesla Fleet API](docs/TESLA-FLEET.md)
+- [TECLA DRIVE](docs/DRIVE.md) · [TECLA AI estilo Jarvis](docs/AI-JARVIS.md) · [Video en marcha en el Tesla](docs/TESLA-VIDEO.md) · [Hoja de ruta](docs/ROADMAP.md) · [Control remoto](docs/REMOTE.md) · [Tesla Fleet API](docs/TESLA-FLEET.md) · [Navegación embebida](docs/NAVIGATION.md)
 
 Hecho para disfrutar el camino. No manipules la pantalla mientras conduces.

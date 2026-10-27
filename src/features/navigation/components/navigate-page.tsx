@@ -17,6 +17,9 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { GoogleRouteMap } from "@/components/navigation/google-route-map";
+import { usePreferences } from "@/stores/preferences";
+import type { EmbedPlace } from "@/lib/integrations/google-maps-embed";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +51,26 @@ export function NavigatePage() {
   const [input, setInput] = React.useState(initialQuery);
   // Mientras el texto buscado siga siendo el del lugar recibido, las rutas van por coordenadas.
   const place = initialPlace && query === initialPlace.place.label ? initialPlace : null;
+  // Origen para el mapa embebido: la posición del Tesla (si vino de Cargadores), la ubicación del
+  // navegador (se pide una vez cuando hay destino) o, si no hay permiso, nada: el mapa muestra el lugar.
+  const weatherLat = usePreferences((state) => state.weatherLat);
+  const weatherLon = usePreferences((state) => state.weatherLon);
+  const [browserOrigin, setBrowserOrigin] = React.useState<{ latitude: number; longitude: number } | null>(null);
+  const [originDenied, setOriginDenied] = React.useState(false);
+  const askedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!query || place?.from || browserOrigin || askedRef.current) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    askedRef.current = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => setBrowserOrigin({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+      () => setOriginDenied(true),
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+    );
+  }, [query, place, browserOrigin]);
+  const embedDestination: EmbedPlace | null = place ? place.place : query || null;
+  const embedOrigin: EmbedPlace | null = place?.from ?? browserOrigin ?? (originDenied ? { latitude: weatherLat, longitude: weatherLon } : null);
+  const embedOriginLabel = place?.from ? "la posición de tu Tesla" : browserOrigin ? "tu ubicación actual" : originDenied ? "tu ciudad (sin permiso de ubicación)" : "pidiendo tu ubicación…";
   const [label, setLabel] = React.useState("");
   const [kind, setKind] = React.useState<DestinationKind>("custom");
   const [showForm, setShowForm] = React.useState(false);
@@ -102,18 +125,18 @@ export function NavigatePage() {
   const wazeUrl = place ? buildWazeRouteUrl(place.place) : query ? buildWazeSearchUrl(query) : null;
   const mapsUrl = place ? buildGoogleMapsDirectionsUrl(place.place, place.from) : query ? buildGoogleMapsRouteUrl(query) : null;
   const mapsSearchUrl = place ? buildGoogleMapsDirectionsUrl(place.place, place.from) : query ? buildGoogleMapsSearchUrl(query) : null;
-  const originNote = place ? (place.from ? "Origen: la posición de tu Tesla · destino por coordenadas exactas" : "Origen: tu ubicación actual (la toma la app de navegación) · destino por coordenadas exactas") : null;
+  const originNote = query ? `Origen: ${embedOriginLabel}${place ? " · destino por coordenadas exactas" : ""}` : null;
 
   return (
     <div>
       <PageHeader
         eyebrow="Movilidad"
         title="Navega sin rodeos."
-        description="Prepara destinos y abre Waze o Google Maps de forma oficial. TECLA LIVE no conduce ni simula navegación embebida."
+        description="Busca un destino y mira la ruta de Google aquí mismo, con tráfico en vivo. Para la guía por voz, ábrela en Waze o Google Maps con un toque."
         actions={
           <Badge variant="outline">
             <Navigation className="size-3" aria-hidden />
-            Sin GPS
+            {query ? embedOriginLabel : "Ubicación solo con destino"}
           </Badge>
         }
       />
@@ -140,6 +163,8 @@ export function NavigatePage() {
             primaryUrl={wazeUrl}
             secondaryUrl={mapsSearchUrl}
             originNote={originNote}
+            embedDestination={embedDestination}
+            embedOrigin={embedOrigin}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -162,6 +187,8 @@ export function NavigatePage() {
             primaryUrl={mapsUrl}
             secondaryUrl={wazeUrl}
             originNote={originNote}
+            embedDestination={embedDestination}
+            embedOrigin={embedOrigin}
             onSaveClick={() => setShowForm(true)}
             onQuickSave={quickSave}
             recent={recent}
@@ -316,6 +343,8 @@ function NavigationPanel({
   primaryUrl,
   secondaryUrl,
   originNote,
+  embedDestination,
+  embedOrigin,
   onSaveClick,
   onQuickSave,
   recent,
@@ -330,6 +359,8 @@ function NavigationPanel({
   primaryUrl: string | null;
   secondaryUrl: string | null;
   originNote?: string | null;
+  embedDestination: EmbedPlace | null;
+  embedOrigin: EmbedPlace | null;
   onSaveClick: () => void;
   onQuickSave: (kind: DestinationKind) => void;
   recent: Array<{ query: string; provider: Provider }>;
@@ -364,7 +395,11 @@ function NavigationPanel({
           </Button>
         </form>
 
-        <div className="relative mt-4 min-h-[330px] overflow-hidden rounded-[2rem] border border-border bg-[#0a090d] p-6 text-white md:min-h-[380px] md:p-8">
+        {embedDestination ? (
+          <GoogleRouteMap destination={embedDestination} origin={embedOrigin} height={520} className="mt-4" />
+        ) : null}
+
+        <div className={cn("relative mt-4 min-h-[330px] overflow-hidden rounded-[2rem] border border-border bg-[#0a090d] p-6 text-white md:min-h-[380px] md:p-8", embedDestination && "min-h-0 md:min-h-0")}>
           <div className="absolute inset-0 bg-[radial-gradient(100%_80%_at_20%_0%,rgba(55,214,255,0.18),transparent_60%),radial-gradient(80%_70%_at_95%_60%,rgba(94,234,212,0.12),transparent_60%)]" />
           <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.5)_1px,transparent_1px)] [background-size:56px_56px]" />
           <div className="absolute -right-24 -top-24 size-72 rounded-full border border-white/10" />

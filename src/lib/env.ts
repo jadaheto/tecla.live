@@ -44,6 +44,8 @@ export const serverConfig = {
   teslaScopes: trim(process.env.TESLA_SCOPES),
   // Open Charge Map: estaciones de carga (clave gratuita, obligatoria para su API).
   openChargeMapApiKey: trim(process.env.OPENCHARGEMAP_API_KEY),
+  // Google Maps Embed API (ruta dentro de Navegar). Clave pública por diseño; restringir por referente.
+  googleMapsEmbedKey: trim(process.env.GOOGLE_MAPS_EMBED_KEY),
   limits: {
     maxInputTokens: intFromEnv("AI_MAX_INPUT_TOKENS", 6000, 500, 128_000),
     maxOutputTokens: intFromEnv("AI_MAX_OUTPUT_TOKENS", 700, 100, 8192),
@@ -66,6 +68,7 @@ export type IntegrationKey =
   | "spotify"
   | "tesla"
   | "chargers"
+  | "mapsEmbed"
   | "database"
   | "auth";
 
@@ -84,6 +87,7 @@ export const integrationStatus: Record<IntegrationKey, boolean> = {
     serverConfig.teslaClientId && serverConfig.teslaClientSecret && serverConfig.tokenEncryptionKey && serverConfig.databaseUrl,
   ),
   chargers: Boolean(serverConfig.openChargeMapApiKey),
+  mapsEmbed: Boolean(serverConfig.googleMapsEmbedKey),
   database: Boolean(serverConfig.databaseUrl),
   auth: Boolean(serverConfig.databaseUrl && serverConfig.authSecret),
 };
