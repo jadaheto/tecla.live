@@ -246,6 +246,7 @@ export function NavigationMode({
   // Dibuja la ruta (contorno oscuro + línea cian) y muestra el trayecto completo dos segundos.
   const outlineRef = React.useRef<google.maps.Polyline | null>(null);
   const overviewUntilRef = React.useRef(0);
+  const overviewShownRef = React.useRef(false);
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !route) return;
@@ -253,7 +254,9 @@ export function NavigationMode({
     outlineRef.current?.setMap(null);
     outlineRef.current = new google.maps.Polyline({ path: route.path, strokeColor: "#062a3f", strokeOpacity: 0.9, strokeWeight: 12, zIndex: 50, map });
     routeLineRef.current = new google.maps.Polyline({ path: route.path, strokeColor: "#4cc9ff", strokeOpacity: 1, strokeWeight: 7, zIndex: 51, map });
-    if (route.path.length > 1) {
+    // Vista general solo con la primera ruta; en los recálculos la cámara sigue al auto.
+    if (route.path.length > 1 && !overviewShownRef.current) {
+      overviewShownRef.current = true;
       const bounds = new google.maps.LatLngBounds();
       for (const point of route.path) bounds.extend(point);
       map.moveCamera({ tilt: 0, heading: 0 });
