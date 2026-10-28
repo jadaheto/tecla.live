@@ -255,3 +255,8 @@
 
 - [x] `NavigationMode`: mapa vectorial de Google (Map ID) inclinado y orientado al rumbo, seguimiento del auto, tráfico, ruta con Routes API, maniobra actual y siguiente, llegada estimada, recálculo por desvío, voz de TECLA opcional (`navVoice`), wake lock, salida. Botón en Navegar y arranque directo desde Cargadores («Ir» → `nav=1`). Evidencia: `tests/unit/guidance.test.ts` (141 unitarias), build.
 - [ ] Verificar en tecla.live con la clave real y el Map ID: carga del mapa vectorial en el navegador del Tesla, ruta real y avisos por voz en marcha.
+
+## FASE 17 — NAVEGACIÓN EN PANTALLA ESTRECHA (2026-10-28)
+
+- [x] Menú de secciones (hamburguesa, `nav-menu.tsx`) visible cuando la cabecera no muestra los enlaces (por debajo de 1280 px, como el Tesla en modo conductor): 12 secciones en botones grandes más Pantalla ambiente, Control remoto, Pantalla completa y tema.
+- [x] Accesos rápidos de Inicio sin Netflix ni Disney+ (siguen en Apps); Cargadores ocupa su lugar.

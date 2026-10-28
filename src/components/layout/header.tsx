@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Orbit, QrCode, Search, Settings2, Sparkles, Sun, SunMoon } from "lucide-react";
 import { TeclaLogo } from "@/components/layout/tecla-logo";
+import { NavMenu } from "@/components/layout/nav-menu";
 import { KittScanner } from "@/components/kitt/kitt-scanner";
 import { RoadsterHud } from "@/components/roadster/roadster-hud";
 import { DiscoveryHud } from "@/components/discovery/discovery-hud";
@@ -58,7 +59,9 @@ export function Header() {
       <KittScanner className="absolute inset-x-0 bottom-0" />
       <RoadsterHud className="absolute inset-x-0 bottom-0" />
       <DiscoveryHud className="absolute inset-x-0 bottom-0" />
-      <div className="mx-auto flex h-[76px] w-full max-w-[1840px] items-center gap-4 px-4 md:h-[84px] md:px-7">
+      <div className="mx-auto flex h-[76px] w-full max-w-[1840px] items-center gap-3 px-4 md:h-[84px] md:px-7">
+        {/* En pantallas estrechas (Tesla en modo conductor) los enlaces no caben: menú de secciones. */}
+        <NavMenu className="xl:hidden" />
         <TeclaLogo />
 
         <nav
