@@ -4,7 +4,7 @@
 
 ## Cómo funciona
 
-1. En el auto, Ajustes → Control remoto → «Permitir control remoto» (o el botón QR de la cabecera). El auto abre una **sala** en el servidor (`POST /api/remote/session`) y recibe un **código** de seis letras y un **token** largo que solo conoce el auto.
+1. En el auto, tocar el botón QR de la cabecera (o el menú ☰ → Control remoto) enciende el control remoto y muestra el QR de inmediato; también se puede activar en Ajustes → Control remoto → «Permitir control remoto». El auto abre una **sala** en el servidor (`POST /api/remote/session`) y recibe un **código** de seis letras y un **token** largo que solo conoce el auto.
 2. La cabecera muestra el QR con la URL `https://tecla.live/remote/<código>`. El celular la abre: es una pantalla aparte, sin cabecera ni reproductor (`src/app/remote/[code]/page.tsx`).
 3. El celular envía órdenes (`POST /api/remote/<código>/command`) y consulta cada 3 s qué suena en el auto (`GET /api/remote/<código>`).
 4. El auto recibe las órdenes por Server-Sent Events (`GET /api/remote/<código>/events?token=…`) y las ejecuta con los mismos controladores que usa TECLA AI (`getMediaController`, navegación interna, `openAssistant`). Publica su estado (`POST /api/remote/<código>/state`, cabecera `x-remote-token`) cada 6 s y tras cada orden.

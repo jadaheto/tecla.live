@@ -260,3 +260,11 @@
 
 - [x] Menú de secciones (hamburguesa, `nav-menu.tsx`) visible cuando la cabecera no muestra los enlaces (por debajo de 1280 px, como el Tesla en modo conductor): 12 secciones en botones grandes más Pantalla ambiente, Control remoto, Pantalla completa y tema.
 - [x] Accesos rápidos de Inicio sin Netflix ni Disney+ (siguen en Apps); Cargadores ocupa su lugar.
+
+## FASE 18 — BIENVENIDA POR VOZ, SPOTIFY A PANTALLA COMPLETA Y QR DIRECTO (2026-10-29)
+
+- [x] Bienvenida por voz al terminar el arranque (`bootVoice`, ElevenLabs, sin DeepSeek): `synthesizeSpeech`/`playSpeech` en `announce.ts`; si el navegador exige un toque, la cortinilla espera y el toque la hace sonar. Ajuste «Bienvenida por voz». Evidencia: Playwright con TTS simulado en los dos casos (suena sola / bloqueada hasta tocar).
+- [x] Spotify: botón «Pantalla completa» en Reproduciendo ahora → `NowPlayingFull` (carátula grande, avance estimado entre lecturas, controles de 72/96 px, reloj, Salir/Escape). Evidencia: `tests/unit/now-playing.test.ts`, Playwright.
+- [x] Control remoto: abrir el diálogo desde la cabecera o el menú ☰ enciende el control remoto y muestra el QR sin buscar el interruptor; error de sala visible.
+- [ ] Producción: tecla.live seguía sirviendo la versión anterior a `5694773` (sin menú ☰, con Netflix en accesos rápidos); revisar el despliegue en Easypanel (posible build fallido por descarga de Google Fonts) y redesplegar.
+

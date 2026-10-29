@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Headphones,
   Heart,
+  Maximize2,
   Music2,
   Pause,
   Play,
@@ -33,6 +34,8 @@ import { toast } from "@/stores/toast";
 import { formatDuration } from "@/lib/utils";
 import { SpotifySearch } from "@/features/music/components/spotify-search";
 import { SpotifyWebPlayer } from "@/features/music/components/spotify-web-player";
+import { NowPlayingFull } from "@/features/music/components/now-playing-full";
+import type { NowPlaying } from "@/features/music/now-playing";
 import { ensureSpotifyWebDevice } from "@/features/music/spotify-web-player-bridge";
 import { claimPlayback } from "@/features/media/playback-sources";
 import { usePreferences } from "@/stores/preferences";
@@ -50,28 +53,14 @@ interface SpotifyStatus {
   encrypted?: boolean;
 }
 
-interface NowPlaying {
-  playing: boolean;
-  progressMs: number;
-  durationMs: number;
-  track: {
-    id: string;
-    name: string;
-    artists: string[];
-    album: string | null;
-    imageUrl: string | null;
-    externalUrl: string | null;
-  } | null;
-  device: string | null;
-  deviceVolume: number | null;
-}
-
 export function MusicPage() {
   const params = useSearchParams();
   const queryClient = useQueryClient();
   const [controlError, setControlError] = React.useState<string | null>(null);
   const [localVolume, setLocalVolume] = React.useState(70);
   const [webDeviceId, setWebDeviceId] = React.useState<string | null>(null);
+  const [fullOpen, setFullOpen] = React.useState(false);
+  const closeFull = React.useCallback(() => setFullOpen(false), []);
   const feedbackShown = React.useRef(false);
 
   const me = useQuery({
@@ -386,9 +375,20 @@ export function MusicPage() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="eyebrow !text-white/40">
-                        {nowPlaying.data?.playing ? "Reproduciendo ahora" : "En pausa"}
-                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="eyebrow !text-white/40">
+                          {nowPlaying.data?.playing ? "Reproduciendo ahora" : "En pausa"}
+                        </p>
+                        <Button
+                          variant="glass"
+                          size="sm"
+                          onClick={() => setFullOpen(true)}
+                          aria-label="Ver lo que suena en pantalla completa"
+                        >
+                          <Maximize2 className="size-3.5" aria-hidden />
+                          Pantalla completa
+                        </Button>
+                      </div>
                       <h2 className="mt-1 line-clamp-2 text-2xl font-semibold tracking-tight md:text-3xl">
                         {track.name}
                       </h2>
@@ -432,6 +432,17 @@ export function MusicPage() {
                     {controlError}
                   </p>
                 ) : null}
+
+                <NowPlayingFull
+                  open={fullOpen}
+                  onClose={closeFull}
+                  data={nowPlaying.data}
+                  updatedAt={nowPlaying.dataUpdatedAt}
+                  pending={control.isPending}
+                  onToggle={() => control.mutate({ action: nowPlaying.data?.playing ? "pause" : "play" })}
+                  onNext={() => control.mutate({ action: "next" })}
+                  onPrevious={() => control.mutate({ action: "previous" })}
+                />
 
                 <SpotifyWebPlayer
                   enabled={Boolean(status.data?.streaming)}

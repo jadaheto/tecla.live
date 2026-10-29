@@ -24,6 +24,12 @@ export function RemoteDialog() {
   const [qr, setQr] = React.useState<string | null>(null);
   const url = session.code && typeof window !== "undefined" ? remoteUrl(session.code, window.location.origin) : null;
 
+  // Abrir el diálogo desde la cabecera ya expresa la intención: enciende el control
+  // remoto para que el QR aparezca sin buscar el interruptor (se puede apagar aquí mismo).
+  React.useEffect(() => {
+    if (open && !usePreferences.getState().remoteControl) setPreferences({ remoteControl: true });
+  }, [open, setPreferences]);
+
   React.useEffect(() => {
     if (!url) return;
     let cancelled = false;
@@ -82,6 +88,8 @@ export function RemoteDialog() {
               {qr && url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={qr} alt={`Código QR para ${url}`} className="size-full" />
+              ) : session.status === "error" ? (
+                <p className="px-3 text-center text-[12px] leading-relaxed text-red-700">{session.error ?? "No se pudo abrir la sala"}</p>
               ) : null}
             </div>
             <div className="min-w-0">

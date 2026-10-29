@@ -365,12 +365,23 @@ export function SettingsPage() {
             </SettingRow>
             <SettingRow
               title="Secuencia de arranque"
-              description="Al abrir TECLA LIVE, una vez por sesión: chequeo de sistemas (clima, TECLA AI, voz, Spotify, YouTube, GPS y audio) en el lenguaje del estilo activo, con el briefing del día. Con «Saludo al iniciar» activo, tocar la pantalla abre TECLA AI para escucharlo."
+              description="Al abrir TECLA LIVE, una vez por sesión: chequeo de sistemas (clima, TECLA AI, voz, Spotify, YouTube, GPS y audio) en el lenguaje del estilo activo, con el briefing del día."
             >
               <Switch
                 checked={preferences.bootSequence}
                 onCheckedChange={(checked) => setPreferences({ bootSequence: checked })}
                 aria-label="Secuencia de arranque"
+              />
+            </SettingRow>
+            <SettingRow
+              title="Bienvenida por voz"
+              description="Al terminar el arranque, TECLA AI te da la bienvenida con la voz configurada: hora, clima real y lo que dejaste a medias. Una sola síntesis de voz por sesión; si el navegador pide un toque antes de sonar, la cortinilla espera tu toque."
+            >
+              <Switch
+                checked={preferences.bootVoice}
+                onCheckedChange={(checked) => setPreferences({ bootVoice: checked })}
+                aria-label="Bienvenida por voz"
+                disabled={!preferences.bootSequence}
               />
             </SettingRow>
             <SettingRow

@@ -7,6 +7,66 @@ import { toast } from "@/stores/toast";
 
 let current: HTMLAudioElement | null = null;
 
+export type SpeechResult = "played" | "blocked" | "failed";
+
+/**
+ * Pide a /api/ai/tts la voz configurada para un texto y devuelve el audio
+ * listo para reproducir (o `null` si la voz no está disponible). No suena solo.
+ */
+export async function synthesizeSpeech(text: string): Promise<HTMLAudioElement | null> {
+  const clean = text.trim();
+  if (!clean) return null;
+  try {
+    const response = await fetch("/api/ai/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: clean, ...voicePayload() }),
+    });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob.size) return null;
+    const audio = new Audio(URL.createObjectURL(blob));
+    audio.volume = Math.min(1, Math.max(0, usePreferences.getState().volume / 100));
+    return audio;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reproduce un audio de voz pausando la música mientras habla y reanudándola
+ * al terminar. `blocked` significa que el navegador exige un toque antes de
+ * sonar: el audio queda intacto para intentarlo tras la interacción.
+ */
+export async function playSpeech(audio: HTMLAudioElement): Promise<SpeechResult> {
+  current?.pause();
+  current = audio;
+  const media = getMediaController();
+  let resume = false;
+  if (media?.getSnapshot().isPlaying) resume = (await media.pause()).ok;
+  const finish = () => {
+    URL.revokeObjectURL(audio.src);
+    if (current === audio) current = null;
+    if (resume) void media?.play().catch(() => undefined);
+  };
+  try {
+    await audio.play();
+  } catch (error) {
+    if (resume) void media?.play().catch(() => undefined);
+    const blocked = error instanceof DOMException && error.name === "NotAllowedError";
+    if (!blocked) {
+      URL.revokeObjectURL(audio.src);
+      if (current === audio) current = null;
+    }
+    return blocked ? "blocked" : "failed";
+  }
+  await new Promise<void>((resolve) => {
+    audio.onended = () => resolve();
+    audio.onerror = () => resolve();
+  }).finally(finish);
+  return "played";
+}
+
 /**
  * Aviso breve de TECLA AI fuera del HUD (batería baja, carga completa…):
  * muestra el texto y lo pronuncia con la voz configurada, pausando la música
@@ -19,35 +79,7 @@ export async function announce(text: string, options: { title?: string; speak?: 
   toast({ title: options.title ?? "Mi Tesla", description: clean, variant: "info" });
   const prefs = usePreferences.getState();
   if (options.speak === false || !prefs.voiceEnabled) return false;
-
-  try {
-    const response = await fetch("/api/ai/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: clean, ...voicePayload() }),
-    });
-    if (!response.ok) return false;
-    const blob = await response.blob();
-    if (!blob.size) return false;
-    current?.pause();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.volume = Math.min(1, Math.max(0, prefs.volume / 100));
-    current = audio;
-    const media = getMediaController();
-    let resume = false;
-    if (media?.getSnapshot().isPlaying) resume = (await media.pause()).ok;
-    await new Promise<void>((resolve, reject) => {
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("audio"));
-      audio.play().catch(reject);
-    }).finally(() => {
-      URL.revokeObjectURL(url);
-      if (current === audio) current = null;
-      if (resume) void media?.play().catch(() => undefined);
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  const audio = await synthesizeSpeech(clean);
+  if (!audio) return false;
+  return (await playSpeech(audio)) === "played";
 }

@@ -21,6 +21,8 @@ export interface PreferencesState {
   weatherEffects: boolean;
   /** Secuencia de arranque (chequeo de sistemas) al abrir la app, una vez por sesión. */
   bootSequence: boolean;
+  /** Al terminar el arranque, TECLA AI da la bienvenida con la voz configurada (una síntesis por sesión). */
+  bootVoice: boolean;
   /** Minutos sin tocar la pantalla antes de pasar a Pantalla ambiente (0 = nunca). */
   ambientIdleMinutes: number;
   /** Control remoto desde el celular (código QR). */
@@ -70,6 +72,7 @@ export const DEFAULT_PREFERENCES = {
   ambientBackground: true,
   weatherEffects: true,
   bootSequence: true,
+  bootVoice: true,
   ambientIdleMinutes: 10,
   remoteControl: false,
   teslaChargeMode: true,
@@ -130,6 +133,7 @@ export const usePreferences = create<PreferencesState>()(
         ambientBackground: state.ambientBackground,
         weatherEffects: state.weatherEffects,
         bootSequence: state.bootSequence,
+        bootVoice: state.bootVoice,
         ambientIdleMinutes: state.ambientIdleMinutes,
         remoteControl: state.remoteControl,
         teslaChargeMode: state.teslaChargeMode,

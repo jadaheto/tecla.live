@@ -7,6 +7,7 @@ import { bootDuration, bootTitles, buildBootSteps } from "@/features/boot/boot-s
 import { buildGreeting } from "@/features/ai/greeting";
 import { effectivePersona } from "@/features/ai/persona";
 import { openAssistant } from "@/features/ai/open-assistant";
+import { playSpeech, synthesizeSpeech } from "@/features/ai/announce";
 import { useIntegrations, useWeather } from "@/features/integrations/hooks";
 import { apiFetch } from "@/lib/http";
 import { useTeslaStatus, useTeslaVehicle } from "@/features/tesla/hooks";
@@ -36,9 +37,13 @@ function usePreferencesHydrated(): boolean {
  * Arranque «tipo nave»: una vez por sesión, al abrir la app, un chequeo de
  * sistemas con el estado real de clima, TECLA AI, voz, Spotify, YouTube,
  * GPS y audio, en el lenguaje visual del estilo activo. Termina con el
- * briefing (hora, clima, lo pendiente). Tocar la pantalla lo cierra y, si
- * el «Saludo al iniciar» está activo, abre TECLA AI para oír el briefing.
+ * briefing (hora, clima, lo pendiente) y, con «Bienvenida por voz» activa,
+ * TECLA AI lo pronuncia con la voz configurada (solo síntesis, sin DeepSeek).
+ * Si el navegador exige un toque antes de sonar, la cortinilla espera el
+ * toque y entonces habla. Tocar la pantalla la cierra.
  */
+type WelcomeVoice = "off" | "loading" | "playing" | "blocked" | "done";
+
 export function BootSequence() {
   const pathname = usePathname();
   const hydrated = usePreferencesHydrated();
@@ -47,11 +52,16 @@ export function BootSequence() {
   const reduceMotion = usePreferences((state) => state.reduceMotion);
   const aiPersona = usePreferences((state) => state.aiPersona);
   const speakGreeting = usePreferences((state) => state.speakGreeting);
+  const bootVoice = usePreferences((state) => state.bootVoice);
   const voiceEnabled = usePreferences((state) => state.voiceEnabled);
   const micConsent = usePreferences((state) => state.micConsent);
   const wakeWordEnabled = usePreferences((state) => state.wakeWordEnabled);
   const [visible, setVisible] = React.useState(false);
   const [phase, setPhase] = React.useState<"running" | "ready" | "closing">("running");
+  const [voice, setVoice] = React.useState<WelcomeVoice>("off");
+  const voiceRef = React.useRef<WelcomeVoice>("off");
+  const pendingAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const autoCloseAtRef = React.useRef(0);
   const integrations = useIntegrations();
   const weather = useWeather();
   const history = useLibrary((state) => state.history);
@@ -85,8 +95,12 @@ export function BootSequence() {
   }, [hydrated, pathname]);
 
   const persona = effectivePersona({ aiPersona, visualStyle });
+  const elevenLabsReady = integrations.data?.integrations.elevenlabs ?? false;
+  // Bienvenida hablada: solo síntesis de voz, sin micrófono ni DeepSeek.
+  const welcomeVoice = bootVoice && voiceEnabled && elevenLabsReady;
+  // Compatibilidad: sin bienvenida hablada, el «Saludo al iniciar» abre TECLA AI por voz al tocar.
   const voiceBriefing =
-    speakGreeting && voiceEnabled && micConsent && (integrations.data?.integrations.elevenlabs ?? false) && (integrations.data?.integrations.deepseek ?? false);
+    !welcomeVoice && speakGreeting && voiceEnabled && micConsent && elevenLabsReady && (integrations.data?.integrations.deepseek ?? false);
 
   const steps = React.useMemo(
     () =>
@@ -130,10 +144,20 @@ export function BootSequence() {
     if (withVoice) openAssistant({ mode: "voice" });
   }, []);
 
+  const setWelcome = React.useCallback((next: WelcomeVoice) => {
+    voiceRef.current = next;
+    setVoice(next);
+  }, []);
+
   React.useEffect(() => {
     if (!visible) return;
+    autoCloseAtRef.current = Date.now() + timing.totalMs;
     const readyTimer = window.setTimeout(() => setPhase("ready"), 500 + steps.length * timing.stepMs);
-    const closeTimer = window.setTimeout(() => close(false), timing.totalMs);
+    const closeTimer = window.setTimeout(() => {
+      // Con la voz cargando o bloqueada, la cortinilla espera: la voz cierra al sonar o el toque la libera.
+      if (voiceRef.current === "loading" || voiceRef.current === "blocked") return;
+      close(false);
+    }, timing.totalMs);
     return () => {
       window.clearTimeout(readyTimer);
       window.clearTimeout(closeTimer);
@@ -141,6 +165,53 @@ export function BootSequence() {
     // La duración queda fijada al mostrarse; los pasos que lleguen después se pintan igual.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  const briefingRef = React.useRef(briefing);
+  React.useEffect(() => {
+    briefingRef.current = briefing;
+  }, [briefing]);
+
+  // Al terminar el chequeo, sintetiza el briefing una sola vez e intenta pronunciarlo.
+  React.useEffect(() => {
+    if (phase !== "ready" || !welcomeVoice || voiceRef.current !== "off") return;
+    setWelcome("loading");
+    void synthesizeSpeech(briefingRef.current).then(async (audio) => {
+      if (!audio) {
+        setWelcome("done");
+        if (Date.now() >= autoCloseAtRef.current) close(false);
+        return;
+      }
+      setWelcome("playing");
+      const played = playSpeech(audio);
+      // Si el navegador exige un toque, `play()` se rechaza enseguida; si no, la voz ya está sonando.
+      const result = await Promise.race([played, new Promise<"pending">((resolve) => window.setTimeout(() => resolve("pending"), 400))]);
+      if (result === "blocked") {
+        pendingAudioRef.current = audio;
+        setWelcome("blocked");
+        return;
+      }
+      if (result === "failed") {
+        setWelcome("done");
+        if (Date.now() >= autoCloseAtRef.current) close(false);
+        return;
+      }
+      // Sonando: deja ver el briefing un instante y cierra; la voz sigue sobre la app.
+      window.setTimeout(() => close(false), Math.max(900, autoCloseAtRef.current - Date.now()));
+      void played.then(() => setWelcome("done"));
+    });
+  }, [phase, welcomeVoice, close, setWelcome]);
+
+  function handleTap() {
+    const pending = pendingAudioRef.current;
+    if (pending) {
+      pendingAudioRef.current = null;
+      setWelcome("playing");
+      void playSpeech(pending).then(() => setWelcome("done"));
+      close(false);
+      return;
+    }
+    close(voiceBriefing);
+  }
 
   if (!visible || !enabled) return null;
   const titles = bootTitles(visualStyle);
@@ -152,7 +223,7 @@ export function BootSequence() {
       data-style={visualStyle}
       role="status"
       aria-live="polite"
-      onClick={() => close(voiceBriefing)}
+      onClick={handleTap}
     >
       <div className="boot-seq__grid" aria-hidden />
       <div className="boot-seq__stage">
@@ -178,7 +249,16 @@ export function BootSequence() {
         </div>
         <p className={cn("boot-seq__briefing", phase !== "running" && "boot-seq__briefing--show")}>{briefing}</p>
         <p className="boot-seq__hint">
-          {okCount} de {steps.length} sistemas listos · {voiceBriefing ? "toca para escuchar el briefing" : "toca para continuar"}
+          {okCount} de {steps.length} sistemas listos ·{" "}
+          {voice === "blocked"
+            ? "toca para escuchar la bienvenida"
+            : voice === "loading"
+              ? "preparando la voz…"
+              : voice === "playing"
+                ? "hablando…"
+                : voiceBriefing
+                  ? "toca para escuchar el briefing"
+                  : "toca para continuar"}
         </p>
       </div>
     </div>
